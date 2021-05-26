@@ -10,7 +10,11 @@ Developers contributing to this project MUST follow these principles:
   to reuse logic, import it from somewhere common outside the migrations. However, make sure changes to reuse logic
   doesn't break any of the migrations using the common logic (by having tests, keeping the API stable, etc).
 
-# Description
+# Outputs
+
+This repository will produce the following outputs.
+
+## Binaries
 
 Output of this project will
 
@@ -18,15 +22,30 @@ This project creates migrations just like Flyway. Each migration is a binary, wh
 convention:
 
 ```
-okctl-<migration number>-<description>
+okctl_<migration number>_<okctl target version>_<os>_<arch>
 ```
 
 * `migration number` will be used to determine execution order, and must thus be a parsable integer.
+*  
 * `description` can in theory be anything, but we will by default name it with the version of okctl we are upgrading
 to, plus possible a textual description if that gives value in the given situation.
 
 Examples:
-* `okctl-1-0_0_63`
-* `okctl-2-0_0_64`
-* `okctl-3-0_0_64_whops_we_forgot_something`
-* `okctl-4-0_0_65`
+* `okctl-upgrade_1_0.0.63_Linux_amd64`
+* `okctl-upgrade_2_0.0.64_Linux_amd64`
+* `okctl-upgrade_3_0.0.64_Linux_amd64`
+* `okctl-upgrade_4_0.0.65_Linux_amd64`
+
+## Releases
+
+Every binary will be put in its own release, and tagged with
+
+```
+<migration number>-<okctl target version>
+```
+
+Examples:
+* `2_0.0.64`
+* `3_0.0.64`
+
+See https://github.com/oslokommune/okctl-upgrade/releases.

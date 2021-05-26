@@ -1,0 +1,37 @@
+# This is created by goreleaser
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - go mod tidy
+    # you may remove this if you don't need go generate
+    - go generate ./...
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+
+project_name: okctl-upgrade
+
+archives:
+  - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    replacements:
+      darwin: Darwin
+      linux: Linux
+
+checksum:
+  name_template: 'okctl-upgrade-checksums.txt'
+
+snapshot:
+  name_template: "{{ .Env.VERSION }}"
+  #name_template: "{{ .Tag }}"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
