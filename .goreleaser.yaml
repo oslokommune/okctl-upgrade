@@ -37,4 +37,4 @@ changelog:
       - '^test:'
 
 release:
-  name_template: "{{.ProjectName}}-{{.Version}}"
+  name_template: "{{.ProjectName}}_{{.Version}}"
