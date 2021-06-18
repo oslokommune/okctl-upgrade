@@ -15,6 +15,12 @@ release: ## Make a release. This target assumes that running `git tag` returns t
 			--rm-dist
 
 release-test: ## Test making a release. Example usage: make release-test VERSION=0.0.50
+	@if [[ -z "${VERSION}" ]]; then\
+		echo "You must specify VERSION=<upgrade version>";\
+		echo "";\
+		exit 1;\
+	fi;
+
 	# Because goreleaser expects this tag, we'll read it here as well.
 	cd ${VERSION} && \
 		goreleaser release \
