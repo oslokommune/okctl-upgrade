@@ -6,7 +6,7 @@ help: ## Print this menu
 
 release: ## Make a release. This target assumes that running `git tag` returns the version to release.
 	# Because goreleaser expects this tag, we'll read it here as well.
-	$(eval VERSION := $(shell git tag))
+	$(eval VERSION := $(shell git describe --tags HEAD))
 
 	cd ${VERSION} && \
 	VERSION=${VERSION} \
