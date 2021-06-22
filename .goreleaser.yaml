@@ -26,7 +26,7 @@ checksum:
   name_template: 'okctl-upgrade-checksums.txt'
 
 snapshot:
-  name_template: "{{ .Env.VERSION }}"
+  name_template: "{{ .Env.UPGRADE_VERSION }}"
   #name_template: "{{ .Tag }}"
 
 changelog:
