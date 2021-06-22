@@ -22,8 +22,17 @@ jobs:
           go-version: 1.16
 
       -
+        name: Get the git tag
+        uses: little-core-labs/get-git-tag@v3.0.2
+        id: tagName
+
+      -
         name: Run GoReleaser
-        run: |
-          make release
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --config ../.goreleaser.yaml --rm-dist
+          workdir: ${{ steps.tagName.outputs.tag }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
