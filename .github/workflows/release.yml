@@ -36,3 +36,4 @@ jobs:
           workdir: ${{ steps.tagName.outputs.tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPGRADE_VERSION: ${{ steps.tagName.outputs.tag }}
