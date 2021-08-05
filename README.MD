@@ -14,6 +14,22 @@ Developers contributing to this project [MUST](https://www.ietf.org/rfc/rfc2119.
 * If you want okctl upgrade not to possibly re-run an upgrade that has been run manually, that is, outside of okctl
   upgrade, then you MUST ensure that the upgrade updates okctl's state, marking the upgrade as run.
 
+# How to create an upgrade
+
+* Create (or copy-paste) a project for your upgrade, where the directory name is the `okctl target version` explained
+under [Binaries](#binaries).
+* To test the release, which will produce a `dist` folder, run `make release-test UPGRADE_VERSION=0.0.65`.
+* To make the actual release, commit and push your changes, then push a tag with the upgrade version. For instance
+
+```shell
+git add 0.0.5
+git commit -m "✔ Add upgrade 0.0.5"
+git tag -s "0.0.5" -m "Upgrade 0.0.5"
+git push --atomic origin main 0.0.5
+```
+
+Github actions takes care of the rest.
+
 # Outputs
 
 This repository will produce the following outputs.
@@ -26,20 +42,28 @@ This project creates binaries whose file name will follow this naming convention
 okctl-upgrade_<okctl target version>_<os>_<arch>
 ```
 
-* `okctl target version` is the version of okctl that this upgrade will support after running the upgrade.
-*  `os` is `Linux` or `Darwin`
+* `okctl target version` is the version of okctl the upgrade should upgrade to.
+
+For instance, after running upgrades with target version `0.0.5` and `0.0.6`, the okctl infrastructure should be as if
+creating the infrastructure with okctl version `0.0.6`.
+ 
+The version format can be a semantic version (e.g. `0.0.10`), or a semver with a hotfix (`0.0.10.some-hotfix`). If
+using a hotfix, it MUST be on the format `<semver>.<hotfix identifier>` where `<hotfix identifier>` MUST NOT contain
+dots or underscores.
+
+* `os` is `Linux` or `Darwin`
 * `arch` is for instance `amd64`
-* `description` can in theory be anything, but we will by default name it with the version of okctl we are upgrading
-to, plus possible a textual description if that gives value in the given situation.
 
 Examples:
 * `okctl-upgrade_0.0.63_Linux_amd64`
 * `okctl-upgrade_0.0.64_Linux_amd64`
-* `okctl-upgrade_0.0.64_Linux_amd64`
+* `okctl-upgrade_0.0.64_Darwin_amd64`
 * `okctl-upgrade_0.0.65_Linux_amd64`
+* `okctl-upgrade_0.0.65.some-hotfix_Linux_amd64`
 
 ## Releases
 
-Every binary will be put in its own release, and tagged with `<okctl target version>`, for instance `0.0.64`.
+Every binary will be put in its own release, and tagged with `<okctl target version>`, for instance `0.0.64` or
+`0.0.64.some-hotfix`
 
 See https://github.com/oslokommune/okctl-upgrade/releases.
