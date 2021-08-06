@@ -19,8 +19,9 @@ Developers contributing to this project [MUST](https://www.ietf.org/rfc/rfc2119.
 
 * Create (or copy-paste) a project for your upgrade, where the directory name is the `okctl target version` explained
 under [Binaries](#binaries).
-* To test the release, which will produce a `dist` folder, run `make release-test UPGRADE_VERSION=0.0.65`.
-* To make the actual release, commit and push your changes, then push a tag with the upgrade version. For instance
+* Optional: To have a look at the release before publishing, run `make release-test UPGRADE_VERSION=0.0.65`, which will
+create a `dist` directory.
+* To make the actual release, do:
 
 ```shell
 git add 0.0.5
@@ -33,7 +34,7 @@ Github actions takes care of the rest.
 
 # Outputs
 
-This repository will produce the following outputs.
+The github release action will produce the outputs described below.
 
 ## Binaries
 
@@ -72,7 +73,6 @@ Examples:
 
 ## Releases
 
-Every binary will be put in its own release, and tagged with `<okctl target version>`, for instance `0.0.64` or
-`0.0.64.some-hotfix`
+Every binary will be put in its own release, and tagged with the `<okctl target version>`.
 
 See https://github.com/oslokommune/okctl-upgrade/releases.
