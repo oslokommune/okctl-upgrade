@@ -24,10 +24,11 @@ create a `dist` directory.
 * To make the actual release, do:
 
 ```shell
-git add 0.0.5
-git commit -m "✔ Add upgrade 0.0.5"
-git tag -s "0.0.5" -m "Upgrade 0.0.5"
-git push --atomic origin main 0.0.5
+TAG="0.0.5"
+git add $TAG
+git commit -m "✔ Add upgrade $TAG"
+git tag -s "$TAG" -m "Upgrade $TAG"
+git push --atomic origin main $TAG
 ```
 
 Github actions takes care of the rest.
