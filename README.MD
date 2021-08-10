@@ -2,14 +2,12 @@ This repository contains functionality for upgrading [okctl](https://github.com/
 
 # Developing principles
 
-Developers contributing to this project [MUST](https://www.ietf.org/rfc/rfc2119.txt) follow these principles:
-
-* Any code in a migration SHOULD NOT import code from another migration.
+* Any code in a migration [MUST NOT](https://www.ietf.org/rfc/rfc2119.txt) import code from another migration.
   Upgrading is a complex domain, and this is to ensure that upgrades stays simple and isolated. If downstream migrations
   depend on an upstream migrations, we might break any of the downstream migrations, which we want to avoid. If you want
   to reuse logic, import it from somewhere common outside the migrations. However, make sure changes to reuse logic
   doesn't break any of the migrations using the common logic (by having tests, keeping the API stable, etc).
-* Upgrades SHOULD be idempotent. How to implement is this is up to the update itself, but the straight forward way is
+* Upgrades MUST be idempotent. How to implement is this is up to the update itself, but the straight forward way is
   using the same logic as okctl uses to check if an upgrade has been run, which is checking the cluster's state storage.
 * If you want to make sure okctl upgrade doesn't re-run an upgrade that has been run manually, that is, outside of
   `okctl upgrade`, then you MUST ensure that the upgrade updates okctl's state, marking the upgrade as run. Another
@@ -24,7 +22,7 @@ create a `dist` directory.
 * To make the actual release, do:
 
 ```shell
-TAG="0.0.5"
+TAG="0.0.5" # Or 0.0.6.some-hotfix
 git add $TAG
 git commit -m "✔ Add upgrade $TAG"
 git tag -s "$TAG" -m "Upgrade $TAG"
