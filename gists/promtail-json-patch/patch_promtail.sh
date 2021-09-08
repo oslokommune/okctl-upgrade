@@ -2,7 +2,7 @@
 
 # This patch enables basic JSON parsing of logs. See https://grafana.com/docs/loki/latest/clients/promtail/stages/docker/
 
-WD=./PATCHAGE
+WD=/tmp/okctl-promtail-json-patch
 
 # Create work directory
 mkdir -p ${WD}
