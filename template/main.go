@@ -42,7 +42,8 @@ func buildRootCommand() *cobra.Command {
 	}
 
 	cmd.PersistentFlags().BoolVarP(&flags.debug, "debug", "d", false, "Set to true to enable debug output.")
-	cmd.PersistentFlags().BoolVarP(&flags.force, "force", "f", false, "Set to true to apply changes. False means no changes are done.")
+	cmd.PersistentFlags().BoolVarP(&flags.debug, "dry-run", "n", true, "Don't actually do any changes, just show what would be done.")
+	cmd.PersistentFlags().BoolVarP(&flags.force, "confirm", "c", false, "Set to true to skip confirmation prompts.")
 
 	return cmd
 }
