@@ -2,8 +2,8 @@ This repository contains functionality for upgrading [okctl](https://github.com/
 
 # Developing principles
 
-* Upgrades [MUST](https://www.ietf.org/rfc/rfc2119.txt) support `-f` and `--force`. That is, when executing an upgrade binary without these arguments, it MUST
-  make zero changes. Only when run with `-f` or `--force` must the upgrade make any changes.
+* Upgrades [MUST](https://www.ietf.org/rfc/rfc2119.txt) support the flags described in [this code](template/main.go).
+  The behavior of the flags MUST be as described in the code's comments.
 * Upgrades MUST be idempotent. How to implement is this is up to the update itself, but the straight forward way is
   using the same logic as okctl uses to check if an upgrade has been run, which is checking the cluster's state storage. 
 * Any code in a migration MUST NOT import code from another migration.
@@ -11,7 +11,7 @@ This repository contains functionality for upgrading [okctl](https://github.com/
   depend on an upstream migrations, we might break any of the downstream migrations, which we want to avoid. If you want
   to reuse logic, either duplicate it or import it from somewhere common outside the migrations. However, make sure
   changes to reuse logic doesn't break any of the migrations using the common logic (by having tests, keeping the API
-  stable, etc).
+  stable, etc.).
 * If you want to make sure okctl upgrade doesn't re-run an upgrade that has been run manually, that is, outside of
   `okctl upgrade`, then you MUST ensure that the upgrade updates okctl's state, marking the upgrade as run.
 
@@ -32,11 +32,11 @@ git tag -s "$TAG" -m "Upgrade $TAG"
 git push --atomic origin main $TAG
 ```
 
-Github actions takes care of the rest.
+GitHub actions takes care of the rest.
 
 # Outputs
 
-The github release action will produce the outputs described below.
+The GitHub release action will produce the outputs described below.
 
 ## Binaries
 
@@ -78,3 +78,4 @@ Examples:
 Every binary will be put in its own release, and tagged with the `<okctl target version>`.
 
 See https://github.com/oslokommune/okctl-upgrade/releases.
+
