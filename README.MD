@@ -2,18 +2,32 @@ This repository contains functionality for upgrading [okctl](https://github.com/
 
 # Developing principles
 
-* Upgrades [MUST](https://www.ietf.org/rfc/rfc2119.txt) support the flags described in [this code](template/main.go).
-  The behavior of the flags MUST be as described in the code's comments.
-* Upgrades MUST be idempotent. How to implement is this is up to the update itself, but the straight forward way is
-  using the same logic as okctl uses to check if an upgrade has been run, which is checking the cluster's state storage. 
-* Any code in a migration MUST NOT import code from another migration.
-  Upgrading is a complex domain, and this is to ensure that upgrades stays simple and isolated. If downstream migrations
-  depend on an upstream migrations, we might break any of the downstream migrations, which we want to avoid. If you want
-  to reuse logic, either duplicate it or import it from somewhere common outside the migrations. However, make sure
-  changes to reuse logic doesn't break any of the migrations using the common logic (by having tests, keeping the API
-  stable, etc.).
-* If you want to make sure okctl upgrade doesn't re-run an upgrade that has been run manually, that is, outside of
-  `okctl upgrade`, then you MUST ensure that the upgrade updates okctl's state, marking the upgrade as run.
+## Use required flags
+Upgrades [MUST](https://www.ietf.org/rfc/rfc2119.txt) support the flags described in [this code](template/main.go).
+The behavior of the flags MUST be as described in the code's comments.
+
+## Return correct exit code
+Upgrades MUST return a non-zero exit code if it doesn't complete successfully for any reason. For instance if the
+user is prompted whether to continue and answers no, the upgrade must return a non-zero exit code.
+
+## Support idempotency
+Upgrades MUST be idempotent. How to implement is this is up to the update itself, but the straight forward way is
+using the same logic as okctl uses to check if an upgrade has been run, which is checking the cluster's state storage. 
+
+## Avoid re-runs
+If you want to make sure okctl upgrade doesn't re-run an upgrade that has been run manually, that is, outside of
+`okctl upgrade`, then you MUST ensure that the upgrade updates okctl's state, marking the upgrade as run.
+
+## Avoid cross-upgrade imports
+Any code in a migration MUST NOT import code from another migration.
+
+Upgrading is a complex domain, and to ensure that upgrades stays simple and isolated, they must avoid such imports.
+If downstream migrations depend on an upstream migrations, we might break any of the downstream migrations, which
+we want to avoid.
+
+If you want to reuse logic, either duplicate it or import it from somewhere common outside the migrations. However,
+make sure changes to reuse logic doesn't break any of the migrations using the common logic (by having tests, keeping
+the API stable, etc.).
 
 # How to create an upgrade
 
