@@ -43,16 +43,7 @@ func buildRootCommand() *cobra.Command {
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			if !flags.force {
-				context.logger.Info("Simulating the upgrade, not doing any changes.")
-			}
-
-			err := upgrade(context)
-			if err != nil {
-				return fmt.Errorf("upgrade failed: %w", err)
-			}
-
-			return nil
+			return upgrade(context, flags)
 		},
 	}
 
@@ -68,8 +59,8 @@ func buildRootCommand() *cobra.Command {
 	 * --confirm:	Skips all confirmation prompts, if any.
 	 */
 	cmd.PersistentFlags().BoolVarP(&flags.debug, "debug", "d", false, "Set this to enable debug output.")
-	cmd.PersistentFlags().BoolVarP(&flags.debug, "dry-run", "n", true, "Don't actually do any changes, just show what would be done.")
-	cmd.PersistentFlags().BoolVarP(&flags.force, "confirm", "c", false, "Set this to skip confirmation prompts.")
+	cmd.PersistentFlags().BoolVarP(&flags.dryRun, "dry-run", "n", true, "Don't actually do any changes, just show what would be done.")
+	cmd.PersistentFlags().BoolVarP(&flags.confirm, "confirm", "c", false, "Set this to skip confirmation prompts.")
 
 	return cmd
 }
