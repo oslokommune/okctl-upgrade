@@ -1,21 +1,33 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"github.com/oslokommune/okctl-upgrade/template/pkg/commonerrors"
 	"github.com/spf13/cobra"
 	"os"
 )
 
 func main() {
 	cmd := buildRootCommand()
-	if err := cmd.Execute(); err != nil {
+
+	err := cmd.Execute()
+
+	if err != nil && errors.Is(err, commonerrors.ErrUserAborted) {
+		fmt.Println("Upgrade aborted by user.")
+	} else if err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, err.Error())
+	}
+
+	if err != nil {
 		os.Exit(1)
 	}
 }
 
 type cmdFlags struct {
-	debug bool
-	force bool
+	debug   bool
+	dryRun  bool
+	confirm bool
 }
 
 func buildRootCommand() *cobra.Command {
@@ -24,6 +36,8 @@ func buildRootCommand() *cobra.Command {
 	var context Context
 
 	cmd := &cobra.Command{
+		SilenceErrors: true,  // true as we print errors in the main() function
+		SilenceUsage:  false, // true because we don't want to show usage if an errors occurs
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			context = newContext(flags)
 			return nil
