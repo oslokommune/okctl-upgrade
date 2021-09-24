@@ -33,10 +33,10 @@ the API stable, etc.).
 
 * `cp -r template <okctl target version>`, where `<okctl target version>` is explained under [Binaries](#binaries).
    * Example: `cp -r template 0.0.60`
-* Edit the upgrade to your needs
+* Edit the upgrade to your needs (:information_source: Tip: start with `upgrade.go`)
 * Optional: To have a look at the release files before publishing, run `make release-test UPGRADE_VERSION=0.0.65`, which will
 create a `dist` directory.
-* To make the actual release, do:
+* To make the actual release, do
 
 ```shell
 TAG="0.0.5" # Or 0.0.6.some-hotfix
