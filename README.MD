@@ -21,7 +21,7 @@ If you want to make sure okctl upgrade doesn't re-run an upgrade that has been r
 ## Avoid cross-upgrade imports
 Any code in a migration MUST NOT import code from another migration.
 
-Upgrading is a complex domain, and to ensure that upgrades stays simple and isolated, they must avoid such imports.
+Upgrading is a complex domain, and to ensure that upgrades stay simple and isolated, they must avoid such imports.
 If downstream migrations depend on an upstream migrations, we might break any of the downstream migrations, which
 we want to avoid.
 
@@ -49,7 +49,7 @@ git push --atomic origin main $TAG
 GitHub actions takes care of the rest.
 
 To test a release, you can run the above commands from a branch. Aftwards, you must
-* delete the release in Github
+* delete the release in GitHub
 * delete tag 
 
 ```shell
