@@ -48,6 +48,15 @@ git push --atomic origin main $TAG
 
 GitHub actions takes care of the rest.
 
+To test a release, you can run the above commands from a branch. Aftwards, you must
+* delete the release in Github
+* delete tag 
+
+```shell
+git tag -d $TAG
+git push --delete origin $TAG
+```
+
 # Outputs
 
 The GitHub release action will produce the outputs described below.
