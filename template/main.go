@@ -6,6 +6,7 @@ import (
 	"github.com/oslokommune/okctl-upgrade/template/pkg/commonerrors"
 	"github.com/spf13/cobra"
 	"os"
+	"path/filepath"
 )
 
 func main() {
@@ -35,9 +36,15 @@ func buildRootCommand() *cobra.Command {
 
 	var context Context
 
+	filename := filepath.Base(os.Args[0])
+
 	cmd := &cobra.Command{
-		SilenceErrors: true,  // true as we print errors in the main() function
-		SilenceUsage:  false, // true because we don't want to show usage if an errors occurs
+		Short:         "Upgrades an okctl cluster",
+		Long:          "Note, boolean arguments must be specified on the form --arg=bool (and not on the form --arg bool).",
+		Use:           filename,
+		Example:       fmt.Sprintf("%s --debug=false", filename),
+		SilenceErrors: true, // true as we print errors in the main() function
+		SilenceUsage:  true, // true because we don't want to show usage if an errors occurs
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			context = newContext(flags)
 			return nil
