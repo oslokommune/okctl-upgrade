@@ -14,7 +14,7 @@ tar xvf remote-state-upgrader_v0.0.0_Darwin_amd64.tar.gz
 ```
 
 Run the following and verify that the checksum matches 
-`3ff1d6c3631e836a96f03d756f36b230d17c9e24dffd95b1b835011bfd5522b5`
+`d861a1e258ded5ef27c66ca9ab6f86adc9ceeb93e4bda0793d08decf931a4f48`
 
 ```shell
 sha256sum remote-state-upgrader
@@ -30,7 +30,7 @@ tar xvf remote-state-upgrader_v0.0.0_Darwin_amd64.tar.gz
 ```
 
 Run the following and verify that the checksum matches 
-`b4f09c06aa97323cd4c51a8130f618c5adb693e0e23bb9dc2b7c808014b87090`
+`8b38434a088a59b08bd52e40fdcac1f0b24c4c70adab6fae0f9eb947e859a0b0`
 
 ```shell
 sha256sum remote-state-upgrader
