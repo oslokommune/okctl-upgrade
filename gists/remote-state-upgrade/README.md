@@ -30,5 +30,5 @@ sha256sum remote-state-upgrader
 1. Authenticate with your desired okctl environment by either 
    1. Running `okctl venv -c <cluster manifest>` (preferred)
    2. Running `saml2aws login`, see [saml2aws](https://github.com/Versent/saml2aws)
-2. Run `remote-state-upgrade <path to cluster manifest>`
+2. Run `./remote-state-upgrade <path to cluster manifest>`
  
