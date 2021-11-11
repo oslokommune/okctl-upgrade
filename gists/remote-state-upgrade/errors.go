@@ -26,11 +26,11 @@ func t(key int) string {
 	case BucketAlreadyExists:
 		return "The bucket already exists. To not overwrite any important data, please contact #kjøremiljø"
 	case NotAuthenticated:
-		return "There seems to be a problem with the authentication. Please run 'okctl venv -c <cluster manifest>' again"
+		return "There is a problem with the authentication. Please run 'okctl venv -c <cluster manifest>' or 'saml2aws login' again"
 	case BranchInvalid:
 		return "Invalid git branch: please switch to your IAC repo's main branch"
 	case BranchOutdated:
-		return "Outdated git branch: please ensure your branch is synced with the remote with 'git pull' and 'git push' before upgrading"
+		return "Outdated git branch: please sync your branch with the remote using 'git pull' and 'git push' before upgrading"
 	case BranchDirty:
 		return "Dirty git branch: please commit your local changes"
 	case BadCurrentWorkingDirectory:
