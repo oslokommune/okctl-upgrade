@@ -1,0 +1,62 @@
+project_name: remote-state-upgrader
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - id: linux
+    main: .
+    binary: remote-state-upgrade
+    flags:
+      - -tags
+      - netgo release
+      - -trimpath
+    env:
+      - CGO_ENABLED=1
+    ldflags:
+      - -s
+      - -w
+    goos:
+      - linux
+    goarch:
+      - amd64
+  - id: darwin
+    main: .
+    binary: remote-state-upgrade
+    flags:
+      - -tags
+      - netgo release
+      - -trimpath
+    env:
+      - CGO_ENABLED=1
+      - CC=o64-clang
+      - CXX=o64-clang++
+    ldflags:
+      - -s
+      - -w
+    goos:
+      - darwin
+    goarch:
+      - amd64
+
+archives:
+- replacements:
+    darwin: Darwin
+    linux: Linux
+  builds:
+    - linux
+    - darwin
+
+checksum:
+  name_template: 'remote-state-upgrade_checksums.txt'
+
+snapshot:
+  name_template: "{{ .Tag }}"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
