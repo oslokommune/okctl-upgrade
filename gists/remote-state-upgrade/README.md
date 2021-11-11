@@ -10,7 +10,7 @@ This upgrade moves the `state.db` file from a local machine to an S3 bucket.
 Download [remote-state-upgrader_v0.0.0_Darwin_amd64.tar.gz](dist/remote-state-upgrader_v0.0.0_Darwin_amd64.tar.gz) to
 your machine and run `tar xvf remote-state-upgrader_v0.0.0_Darwin_amd64.tar.gz`
 
-Run the following and verify that the checksum matches `52d9434c30638f47b482326b3ea8319758dc7a2cabc5930954334bee776f88c1`
+Run the following and verify that the checksum matches `b17e217abaf09f87f535d382624f78cb4f11a9f91aba14bb7f63d06b41a27f85`
 ```shell
 sha256sum remote-state-upgrader
 ```
@@ -20,7 +20,7 @@ sha256sum remote-state-upgrader
 Download [remote-state-upgrader_v0.0.0_Linux_amd64.tar.gz](dist/remote-state-upgrader_v0.0.0_Linux_amd64.tar.gz) to
 your machine and run `tar xvf remote-state-upgrader_v0.0.0_Darwin_amd64.tar.gz`
 
-Run the following and verify that the checksum matches `3c75073fcc620934f35f44d9f0b582ce9656fd75a8e469a840c6eb68cf9b3a4d`
+Run the following and verify that the checksum matches `d58f57d388074d7511537c112deb5c6908f5f4c014a158b04fa3ea722b4b288a`
 ```shell
 sha256sum remote-state-upgrader
 ```
