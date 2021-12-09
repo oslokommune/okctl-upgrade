@@ -24,7 +24,7 @@ func t(key int) string {
 	case ClusterManifestNotFound:
 		return "Cluster manifest not found at provided path, are you sure it is correct?"
 	case BucketAlreadyExists:
-		return "The bucket already exists. To not overwrite any important data, please contact #kjøremiljø"
+		return "The bucket already exists. To avoid overwriting any important data, please contact #kjøremiljø"
 	case NotAuthenticated:
 		return "There is a problem with the authentication. Please run 'okctl venv -c <cluster manifest>' or 'saml2aws login' again"
 	case BranchInvalid:
