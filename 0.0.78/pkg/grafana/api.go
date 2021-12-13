@@ -1,10 +1,9 @@
-package somecomponent
+package grafana
 
 import (
 	"fmt"
-	"github.com/AlecAivazis/survey/v2"
-	"github.com/oslokommune/okctl-upgrade/template/pkg/commonerrors"
-	"github.com/oslokommune/okctl-upgrade/template/pkg/logger"
+	"github.com/oslokommune/okctl-upgrade/0.0.78/pkg/commonerrors"
+	"github.com/oslokommune/okctl-upgrade/0.0.78/pkg/logger"
 )
 
 // SomeComponent is a sample okctl component

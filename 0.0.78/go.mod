@@ -1,4 +1,4 @@
-module github.com/oslokommune/okctl-upgrade/template
+module github.com/oslokommune/okctl-upgrade/0.0.78
 
 go 1.16
 

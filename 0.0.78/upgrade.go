@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/oslokommune/okctl-upgrade/template/pkg/somecomponent"
+	"github.com/oslokommune/okctl-upgrade/0.0.78/pkg/somecomponent"
 )
 
 func upgrade(context Context, flags cmdFlags) error {

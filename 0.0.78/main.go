@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/oslokommune/okctl-upgrade/template/pkg/commonerrors"
+	"github.com/oslokommune/okctl-upgrade/0.0.78/pkg/commonerrors"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
