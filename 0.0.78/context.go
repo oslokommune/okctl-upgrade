@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/oslokommune/okctl-upgrade/template/pkg/logger"
+	"github.com/oslokommune/okctl-upgrade/0.0.78/pkg/logger"
 )
 
 type Context struct {

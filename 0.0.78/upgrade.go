@@ -1,16 +1,14 @@
 package main
 
-import (
-	"github.com/oslokommune/okctl-upgrade/0.0.78/pkg/somecomponent"
-)
+import "github.com/oslokommune/okctl-upgrade/0.0.78/pkg/grafana"
 
 func upgrade(context Context, flags cmdFlags) error {
-	opts := somecomponent.Opts{
+	opts := grafana.Opts{
 		DryRun:  flags.dryRun,
 		Confirm: flags.confirm,
 	}
 
-	c := somecomponent.New(context.logger, opts)
+	c := grafana.New(context.logger, opts)
 
 	err := c.Upgrade()
 	if err != nil {
