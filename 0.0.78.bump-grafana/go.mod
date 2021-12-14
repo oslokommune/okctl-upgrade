@@ -1,4 +1,4 @@
-module github.com/oslokommune/okctl-upgrade/0.0.78
+module github.com/oslokommune/okctl-upgrade/0.0.78.bump-grafana
 
 go 1.16
 

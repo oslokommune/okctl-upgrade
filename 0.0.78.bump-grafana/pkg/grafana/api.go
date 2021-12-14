@@ -6,8 +6,8 @@ import (
 	"os"
 
 	survey "github.com/AlecAivazis/survey/v2"
-	"github.com/oslokommune/okctl-upgrade/0.0.78/pkg/commonerrors"
-	"github.com/oslokommune/okctl-upgrade/0.0.78/pkg/logger"
+	"github.com/oslokommune/okctl-upgrade/0.0.78.bump-grafana/pkg/commonerrors"
+	"github.com/oslokommune/okctl-upgrade/0.0.78.bump-grafana/pkg/logger"
 )
 
 // Upgrader is a sample okctl component

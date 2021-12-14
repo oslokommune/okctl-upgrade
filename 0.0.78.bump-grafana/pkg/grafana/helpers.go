@@ -3,7 +3,7 @@ package grafana
 import (
 	"fmt"
 
-	"github.com/oslokommune/okctl-upgrade/0.0.78/pkg/logger"
+	"github.com/oslokommune/okctl-upgrade/0.0.78.bump-grafana/pkg/logger"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/Masterminds/semver"
