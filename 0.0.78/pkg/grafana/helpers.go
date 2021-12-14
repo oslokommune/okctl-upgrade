@@ -24,6 +24,8 @@ func preflight(log logger.Logger, clientSet *kubernetes.Clientset) error {
 	}
 
 	if !hasGrafana {
+		log.Info("Grafana is not installed, ignoring upgrade")
+
 		return ErrNothingToDo
 	}
 
@@ -35,7 +37,7 @@ func preflight(log logger.Logger, clientSet *kubernetes.Clientset) error {
 	err = validateVersion(expectedGrafanaVersionPreUpgrade, currentGrafanaVersion)
 	if err != nil {
 		if currentGrafanaVersion.GreaterThan(targetGrafanaVersion) || currentGrafanaVersion.Equal(targetGrafanaVersion) {
-			log.Info(fmt.Sprintf("Current version is %s, doing nothing", currentGrafanaVersion.String()))
+			log.Info(fmt.Sprintf("Current version is %s, ignoring upgrade", currentGrafanaVersion.String()))
 
 			return ErrNothingToDo
 		}

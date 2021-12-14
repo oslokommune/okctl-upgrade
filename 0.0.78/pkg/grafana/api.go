@@ -18,7 +18,6 @@ type Upgrader struct {
 }
 
 // Upgrade upgrades the component
-//nolint:funlen
 func (c Upgrader) Upgrade() error {
 	c.logger.Info("Upgrading Grafana")
 
@@ -35,8 +34,6 @@ func (c Upgrader) Upgrade() error {
 	err = preflight(c.logger, kubectlClient)
 	if err != nil {
 		if errors.Is(err, ErrNothingToDo) {
-			c.logger.Info("Grafana is either missing or already upgraded. Ignoring upgrade.")
-
 			return nil
 		}
 
@@ -60,18 +57,13 @@ func (c Upgrader) Upgrade() error {
 
 	if c.dryRun {
 		c.logger.Info("Simulating upgrade")
-
-		err = patchGrafanaDeployment(c.logger, kubectlClient, c.dryRun)
-		if err != nil {
-			return fmt.Errorf("patching grafana deployment: %w", err)
-		}
 	} else {
 		c.logger.Info("Patching Grafana")
+	}
 
-		err = patchGrafanaDeployment(c.logger, kubectlClient, c.dryRun)
-		if err != nil {
-			return fmt.Errorf("patching grafana deployment: %w", err)
-		}
+	err = patchGrafanaDeployment(c.logger, kubectlClient, c.dryRun)
+	if err != nil {
+		return fmt.Errorf("patching grafana deployment: %w", err)
 	}
 
 	err = postflight(c.logger, kubectlClient, c.dryRun)
