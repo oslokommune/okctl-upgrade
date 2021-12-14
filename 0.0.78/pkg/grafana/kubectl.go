@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/oslokommune/okctl-upgrade/0.0.78/pkg/logger"
+
+	"github.com/Masterminds/semver"
+
 	"k8s.io/client-go/tools/clientcmd"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,12 +18,15 @@ import (
 )
 
 const (
-	grafanaRepository                = "grafana/grafana"
-	expectedGrafanaVersionPreUpgrade = "7.3.5"
-	upgradeTag                       = "7.5.12"
-	monitoringNamespace              = "monitoring"
-	grafanaDeploymentName            = "kube-prometheus-stack-grafana"
-	grafanaContainerName             = "grafana"
+	grafanaRepository     = "grafana/grafana"
+	monitoringNamespace   = "monitoring"
+	grafanaDeploymentName = "kube-prometheus-stack-grafana"
+	grafanaContainerName  = "grafana"
+)
+
+var (
+	expectedGrafanaVersionPreUpgrade = semver.MustParse("7.3.5")  //nolint:gochecknoglobals
+	targetGrafanaVersion             = semver.MustParse("7.5.12") //nolint:gochecknoglobals
 )
 
 func acquireKubectlClient(kubeConfigPath string) (*kubernetes.Clientset, error) {
@@ -36,10 +43,10 @@ func acquireKubectlClient(kubeConfigPath string) (*kubernetes.Clientset, error) 
 	return client, nil
 }
 
-func getCurrentGrafanaVersion(clientSet *kubernetes.Clientset) (string, error) {
+func getCurrentGrafanaVersion(clientSet *kubernetes.Clientset) (*semver.Version, error) {
 	grafanaContainerIndex, err := getContainerIndexByName(clientSet, grafanaContainerName)
 	if err != nil {
-		return "", fmt.Errorf("getting Grafana container index: %w", err)
+		return nil, fmt.Errorf("getting Grafana container index: %w", err)
 	}
 
 	result, err := clientSet.AppsV1().Deployments(monitoringNamespace).Get(
@@ -48,43 +55,48 @@ func getCurrentGrafanaVersion(clientSet *kubernetes.Clientset) (string, error) {
 		metav1.GetOptions{},
 	)
 	if err != nil {
-		return "", fmt.Errorf("getting deployment: %w", err)
+		return nil, fmt.Errorf("getting deployment: %w", err)
 	}
 
 	parts := strings.Split(result.Spec.Template.Spec.Containers[grafanaContainerIndex].Image, ":")
 
-	return parts[1], nil
+	version, err := semver.NewVersion(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("parsing version: %w", err)
+	}
+
+	return version, nil
 }
 
-func patchGrafanaDeployment(clientSet *kubernetes.Clientset, dryRun bool) (Receipts, error) {
+func patchGrafanaDeployment(log logger.Logger, clientSet *kubernetes.Clientset, dryRun bool) error {
 	dryRunOpts := []string{metav1.DryRunAll}
 	if !dryRun {
 		dryRunOpts = nil
 	}
 
-	receipts := NewReceiptsStack()
-
-	receipts.Push("identifying relevant container")
+	log.Info("identifying relevant container")
 
 	grafanaContainerIndex, err := getContainerIndexByName(clientSet, grafanaContainerName)
 	if err != nil {
-		return receipts, fmt.Errorf("acquiring Grafana container index: %w", err)
+		return fmt.Errorf("acquiring Grafana container index: %w", err)
 	}
 
-	receipts.Push("generating upgrade patch")
+	log.Debug(fmt.Sprintf("found relevant container at index %d", grafanaContainerIndex))
+
+	log.Info("generating upgrade patch")
 
 	patch := Patch{
 		Op:    jsonPatchOperationReplace,
 		Path:  fmt.Sprintf("/spec/template/spec/containers/%d/image", grafanaContainerIndex),
-		Value: fmt.Sprintf("%s:%s", grafanaRepository, upgradeTag),
+		Value: fmt.Sprintf("%s:%s", grafanaRepository, targetGrafanaVersion.String()),
 	}
 
 	raw, err := json.Marshal(patch)
 	if err != nil {
-		return receipts, fmt.Errorf("marshalling patch: %w", err)
+		return fmt.Errorf("marshalling patch: %w", err)
 	}
 
-	receipts.Push("applying patch")
+	log.Info("applying patch")
 
 	_, err = clientSet.AppsV1().Deployments(monitoringNamespace).Patch(
 		context.Background(),
@@ -94,27 +106,31 @@ func patchGrafanaDeployment(clientSet *kubernetes.Clientset, dryRun bool) (Recei
 		metav1.PatchOptions{DryRun: dryRunOpts},
 	)
 	if err != nil {
-		return receipts, fmt.Errorf("patching Grafana deployment: %w", err)
+		return fmt.Errorf("patching Grafana deployment: %w", err)
 	}
 
-	receipts.Push("verifying new Grafana version")
+	log.Info("verifying new Grafana version")
 
 	newVersion, err := getCurrentGrafanaVersion(clientSet)
 	if err != nil {
-		return receipts, fmt.Errorf("acquiring updated Grafana version: %w", err)
+		return fmt.Errorf("acquiring updated Grafana version: %w", err)
 	}
 
-	expectedVersion := upgradeTag
+	log.Debug("found new Grafana version %s", newVersion.String())
+
+	expectedVersion := targetGrafanaVersion
 	if dryRun {
 		expectedVersion = expectedGrafanaVersionPreUpgrade
 	}
 
 	err = validateVersion(expectedVersion, newVersion)
 	if err != nil {
-		return receipts, fmt.Errorf("validating new version: %w", err)
+		log.Debug("expected version %s, but got %s", expectedVersion.String(), newVersion.String())
+
+		return fmt.Errorf("validating new version: %w", err)
 	}
 
-	return receipts, nil
+	return nil
 }
 
 func getContainerIndexByName(clientSet *kubernetes.Clientset, name string) (int, error) {

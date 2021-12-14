@@ -39,17 +39,23 @@ func (c Upgrader) Upgrade() error {
 
 	err = validateVersion(expectedGrafanaVersionPreUpgrade, currentGrafanaVersion)
 	if err != nil {
+		if currentGrafanaVersion.GreaterThan(targetGrafanaVersion) || currentGrafanaVersion.Equal(targetGrafanaVersion) {
+			c.logger.Info(fmt.Sprintf("Current version is %s, doing nothing", currentGrafanaVersion.String()))
+
+			return nil
+		}
+
 		return fmt.Errorf("unexpected Grafana version installed: %w", err)
 	}
 
 	c.logger.Debug(fmt.Sprintf(
-		"Grafana is on version %s. Updating to %s",
-		currentGrafanaVersion,
-		upgradeTag,
+		"Grafana is on version %s. Upgrading to %s",
+		currentGrafanaVersion.String(),
+		targetGrafanaVersion.String(),
 	))
 
 	if !c.dryRun && !c.confirm {
-		c.logger.Info(fmt.Sprintf("This will bump Grafana to %s", upgradeTag))
+		c.logger.Info(fmt.Sprintf("This will bump Grafana to %s", targetGrafanaVersion.String()))
 
 		answer, err := c.askUser("Do you want to proceed?")
 		if err != nil {
@@ -64,18 +70,14 @@ func (c Upgrader) Upgrade() error {
 	if c.dryRun {
 		c.logger.Info("Simulating upgrade")
 
-		receipts, err := patchGrafanaDeployment(kubectlClient, c.dryRun)
+		err = patchGrafanaDeployment(c.logger, kubectlClient, c.dryRun)
 		if err != nil {
 			return fmt.Errorf("patching grafana deployment: %w", err)
-		}
-
-		for _, r := range receipts.receipts {
-			c.logger.Info(r)
 		}
 	} else {
 		c.logger.Info("Patching Grafana")
 
-		_, err = patchGrafanaDeployment(kubectlClient, c.dryRun)
+		err = patchGrafanaDeployment(c.logger, kubectlClient, c.dryRun)
 		if err != nil {
 			return fmt.Errorf("patching grafana deployment: %w", err)
 		}

@@ -7,9 +7,3 @@ type Patch struct {
 	Path  string `json:"path"`
 	Value string `json:"value"`
 }
-
-type Receipt string
-
-type Receipts struct {
-	receipts []Receipt
-}
