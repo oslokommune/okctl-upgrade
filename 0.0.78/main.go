@@ -3,10 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/oslokommune/okctl-upgrade/0.0.78/pkg/commonerrors"
-	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
+
+	"github.com/oslokommune/okctl-upgrade/0.0.78/pkg/commonerrors"
+	"github.com/spf13/cobra"
 )
 
 func main() {
@@ -65,9 +66,12 @@ func buildRootCommand() *cobra.Command {
 	 *
 	 * --confirm:	Skips all confirmation prompts, if any.
 	 */
-	cmd.PersistentFlags().BoolVarP(&flags.debug, "debug", "d", false, "Set this to enable debug output.")
-	cmd.PersistentFlags().BoolVarP(&flags.dryRun, "dry-run", "n", true, "Don't actually do any changes, just show what would be done.")
-	cmd.PersistentFlags().BoolVarP(&flags.confirm, "confirm", "c", false, "Set this to skip confirmation prompts.")
+	cmd.PersistentFlags().BoolVarP(&flags.debug,
+		"debug", "d", false, "Set this to enable debug output.")
+	cmd.PersistentFlags().BoolVarP(&flags.dryRun,
+		"dry-run", "n", true, "Don't actually do any changes, just show what would be done.")
+	cmd.PersistentFlags().BoolVarP(&flags.confirm,
+		"confirm", "c", false, "Set this to skip confirmation prompts.")
 
 	return cmd
 }

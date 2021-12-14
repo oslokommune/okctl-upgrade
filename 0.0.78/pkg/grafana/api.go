@@ -1,23 +1,51 @@
 package grafana
 
 import (
+	"errors"
 	"fmt"
+	"os"
+
+	survey "github.com/AlecAivazis/survey/v2"
 	"github.com/oslokommune/okctl-upgrade/0.0.78/pkg/commonerrors"
 	"github.com/oslokommune/okctl-upgrade/0.0.78/pkg/logger"
 )
 
-// SomeComponent is a sample okctl component
-type SomeComponent struct {
+// Upgrader is a sample okctl component
+type Upgrader struct {
 	logger  logger.Logger
 	dryRun  bool
 	confirm bool
 }
 
 // Upgrade upgrades the component
-func (c SomeComponent) Upgrade() error {
-	c.logger.Info("Upgrading SomeComponent")
+func (c Upgrader) Upgrade() error {
+	c.logger.Info("Upgrading Grafana")
 
-	c.logger.Debug("SomeComponent is on version 0.5. Updating to 0.6")
+	kubeconfigPath := os.Getenv("KUBECONFIG")
+	if kubeconfigPath == "" {
+		return errors.New("missing required KUBECONFIG environment variable")
+	}
+
+	kubectlClient, err := acquireKubectlClient(kubeconfigPath)
+	if err != nil {
+		return fmt.Errorf("acquiring kubectl client: %w", err)
+	}
+
+	currentGrafanaVersion, err := getCurrentGrafanaVersion(kubectlClient)
+	if err != nil {
+		return fmt.Errorf("getting current Grafana version: %w", err)
+	}
+
+	err = validateVersion(expectedGrafanaVersionPreUpgrade, currentGrafanaVersion)
+	if err != nil {
+		return fmt.Errorf("unexpected Grafana version installed: %w", err)
+	}
+
+	c.logger.Debug(fmt.Sprintf(
+		"Grafana is on version %s. Updating to %s",
+		currentGrafanaVersion,
+		upgradeTag,
+	))
 
 	if !c.dryRun && !c.confirm {
 		c.logger.Info("This will delete all logs.")
@@ -33,17 +61,31 @@ func (c SomeComponent) Upgrade() error {
 	}
 
 	if c.dryRun {
-		c.logger.Info("Simulating some stuff")
+		c.logger.Info("Simulating upgrade")
+
+		receipts, err := patchGrafanaDeployment(kubectlClient, c.dryRun)
+		if err != nil {
+			return fmt.Errorf("patching grafana deployment: %w", err)
+		}
+
+		for _, r := range receipts.receipts {
+			c.logger.Info(r)
+		}
 	} else {
-		c.logger.Info("Doing some stuff")
+		c.logger.Info("Patching Grafana")
+
+		_, err = patchGrafanaDeployment(kubectlClient, c.dryRun)
+		if err != nil {
+			return fmt.Errorf("patching grafana deployment: %w", err)
+		}
 	}
 
-	c.logger.Info("Upgrading SomeComponent done!")
+	c.logger.Info("Upgrading Grafana done!")
 
 	return nil
 }
 
-func (c SomeComponent) askUser(question string) (bool, error) {
+func (c Upgrader) askUser(question string) (bool, error) {
 	answer := false
 	prompt := &survey.Confirm{
 		Message: question,
@@ -62,8 +104,8 @@ type Opts struct {
 	Confirm bool
 }
 
-func New(logger logger.Logger, opts Opts) SomeComponent {
-	return SomeComponent{
+func New(logger logger.Logger, opts Opts) Upgrader {
+	return Upgrader{
 		logger:  logger,
 		dryRun:  opts.DryRun,
 		confirm: opts.Confirm,
