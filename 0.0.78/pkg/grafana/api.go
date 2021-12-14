@@ -18,6 +18,7 @@ type Upgrader struct {
 }
 
 // Upgrade upgrades the component
+//nolint:funlen
 func (c Upgrader) Upgrade() error {
 	c.logger.Info("Upgrading Grafana")
 
@@ -48,7 +49,7 @@ func (c Upgrader) Upgrade() error {
 	))
 
 	if !c.dryRun && !c.confirm {
-		c.logger.Info("This will delete all logs.")
+		c.logger.Info(fmt.Sprintf("This will bump Grafana to %s", upgradeTag))
 
 		answer, err := c.askUser("Do you want to proceed?")
 		if err != nil {
