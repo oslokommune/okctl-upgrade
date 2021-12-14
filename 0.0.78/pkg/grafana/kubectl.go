@@ -22,6 +22,7 @@ const (
 	monitoringNamespace   = "monitoring"
 	grafanaDeploymentName = "kube-prometheus-stack-grafana"
 	grafanaContainerName  = "grafana"
+	timeoutSeconds        = 300
 )
 
 var (
@@ -74,7 +75,7 @@ func patchGrafanaDeployment(log logger.Logger, clientSet *kubernetes.Clientset, 
 		dryRunOpts = nil
 	}
 
-	log.Info("identifying relevant container")
+	log.Info("Identifying relevant container")
 
 	grafanaContainerIndex, err := getContainerIndexByName(clientSet, grafanaContainerName)
 	if err != nil {
@@ -83,7 +84,7 @@ func patchGrafanaDeployment(log logger.Logger, clientSet *kubernetes.Clientset, 
 
 	log.Debug(fmt.Sprintf("found relevant container at index %d", grafanaContainerIndex))
 
-	log.Info("generating upgrade patch")
+	log.Info("Generating upgrade patch")
 
 	patch := Patch{
 		Op:    jsonPatchOperationReplace,
@@ -96,7 +97,7 @@ func patchGrafanaDeployment(log logger.Logger, clientSet *kubernetes.Clientset, 
 		return fmt.Errorf("marshalling patch: %w", err)
 	}
 
-	log.Info("applying patch")
+	log.Info("Applying patch")
 
 	_, err = clientSet.AppsV1().Deployments(monitoringNamespace).Patch(
 		context.Background(),
@@ -109,28 +110,24 @@ func patchGrafanaDeployment(log logger.Logger, clientSet *kubernetes.Clientset, 
 		return fmt.Errorf("patching Grafana deployment: %w", err)
 	}
 
-	log.Info("verifying new Grafana version")
-
-	newVersion, err := getCurrentGrafanaVersion(clientSet)
-	if err != nil {
-		return fmt.Errorf("acquiring updated Grafana version: %w", err)
-	}
-
-	log.Debug(fmt.Sprintf("found new Grafana version %s", newVersion.String()))
-
-	expectedVersion := targetGrafanaVersion
-	if dryRun {
-		expectedVersion = expectedGrafanaVersionPreUpgrade
-	}
-
-	err = validateVersion(expectedVersion, newVersion)
-	if err != nil {
-		log.Debug("expected version %s, but got %s", expectedVersion.String(), newVersion.String())
-
-		return fmt.Errorf("validating new version: %w", err)
-	}
-
 	return nil
+}
+
+func hasGrafanaInstalled(clientSet *kubernetes.Clientset) (bool, error) {
+	result, err := clientSet.AppsV1().Deployments(monitoringNamespace).List(context.Background(), metav1.ListOptions{
+		TimeoutSeconds: int64Ptr(timeoutSeconds),
+	})
+	if err != nil {
+		return false, fmt.Errorf("listing deployments: %w", err)
+	}
+
+	for _, deployment := range result.Items {
+		if deployment.Name == grafanaDeploymentName {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func getContainerIndexByName(clientSet *kubernetes.Clientset, name string) (int, error) {

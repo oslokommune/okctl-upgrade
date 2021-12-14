@@ -32,27 +32,18 @@ func (c Upgrader) Upgrade() error {
 		return fmt.Errorf("acquiring kubectl client: %w", err)
 	}
 
-	currentGrafanaVersion, err := getCurrentGrafanaVersion(kubectlClient)
+	err = preflight(c.logger, kubectlClient)
 	if err != nil {
-		return fmt.Errorf("getting current Grafana version: %w", err)
-	}
-
-	err = validateVersion(expectedGrafanaVersionPreUpgrade, currentGrafanaVersion)
-	if err != nil {
-		if currentGrafanaVersion.GreaterThan(targetGrafanaVersion) || currentGrafanaVersion.Equal(targetGrafanaVersion) {
-			c.logger.Info(fmt.Sprintf("Current version is %s, doing nothing", currentGrafanaVersion.String()))
+		if errors.Is(err, ErrNothingToDo) {
+			c.logger.Info("Grafana is either missing or already upgraded. Ignoring upgrade.")
 
 			return nil
 		}
 
-		return fmt.Errorf("unexpected Grafana version installed: %w", err)
+		return fmt.Errorf("running preflight checks: %w", err)
 	}
 
-	c.logger.Debug(fmt.Sprintf(
-		"Grafana is on version %s. Upgrading to %s",
-		currentGrafanaVersion.String(),
-		targetGrafanaVersion.String(),
-	))
+	c.logger.Debug(fmt.Sprintf("Passed preflight test. Upgrading Grafana to %s", targetGrafanaVersion.String()))
 
 	if !c.dryRun && !c.confirm {
 		c.logger.Info(fmt.Sprintf("This will bump Grafana to %s", targetGrafanaVersion.String()))
@@ -81,6 +72,11 @@ func (c Upgrader) Upgrade() error {
 		if err != nil {
 			return fmt.Errorf("patching grafana deployment: %w", err)
 		}
+	}
+
+	err = postflight(c.logger, kubectlClient, c.dryRun)
+	if err != nil {
+		return fmt.Errorf("running postflight checks: %w", err)
 	}
 
 	c.logger.Info("Upgrading Grafana done!")
