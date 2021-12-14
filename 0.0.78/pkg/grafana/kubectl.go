@@ -91,7 +91,7 @@ func patchGrafanaDeployment(log logger.Logger, clientSet *kubernetes.Clientset, 
 		Value: fmt.Sprintf("%s:%s", grafanaRepository, targetGrafanaVersion.String()),
 	}
 
-	raw, err := json.Marshal(patch)
+	raw, err := json.Marshal([]Patch{patch})
 	if err != nil {
 		return fmt.Errorf("marshalling patch: %w", err)
 	}
