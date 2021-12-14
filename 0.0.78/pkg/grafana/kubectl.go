@@ -116,7 +116,7 @@ func patchGrafanaDeployment(log logger.Logger, clientSet *kubernetes.Clientset, 
 		return fmt.Errorf("acquiring updated Grafana version: %w", err)
 	}
 
-	log.Debug("found new Grafana version %s", newVersion.String())
+	log.Debug(fmt.Sprintf("found new Grafana version %s", newVersion.String()))
 
 	expectedVersion := targetGrafanaVersion
 	if dryRun {
