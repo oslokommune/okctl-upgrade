@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	survey "github.com/AlecAivazis/survey/v2"
 	"github.com/oslokommune/okctl-upgrade/0.0.78.bump-grafana/pkg/logger"
 )
 
@@ -60,20 +59,6 @@ func (c Upgrader) Upgrade() error {
 	c.logger.Info("Upgrading Grafana done!")
 
 	return nil
-}
-
-func (c Upgrader) askUser(question string) (bool, error) {
-	answer := false
-	prompt := &survey.Confirm{
-		Message: question,
-	}
-
-	err := survey.AskOne(prompt, &answer)
-	if err != nil {
-		return false, err
-	}
-
-	return answer, nil
 }
 
 type Opts struct {
