@@ -28,7 +28,7 @@ func (l Logger) Debug(args ...interface{}) {
 
 func (l Logger) Debugf(format string, args ...interface{}) {
 	if l.levelIsEnabled(Debug) {
-		fmt.Printf(format, args...)
+		fmt.Printf("[DEBUG] "+format, args...)
 	}
 }
 
