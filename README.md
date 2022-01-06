@@ -35,10 +35,10 @@ changes to reuse logic doesn't break any of the migrations using the common logi
 # How to create an upgrade
 
 * `cp -r template <okctl target version>`, where `<okctl target version>` is explained under [Binaries](#binaries).
-    * Example: `cp -r template 0.0.60`
+    * Example: `cp -r template 0.0.60.some-component`
 * Edit the upgrade to your needs (:information_source: Tip: start with `upgrade.go`)
-* Optional: To have a look at the release files before publishing, run `make release-test UPGRADE_VERSION=0.0.65`, which will
-  create a `dist` directory.
+* Optional: To have a look at the release files before publishing, run `make release-test UPGRADE_VERSION=0.0.65.some-component`,
+  which will create a `dist` directory.
 * To make the actual release, do
 
 ```shell
