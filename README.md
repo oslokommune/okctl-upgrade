@@ -109,3 +109,40 @@ Every binary will be put in its own release, and tagged with the `<okctl target 
 
 See https://github.com/oslokommune/okctl-upgrade/releases.
 
+## Running upgrades
+
+### When developing
+
+Every upgrade must run with the same environment as `okctl show credentials` (which equals `okctl venv`).
+
+So if running through an IDE such as IntelliJ, add environmental variables to be at least those from `okctl show credentials`.
+
+### Using okctl upgrade
+
+The normal way of running upgrades is using `okctl upgrade`, which will calculate which upgrades to run, and then download and run
+them.
+
+### Running manually
+
+If one for whatever reason want to run an upgrade binary directly, without going via `okctl upgrade`, it can be done by following
+the commands below:
+
+```shell
+# Replace these variables with the appropriate values
+UPGRADE_URL=https://github.com/oslokommune/okctl-upgrade/releases/download/some_upgrade.tar.gz
+CLUSTER_NAME=my-cluster
+IAC_REPO_DIR=~/my-iac-repo
+export OKCTL_CLUSTER_DECLARATION=cluster.yaml
+
+curl --silent --location $UPGRADE_URL | tar xz -C /tmp
+cd $IAC_REPO_DIR
+okctl venv
+
+okctl maintenance state-acquire-lock
+okctl maintenance state-download -p ~/.okctl/localState/$CLUSTER_NAME/state.db
+
+./tmp/file-name-of-upgrade # replace with the name of the upgrade binary 
+
+okctl maintenance state-upload ~/.okctl/localState/$CLUSTER_NAME/state.db
+okctl maintenance state-release-lock
+```
