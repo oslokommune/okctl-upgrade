@@ -98,7 +98,7 @@ func (a ArgoCD) preflight() error {
 
 	if !isInstalled {
 		a.log.Info("ArgoCD is not installed, not doing anything")
-		return nil
+		return errNothingToDo
 	}
 
 	currentVersion, err := a.kubectl.getDeploymentImageVersion(argoCDNamespace, argoCDDeploymentName, argoCDContainerName)
