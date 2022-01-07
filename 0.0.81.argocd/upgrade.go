@@ -13,7 +13,7 @@ func upgrade(context Context, flags cmdFlags) error {
 
 	argocd, err := argocdPkg.New(context.log, opts)
 	if err != nil {
-		return fmt.Errorf("craeting argocd: %w", err)
+		return fmt.Errorf("creating argocd: %w", err)
 	}
 
 	err = argocd.Upgrade()
