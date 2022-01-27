@@ -162,7 +162,7 @@ If you after releasing an upgrade discover problems with the upgrade, you can:
 * delete release and the tag corresponding tag in GitHub
 * update the upgrade code, and create a new release as described by the steps above.
 
-Note: Update existing released upgrades with care, as some users may have already downloaded and executed them. Also note that upgrades binaries are downloaded and cached when running okctl upgrade.
+Note: Update existing released upgrades with care, as some users may have already executed them.
 
 # Implementation details
 
