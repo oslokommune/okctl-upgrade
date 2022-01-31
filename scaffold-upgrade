@@ -1,0 +1,26 @@
+#!/usr/bin/bash
+
+## Prints out usage information
+printUsage() {
+	echo "Scaffolds a new upgrade"
+
+	echo "Usage  : ./scaffold-upgrade <name of upgrade>"
+	echo "Example: ./scaffold-upgrade 0.0.88.argocd-app-sync"
+}
+
+upgradeName=$1
+
+if [[ "$1" == "" ]]; then
+	printUsage
+
+	exit 1
+fi
+
+## Copy template to new upgrade
+cp -r template ${upgradeName}
+
+## Substitude all template module references with new upgrade name
+original=okctl-upgrade/template
+substitute=okctl-upgrade/${upgradeName}
+
+find ./${upgradeName} -type f -exec sed -i "s~${original}~${substitute}~" "{}" +;
