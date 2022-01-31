@@ -23,4 +23,11 @@ cp -r template ${upgradeName}
 original=okctl-upgrade/template
 substitute=okctl-upgrade/${upgradeName}
 
-find ./${upgradeName} -type f -exec sed -i "s~${original}~${substitute}~" "{}" +;
+os=`uname`
+if [[ "${os}" == "Linux" ]]; then
+	find ./${upgradeName} -type f -exec sed -i "s~${original}~${substitute}~" "{}" +;
+elif [[ "${os}" == "Darwin" ]]; then
+	find ./${upgradeName} -type f -exec sed -i '' -e "s~${original}~${substitute}~" "{}" +;
+else
+	echo "scaffold-upgrade does not support the operating system ${os}"
+fi
