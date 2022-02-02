@@ -3,6 +3,10 @@ module github.com/oslokommune/okctl-upgrade/0.0.88.activate-argo-app-sync
 go 1.16
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.3.2
-	github.com/spf13/cobra v1.2.1
+	github.com/google/uuid v1.3.0
+	github.com/oslokommune/okctl v0.0.87
+	github.com/spf13/afero v1.8.0
+	github.com/spf13/cobra v1.3.0
+	github.com/stretchr/testify v1.7.0
+	sigs.k8s.io/yaml v1.3.0
 )

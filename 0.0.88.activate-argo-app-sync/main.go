@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/oslokommune/okctl-upgrade/0.0.88.activate-argo-app-sync/pkg/commonerrors"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
@@ -34,7 +36,7 @@ type cmdFlags struct {
 func buildRootCommand() *cobra.Command {
 	flags := cmdFlags{}
 
-	var context Context
+	var upgradeContext Context
 
 	filename := filepath.Base(os.Args[0])
 
@@ -46,11 +48,14 @@ func buildRootCommand() *cobra.Command {
 		SilenceErrors: true, // true as we print errors in the main() function
 		SilenceUsage:  true, // true because we don't want to show usage if an errors occurs
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			context = newContext(flags)
+			fs := &afero.Afero{Fs: afero.NewOsFs()}
+
+			upgradeContext = newContext(context.Background(), fs, flags)
+
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			return upgrade(context, flags)
+			return upgrade(upgradeContext, flags)
 		},
 	}
 
