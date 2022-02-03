@@ -3,7 +3,7 @@ package argocd
 import (
 	"fmt"
 	"io/fs"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/afero"
@@ -11,9 +11,22 @@ import (
 
 // getAllArgoCDApplicationManifests walks rootDir recursively and returns all files named 'argocd-application.yaml'
 func getAllArgoCDApplicationManifests(filesystem *afero.Afero, rootDir string) ([]string, error) {
-	result := make([]string, 0)
+	accumulator := pathAccumulator{Paths: make([]string, 0)}
 
-	err := filesystem.Walk(rootDir, func(currentPath string, info fs.FileInfo, err error) error {
+	err := filesystem.Walk(rootDir, generateAppManifestWalker(&accumulator))
+	if err != nil {
+		return nil, fmt.Errorf("gathering ArgoCD application manifests: %w", err)
+	}
+
+	return accumulator.Paths, nil
+}
+
+func generateAppManifestWalker(accumulator *pathAccumulator) filepath.WalkFunc {
+	return func(currentPath string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return fmt.Errorf("walking app manifests: %w", err)
+		}
+
 		if info.IsDir() {
 			return nil
 		}
@@ -22,15 +35,10 @@ func getAllArgoCDApplicationManifests(filesystem *afero.Afero, rootDir string) (
 			return nil
 		}
 
-		result = append(result, path.Join(rootDir, currentPath))
+		accumulator.Push(currentPath)
 
 		return nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("gathering ArgoCD application manifests: %w", err)
 	}
-
-	return result, nil
 }
 
 // getApplicationNameFromPath knows how to extract the application name from the path of an ArgoCD application manifest
@@ -41,4 +49,12 @@ func getApplicationNameFromPath(applicationsRootDirectory string, targetPath str
 	parts := strings.Split(cleanedPath, "/")
 
 	return parts[0]
+}
+
+type pathAccumulator struct {
+	Paths []string
+}
+
+func (receiver *pathAccumulator) Push(newPath string) {
+	receiver.Paths = append(receiver.Paths, newPath)
 }
