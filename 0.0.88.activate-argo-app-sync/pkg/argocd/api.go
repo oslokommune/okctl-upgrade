@@ -19,7 +19,7 @@ func SetupApplicationsSync(opts SetupApplicationsSyncOpts) error {
 
 	relativeArgoCDManifestPath := path.Join(
 		getArgoCDClusterConfigDir(opts.Cluster),
-		defaultArgoCDApplicationManifestName,
+		defaultArgoCDSyncApplicationsManifestName,
 	)
 	relativeApplicationsSyncDir := path.Join(
 		getArgoCDClusterConfigDir(opts.Cluster),
