@@ -6,12 +6,10 @@ import (
 	"os/exec"
 
 	"github.com/oslokommune/okctl/pkg/binaries/run/kubectl"
-
-	"github.com/oslokommune/okctl/pkg/logging"
 )
 
 func (c client) applyFile(manifestPath string) error {
-	log := logging.GetLogger("kubectl/binary", "applyFile")
+	log := c.logger
 
 	k, err := c.binaryProvider.Kubectl(kubectl.Version)
 	if err != nil {
