@@ -54,7 +54,7 @@ func MigrateExistingApplicationManifests(opts MigrateExistingApplicationManifest
 	relativeArgoCDClusterConfigDir := getArgoCDClusterConfigDir(opts.Cluster)
 	relativeAppSyncDir := path.Join(relativeArgoCDClusterConfigDir, defaultApplicationsSyncDirName)
 
-	log.Infof("Migrating existing ArgoCD application manifests to %s", relativeAppSyncDir)
+	log.Infof("Migrating existing ArgoCD application manifests to %s\n", relativeAppSyncDir)
 
 	argoCDApplicationManifestPaths, err := getAllArgoCDApplicationManifests(opts.Fs, rootAppDir)
 	if err != nil {
@@ -66,7 +66,7 @@ func MigrateExistingApplicationManifests(opts MigrateExistingApplicationManifest
 
 		destinationPath := path.Join(relativeAppSyncDir, fmt.Sprintf("%s.yaml", appName))
 
-		log.Infof("Moving %s to %s", sourcePath, destinationPath)
+		log.Infof("Moving %s to %s\n", sourcePath, destinationPath)
 
 		if opts.DryRun {
 			continue
