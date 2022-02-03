@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/oslokommune/okctl-upgrade/0.0.88.activate-argo-app-sync/pkg/logger"
 	"log"
 	"os"
 	"path/filepath"
@@ -59,6 +60,13 @@ func buildRootCommand() *cobra.Command {
 			fs := &afero.Afero{Fs: afero.NewOsFs()}
 
 			upgradeContext = newContext(context.Background(), fs, flags)
+
+			logLevel := logger.Info
+			if flags.debug {
+				logLevel = logger.Debug
+			}
+
+			upgradeContext.logger = logger.New(logLevel)
 
 			return nil
 		},
