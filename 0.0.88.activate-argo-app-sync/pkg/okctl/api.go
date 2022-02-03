@@ -2,13 +2,14 @@ package okctl
 
 import (
 	"fmt"
+	"os"
+	"path"
+
 	"github.com/oslokommune/okctl/cmd/okctl/hooks"
 	"github.com/oslokommune/okctl/pkg/api"
 	"github.com/oslokommune/okctl/pkg/config/constant"
 	"github.com/oslokommune/okctl/pkg/okctl"
 	"github.com/spf13/cobra"
-	"os"
-	"path"
 )
 
 const (

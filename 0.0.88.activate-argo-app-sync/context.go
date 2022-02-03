@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/oslokommune/okctl-upgrade/0.0.88.activate-argo-app-sync/pkg/logger"
 	"github.com/spf13/afero"
 )

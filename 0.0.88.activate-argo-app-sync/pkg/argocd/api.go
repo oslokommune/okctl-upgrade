@@ -3,11 +3,12 @@ package argocd
 import (
 	"bytes"
 	"fmt"
+	"path"
+
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl/pkg/scaffold"
 	"github.com/oslokommune/okctl/pkg/scaffold/resources"
 	"github.com/spf13/afero"
-	"path"
 )
 
 // SetupApplicationsSync knows how to get ArgoCD to automatically synchronize a folder

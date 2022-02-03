@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+
 	"github.com/oslokommune/okctl-upgrade/0.0.88.activate-argo-app-sync/pkg/commonerrors"
 	"github.com/oslokommune/okctl/pkg/logging"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"log"
-	"os"
-	"path/filepath"
 )
 
 func main() {

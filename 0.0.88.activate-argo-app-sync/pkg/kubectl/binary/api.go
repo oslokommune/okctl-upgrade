@@ -2,8 +2,9 @@ package binary
 
 import (
 	"fmt"
-	"github.com/oslokommune/okctl-upgrade/0.0.88.activate-argo-app-sync/pkg/kubectl"
 	"io"
+
+	"github.com/oslokommune/okctl-upgrade/0.0.88.activate-argo-app-sync/pkg/kubectl"
 )
 
 // Apply runs kubectl apply on a manifest

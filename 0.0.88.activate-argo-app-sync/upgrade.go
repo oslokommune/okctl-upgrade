@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/oslokommune/okctl-upgrade/0.0.88.activate-argo-app-sync/pkg/argocd"
 	"github.com/oslokommune/okctl-upgrade/0.0.88.activate-argo-app-sync/pkg/kubectl/binary"
 	"github.com/oslokommune/okctl-upgrade/0.0.88.activate-argo-app-sync/pkg/okctl"

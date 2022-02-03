@@ -3,10 +3,12 @@ package okctl
 import (
 	"bytes"
 	"fmt"
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
+
 	"sigs.k8s.io/yaml"
 )
 
