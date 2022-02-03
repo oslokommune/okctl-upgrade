@@ -35,7 +35,12 @@ func upgrade(upgradeContext Context, flags cmdFlags) error {
 
 	upgradeContext.logger.Info("Migrating existing application manifests to new location")
 
-	err = argocd.MigrateExistingApplicationManifests(upgradeContext.Fs, *o.Declaration)
+	err = argocd.MigrateExistingApplicationManifests(argocd.MigrateExistingApplicationManifestsOpts{
+		Logger:  upgradeContext.logger,
+		DryRun:  flags.dryRun,
+		Fs:      upgradeContext.Fs,
+		Cluster: *o.Declaration,
+	})
 	if err != nil {
 		return fmt.Errorf("migrating existing ArgoCD application manifests: %w", err)
 	}

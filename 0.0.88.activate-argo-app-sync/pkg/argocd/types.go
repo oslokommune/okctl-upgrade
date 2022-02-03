@@ -38,6 +38,15 @@ type SetupApplicationsSyncOpts struct {
 	DryRun  bool
 }
 
+// MigrateExistingApplicationManifestsOpts defines necessary data required to migrate existing ArgoCD application
+// manifests
+type MigrateExistingApplicationManifestsOpts struct {
+	Logger  logger.Logger
+	DryRun  bool
+	Fs      *afero.Afero
+	Cluster v1alpha1.Cluster
+}
+
 type installArgoCDApplicationForSyncDirectoryOpts struct {
 	DryRun                        bool
 	Fs                            *afero.Afero

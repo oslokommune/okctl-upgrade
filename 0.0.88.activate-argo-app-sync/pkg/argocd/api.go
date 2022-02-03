@@ -3,9 +3,6 @@ package argocd
 import (
 	"fmt"
 	"path"
-
-	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
-	"github.com/spf13/afero"
 )
 
 // SetupApplicationsSync knows how to get ArgoCD to automatically synchronize a folder
@@ -49,13 +46,17 @@ func SetupApplicationsSync(opts SetupApplicationsSyncOpts) error {
 
 // MigrateExistingApplicationManifests knows how to move all existing argocd-application manifests to the new sync
 // directory
-func MigrateExistingApplicationManifests(filesystem *afero.Afero, cluster v1alpha1.Cluster) error {
-	rootAppDir := path.Join(cluster.Github.OutputPath, defaultApplicationsDirName)
+func MigrateExistingApplicationManifests(opts MigrateExistingApplicationManifestsOpts) error {
+	log := opts.Logger
 
-	relativeArgoCDClusterConfigDir := getArgoCDClusterConfigDir(cluster)
+	rootAppDir := path.Join(opts.Cluster.Github.OutputPath, defaultApplicationsDirName)
+
+	relativeArgoCDClusterConfigDir := getArgoCDClusterConfigDir(opts.Cluster)
 	relativeAppSyncDir := path.Join(relativeArgoCDClusterConfigDir, defaultApplicationsSyncDirName)
 
-	argoCDApplicationManifestPaths, err := getAllArgoCDApplicationManifests(filesystem, rootAppDir)
+	log.Infof("Migrating existing ArgoCD application manifests to %s", relativeAppSyncDir)
+
+	argoCDApplicationManifestPaths, err := getAllArgoCDApplicationManifests(opts.Fs, rootAppDir)
 	if err != nil {
 		return fmt.Errorf("acquiring all ArgoCD application manifest paths: %w", err)
 	}
@@ -65,7 +66,13 @@ func MigrateExistingApplicationManifests(filesystem *afero.Afero, cluster v1alph
 
 		destinationPath := path.Join(relativeAppSyncDir, fmt.Sprintf("%s.yaml", appName))
 
-		err = filesystem.Rename(sourcePath, destinationPath)
+		log.Infof("Moving %s to %s", sourcePath, destinationPath)
+
+		if opts.DryRun {
+			continue
+		}
+
+		err = opts.Fs.Rename(sourcePath, destinationPath)
 		if err != nil {
 			return fmt.Errorf("moving file: %w", err)
 		}
