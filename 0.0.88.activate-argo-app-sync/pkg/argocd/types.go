@@ -2,6 +2,7 @@ package argocd
 
 import (
 	"github.com/oslokommune/okctl-upgrade/0.0.88.activate-argo-app-sync/pkg/kubectl"
+	"github.com/oslokommune/okctl-upgrade/0.0.88.activate-argo-app-sync/pkg/logger"
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
 	"github.com/spf13/afero"
 )
@@ -30,7 +31,18 @@ const (
 
 // SetupApplicationsSyncOpts defines necessary data required to setup application synchronization
 type SetupApplicationsSyncOpts struct {
+	Logger  logger.Logger
 	Fs      *afero.Afero
 	Cluster v1alpha1.Cluster
 	Kubectl kubectl.Client
+	DryRun  bool
+}
+
+type installArgoCDApplicationForSyncDirectoryOpts struct {
+	DryRun                        bool
+	Fs                            *afero.Afero
+	Kubectl                       kubectl.Client
+	IACRepoURL                    string
+	ApplicationsSyncDir           string
+	ArgoCDApplicationManifestPath string
 }

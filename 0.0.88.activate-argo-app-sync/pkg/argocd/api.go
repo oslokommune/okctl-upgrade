@@ -1,22 +1,18 @@
 package argocd
 
 import (
-	"bytes"
 	"fmt"
 	"path"
 
 	"github.com/oslokommune/okctl/pkg/apis/okctl.io/v1alpha1"
-	"github.com/oslokommune/okctl/pkg/scaffold"
-	"github.com/oslokommune/okctl/pkg/scaffold/resources"
 	"github.com/spf13/afero"
 )
 
 // SetupApplicationsSync knows how to get ArgoCD to automatically synchronize a folder
 func SetupApplicationsSync(opts SetupApplicationsSyncOpts) error {
-	app := v1alpha1.Application{Metadata: v1alpha1.ApplicationMeta{
-		Name:      defaultArgoCDSyncApplicationName,
-		Namespace: defaultArgoCDSyncApplicationNamespace,
-	}}
+	log := opts.Logger
+
+	log.Info("Setting up application synchronization")
 
 	relativeArgoCDManifestPath := path.Join(
 		getArgoCDClusterConfigDir(opts.Cluster),
@@ -27,27 +23,25 @@ func SetupApplicationsSync(opts SetupApplicationsSyncOpts) error {
 		defaultApplicationsSyncDirName,
 	)
 
-	err := opts.Fs.MkdirAll(relativeApplicationsSyncDir, defaultFolderPermissions)
+	log.Infof("Creating new application sync directory %s", relativeApplicationsSyncDir)
+
+	err := createDirectory(opts.Fs, opts.DryRun, relativeApplicationsSyncDir)
 	if err != nil {
 		return fmt.Errorf("creating applications sync directory: %w", err)
 	}
 
-	argoCDApplication := resources.CreateArgoApp(app, opts.Cluster.Github.URL(), relativeApplicationsSyncDir)
-	argoCDApplication.Spec.SyncPolicy.Automated.Prune = true
+	log.Info("Installing ArgoCD application for application sync directory")
 
-	rawArgoCDApplication, err := scaffold.ResourceAsBytes(argoCDApplication)
+	err = installArgoCDApplicationForSyncDirectory(installArgoCDApplicationForSyncDirectoryOpts{
+		DryRun:                        opts.DryRun,
+		Fs:                            opts.Fs,
+		Kubectl:                       opts.Kubectl,
+		IACRepoURL:                    opts.Cluster.Github.URL(),
+		ApplicationsSyncDir:           relativeApplicationsSyncDir,
+		ArgoCDApplicationManifestPath: relativeArgoCDManifestPath,
+	})
 	if err != nil {
-		return fmt.Errorf("marshalling ArgoCD application manifest: %w", err)
-	}
-
-	err = opts.Fs.WriteReader(relativeArgoCDManifestPath, bytes.NewReader(rawArgoCDApplication))
-	if err != nil {
-		return fmt.Errorf("writing ArgoCD application manifest: %w", err)
-	}
-
-	err = opts.Kubectl.Apply(bytes.NewReader(rawArgoCDApplication))
-	if err != nil {
-		return fmt.Errorf("applying ArgoCD application manifest: %w", err)
+		return fmt.Errorf("installing ArgoCD application: %w", err)
 	}
 
 	return nil
