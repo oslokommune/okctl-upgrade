@@ -13,7 +13,12 @@ const (
 	defaultApplicationsSyncDirName = "applications"
 	// defaultArgoCDSyncApplicationsManifestName defines the name of the ArgoCD application manifest that enables
 	// synchronization of the defaultApplicationsSyncDirName
-	defaultArgoCDSyncApplicationsManifestName = "cluster-applications.yaml"
+	defaultArgoCDSyncApplicationsManifestName = "applications.yaml"
+	// defaultArgoCDSyncApplicationName defines the name of the application sync ArgoCD application
+	defaultArgoCDSyncApplicationName = "applications"
+	// defaultArgoCDSyncApplicationNamespace defines the namespace of where to place the application sync ArgoCD
+	// application
+	defaultArgoCDSyncApplicationNamespace = "argocd"
 	// defaultArgoCDApplicationManifestName defines the "old" name of the individual application ArgoCD app manifests
 	defaultArgoCDApplicationManifestName = "argocd-application.yaml"
 	// defaultArgoCDClusterConfigDirName defines the name of the cluster specific ArgoCD configuration directory

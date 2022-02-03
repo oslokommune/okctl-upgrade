@@ -14,8 +14,8 @@ import (
 // SetupApplicationsSync knows how to get ArgoCD to automatically synchronize a folder
 func SetupApplicationsSync(opts SetupApplicationsSyncOpts) error {
 	app := v1alpha1.Application{Metadata: v1alpha1.ApplicationMeta{
-		Name:      "cluster-applications",
-		Namespace: "argocd",
+		Name:      defaultArgoCDSyncApplicationName,
+		Namespace: defaultArgoCDSyncApplicationNamespace,
 	}}
 
 	relativeArgoCDManifestPath := path.Join(
