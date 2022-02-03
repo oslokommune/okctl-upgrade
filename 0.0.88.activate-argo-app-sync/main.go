@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/oslokommune/okctl-upgrade/0.0.88.activate-argo-app-sync/pkg/commonerrors"
+	"github.com/oslokommune/okctl/pkg/logging"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -34,6 +36,11 @@ type cmdFlags struct {
 }
 
 func buildRootCommand() *cobra.Command {
+	err := logging.InitLogger("/tmp/0.0.88.activate-argo-app-sync.log")
+	if err != nil {
+		log.Fatal(fmt.Sprintf("error initializing logger: %s", err.Error()))
+	}
+
 	flags := cmdFlags{}
 
 	var upgradeContext Context
