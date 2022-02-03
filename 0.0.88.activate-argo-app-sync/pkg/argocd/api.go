@@ -33,6 +33,7 @@ func SetupApplicationsSync(opts SetupApplicationsSyncOpts) error {
 	}
 
 	argoCDApplication := resources.CreateArgoApp(app, opts.Cluster.Github.URL(), relativeApplicationsSyncDir)
+	argoCDApplication.Spec.SyncPolicy.Automated.Prune = true
 
 	rawArgoCDApplication, err := scaffold.ResourceAsBytes(argoCDApplication)
 	if err != nil {
