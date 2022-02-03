@@ -18,6 +18,9 @@ const (
 	defaultArgoCDApplicationManifestName = "argocd-application.yaml"
 	// defaultArgoCDClusterConfigDirName defines the name of the cluster specific ArgoCD configuration directory
 	defaultArgoCDClusterConfigDirName = "argocd"
+	// defaultFolderPermissions defines the default permissions for the ArgoCD config directory and applications sync
+	// directory
+	defaultFolderPermissions = 0o700
 )
 
 // SetupApplicationsSyncOpts defines necessary data required to setup application synchronization

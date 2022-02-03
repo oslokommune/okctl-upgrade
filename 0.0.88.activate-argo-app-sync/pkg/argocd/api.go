@@ -26,6 +26,11 @@ func SetupApplicationsSync(opts SetupApplicationsSyncOpts) error {
 		defaultApplicationsSyncDirName,
 	)
 
+	err := opts.Fs.MkdirAll(relativeApplicationsSyncDir, defaultFolderPermissions)
+	if err != nil {
+		return fmt.Errorf("creating applications sync directory: %w", err)
+	}
+
 	argoCDApplication := resources.CreateArgoApp(app, opts.Cluster.Github.URL(), relativeApplicationsSyncDir)
 
 	rawArgoCDApplication, err := scaffold.ResourceAsBytes(argoCDApplication)
