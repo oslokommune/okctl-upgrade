@@ -112,11 +112,13 @@ func (a ArgoCD) preflight() error {
 }
 
 func (a ArgoCD) partiallyRemoveArgoCD() error {
+	// Delete Helm release so we can reinstall it with correct version
 	err := a.deleteHelmReleaseIfExists()
 	if err != nil {
 		return fmt.Errorf("deleting helm release if exists: %w", err)
 	}
 
+	// Delete secrets because their format has changed
 	err = a.deleteSecrets()
 	if err != nil {
 		return fmt.Errorf("deleting secrets: %w", err)
