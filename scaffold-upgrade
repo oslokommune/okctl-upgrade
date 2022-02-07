@@ -16,18 +16,21 @@ if [[ "$1" == "" ]]; then
 	exit 1
 fi
 
-## Copy template to new upgrade
-cp -r template ${upgradeName}
+upgradeDir=upgrades
+targetDir=${upgradeDir}/${upgradeName}
 
-## Substitude all template module references with new upgrade name
+## Copy template to new upgrade
+cp -r template ${targetDir}
+
+## Substitute all template module references with new upgrade name
 original=okctl-upgrade/template
-substitute=okctl-upgrade/${upgradeName}
+substitute=okctl-upgrade/${targetDir}
 
 os=`uname`
 if [[ "${os}" == "Linux" ]]; then
-	find ./${upgradeName} -type f -exec sed -i "s~${original}~${substitute}~" "{}" +;
+	find ./${targetDir} -type f -exec sed -i "s~${original}~${substitute}~" "{}" +;
 elif [[ "${os}" == "Darwin" ]]; then
-	find ./${upgradeName} -type f -exec sed -i '' -e "s~${original}~${substitute}~" "{}" +;
+	find ./${targetDir} -type f -exec sed -i '' -e "s~${original}~${substitute}~" "{}" +;
 else
 	echo "scaffold-upgrade does not support the operating system ${os}"
 fi
