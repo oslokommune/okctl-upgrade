@@ -105,7 +105,7 @@ echo
 (git push --delete origin "$TAG" 2>/dev/null) || true
 
 # shellcheck disable=SC2164
-cd "$TEST_REPO_ABSOLUTE_DIR/$UPGRADE_RELATIVE_DIR"
+# cd "$TEST_REPO_ABSOLUTE_DIR/$UPGRADE_RELATIVE_DIR"
 
 echo "----------------------------------------------------------------------------"
 echo
