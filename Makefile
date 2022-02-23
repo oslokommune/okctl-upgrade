@@ -23,4 +23,4 @@ release:
 		-w /go/src/github.com/oslokommune/okctl-upgrade/${UPGRADE_WORKDIR} \
 		-e GITHUB_TOKEN \
 		-e UPGRADE_VERSION \
-		ghcr.io/gythialy/golang-cross:v1.17.3-2 release --rm-dist --config=/go/src/github.com/oslokommune/okctl-upgrade/.goreleaser.yaml --snapshot
+		ghcr.io/gythialy/golang-cross:v1.17.3-2 release --rm-dist --config=/go/src/github.com/oslokommune/okctl-upgrade/.goreleaser.yaml
