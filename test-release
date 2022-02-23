@@ -154,9 +154,14 @@ echo "--------------------------------------------------------------------------
 echo
 echo "Creating release... Running from dir: $(pwd)"
 echo
-goreleaser release \
-  --config ../../.goreleaser.yaml \
-  --rm-dist
+
+export UPGRADE_WORKDIR=$UPGRADE_RELATIVE_DIR
+
+make release
+
+#goreleaser release \
+#  --config ../../.goreleaser.yaml \
+#  --rm-dist
 
 echo "----------------------------------------------------------------------------"
 echo
