@@ -105,7 +105,6 @@ echo
 (git push --delete origin "$TAG" 2>/dev/null) || true
 
 # shellcheck disable=SC2164
-# cd "$TEST_REPO_ABSOLUTE_DIR/$UPGRADE_RELATIVE_DIR"
 
 echo "----------------------------------------------------------------------------"
 echo
@@ -158,10 +157,6 @@ echo
 export UPGRADE_WORKDIR=$UPGRADE_RELATIVE_DIR
 
 make release
-
-#goreleaser release \
-#  --config ../../.goreleaser.yaml \
-#  --rm-dist
 
 echo "----------------------------------------------------------------------------"
 echo
