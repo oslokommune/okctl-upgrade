@@ -1,14 +1,19 @@
-package argocd
+// Package kubectl contains functionality for interacting with Kubernetes
+package kubectl
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Masterminds/semver"
-	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.93-increase-argocd-memlimit/pkg/lib/logger"
-	"k8s.io/api/networking/v1"
 	"os"
 	"strings"
+
+	"github.com/Masterminds/semver"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.93-increase-argocd-memlimit/pkg/lib/logger"
+	appsV1 "k8s.io/api/apps/v1"
+	containerV1 "k8s.io/api/core/v1"
+	"k8s.io/api/networking/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -16,16 +21,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-const (
-	timeoutSeconds = 300
-)
-
-type Kubectl struct {
-	logger    logger.Logger
-	clientSet *kubernetes.Clientset
-}
-
-func (k Kubectl) hasDeployment(namespace, deployment string) (bool, error) {
+// HasDeployment returns true if the deployment exists
+func (k Kubectl) HasDeployment(namespace, deployment string) (bool, error) {
 	result, err := k.clientSet.AppsV1().Deployments(namespace).List(context.Background(), metav1.ListOptions{
 		TimeoutSeconds: int64Ptr(timeoutSeconds),
 	})
@@ -42,8 +39,39 @@ func (k Kubectl) hasDeployment(namespace, deployment string) (bool, error) {
 	return false, nil
 }
 
-func (k Kubectl) getDeploymentImageVersion(namespace, deployment, container string) (*semver.Version, error) {
-	containerIndex, err := k.getContainerIndexByName(namespace, deployment, container)
+// GetDeployment returns a deployment resource
+func (k Kubectl) GetDeployment(namespace, name string) (*appsV1.Deployment, error) {
+	deployment, err := k.clientSet.AppsV1().Deployments(namespace).Get(
+		context.Background(),
+		name,
+		metav1.GetOptions{},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("getting deployment: %w", err)
+	}
+
+	return deployment, nil
+}
+
+// GetContainer returns a container resource
+func (k Kubectl) GetContainer(namespace, deploymentName, containerName string) (*containerV1.Container, error) {
+	deployment, err := k.GetDeployment(namespace, deploymentName)
+	if err != nil {
+		return nil, fmt.Errorf("getting deployment '%s': %w", deployment, err)
+	}
+
+	for _, container := range deployment.Spec.Template.Spec.Containers {
+		if container.Name == containerName {
+			return &container, nil
+		}
+	}
+
+	return nil, ErrNotFound
+}
+
+// GetDeploymentImageVersion returns the version of a deployment image
+func (k Kubectl) GetDeploymentImageVersion(namespace, deployment, container string) (*semver.Version, error) {
+	containerIndex, err := k.GetContainerIndexByName(namespace, deployment, container)
 	if err != nil {
 		return nil, fmt.Errorf("getting container index: %w", err)
 	}
@@ -67,7 +95,8 @@ func (k Kubectl) getDeploymentImageVersion(namespace, deployment, container stri
 	return version, nil
 }
 
-func (k Kubectl) getContainerIndexByName(namespace, deployment, container string) (int, error) {
+// GetContainerIndexByName returns the array index of a container in a deployment
+func (k Kubectl) GetContainerIndexByName(namespace, deployment, container string) (int, error) {
 	result, err := k.clientSet.AppsV1().Deployments(namespace).Get(
 		context.Background(),
 		deployment,
@@ -83,10 +112,11 @@ func (k Kubectl) getContainerIndexByName(namespace, deployment, container string
 		}
 	}
 
-	return -1, fmt.Errorf("not found")
+	return -1, ErrNotFound
 }
 
-func (k Kubectl) getIngress(namespace, ingress string) (*v1.Ingress, error) {
+// GetIngress returns an ingress
+func (k Kubectl) GetIngress(namespace, ingress string) (*v1.Ingress, error) {
 	i, err := k.clientSet.NetworkingV1().Ingresses(namespace).Get(context.Background(), ingress, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("getting ingress (namespace: %s, ingress: %s): %w", namespace, ingress, err)
@@ -95,13 +125,35 @@ func (k Kubectl) getIngress(namespace, ingress string) (*v1.Ingress, error) {
 	return i, nil
 }
 
-func (k Kubectl) hasIngress(namespace, ingress string) (bool, error) {
-	_, err := k.getIngress(namespace, ingress)
+// HasIngress returns true if the specified ingress exists
+func (k Kubectl) HasIngress(namespace, ingress string) (bool, error) {
+	_, err := k.GetIngress(namespace, ingress)
 	if err != nil {
 		return false, nil
 	}
 
 	return true, nil
+}
+
+// PatchDeployment patches a deployment
+func (k Kubectl) PatchDeployment(namespace string, deploymentName string, patchJSON []byte, dryRun bool) error {
+	var dryRunOpts []string
+	if dryRun {
+		dryRunOpts = []string{metav1.DryRunAll}
+	}
+
+	_, err := k.clientSet.AppsV1().Deployments(namespace).Patch(
+		context.Background(),
+		deploymentName,
+		types.JSONPatchType,
+		patchJSON,
+		metav1.PatchOptions{DryRun: dryRunOpts},
+	)
+	if err != nil {
+		return fmt.Errorf(": %w", err)
+	}
+
+	return nil
 }
 
 func int64Ptr(i int64) *int64 {
@@ -127,14 +179,15 @@ func acquireKubectlClient() (*kubernetes.Clientset, error) {
 	return client, nil
 }
 
-func newKubectl(logger logger.Logger) (Kubectl, error) {
+// New returns an instance of Kubectl
+func New(log logger.Logger) (Kubectl, error) {
 	clientSet, err := acquireKubectlClient()
 	if err != nil {
 		return Kubectl{}, fmt.Errorf("aqcuiring kubectl client: %w", err)
 	}
 
 	return Kubectl{
-		logger:    logger,
+		log:       log,
 		clientSet: clientSet,
 	}, nil
 }

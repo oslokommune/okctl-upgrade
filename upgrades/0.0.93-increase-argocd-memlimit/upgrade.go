@@ -1,13 +1,19 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.93-increase-argocd-memlimit/pkg/lib/cmdflags"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.93-increase-argocd-memlimit/pkg/memlimit"
 )
 
 func upgrade(context Context, flags cmdflags.Flags) error {
-	c := memlimit.New(context.logger, flags)
+	c, err := memlimit.New(context.logger, flags)
+	if err != nil {
+		return fmt.Errorf("creating increaser: %w", err)
+	}
 
-	err := c.Upgrade()
+	err = c.Upgrade()
 	if err != nil {
 		return err
 	}
