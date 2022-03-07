@@ -12,7 +12,7 @@ import (
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.93-increase-argocd-memlimit/pkg/lib/logger"
 	appsV1 "k8s.io/api/apps/v1"
 	containerV1 "k8s.io/api/core/v1"
-	"k8s.io/api/networking/v1"
+	v1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	"k8s.io/client-go/tools/clientcmd"

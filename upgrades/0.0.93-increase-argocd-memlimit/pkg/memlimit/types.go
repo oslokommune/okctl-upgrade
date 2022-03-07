@@ -24,7 +24,7 @@ const (
 	jsonPatchOperationReplace = "replace"
 )
 
-// errNothingToDo indicates apathy
+// errNothingToDo signals that there is nothing to do
 var errNothingToDo = errors.New("nothing to do")
 
 // Patch is a JSON patch: https://datatracker.ietf.org/doc/html/rfc6902

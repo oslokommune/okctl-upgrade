@@ -11,9 +11,11 @@ const (
 	timeoutSeconds = 300
 )
 
+// Kubectl provides functionality for Kubernetes
 type Kubectl struct {
 	log       logger.Logger
 	clientSet *kubernetes.Clientset
 }
 
-var ErrNotFound = errors.New("nothing to do")
+// ErrNotFound signals that some entity was not found
+var ErrNotFound = errors.New("not found")
