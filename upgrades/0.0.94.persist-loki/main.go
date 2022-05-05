@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/lib/cmdflags"
@@ -29,8 +30,6 @@ func main() {
 func buildRootCommand() *cobra.Command {
 	flags := cmdflags.Flags{}
 
-	var context Context
-
 	filename := filepath.Base(os.Args[0])
 
 	cmd := &cobra.Command{
@@ -40,12 +39,10 @@ func buildRootCommand() *cobra.Command {
 		Example:       fmt.Sprintf("%s --debug=false", filename),
 		SilenceErrors: true, // true as we print errors in the main() function
 		SilenceUsage:  true, // true because we don't want to show usage if an errors occurs
-		PreRunE: func(_ *cobra.Command, args []string) error {
-			context = newContext(flags)
-			return nil
-		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			return upgrade(context, flags)
+			ctx := context.Background()
+
+			return upgrade(ctx, flags)
 		},
 	}
 
