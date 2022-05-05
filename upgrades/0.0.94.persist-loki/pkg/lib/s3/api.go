@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/cfn"
 )
 
 // CreateBucket knows how to make a bucket through CloudFormation
@@ -32,7 +33,7 @@ func CreateBucket(ctx context.Context, clusterName string, bucketName string) (s
 		return "", fmt.Errorf("describing stack: %w", err)
 	}
 
-	arn, err := getOutput(out, defaultLogicalBucketName, defaultBucketARNOutputName)
+	arn, err := cfn.GetOutput(out, defaultLogicalBucketName, defaultBucketARNOutputName)
 	if err != nil {
 		return "", fmt.Errorf("getting bucket ARN: %w", err)
 	}

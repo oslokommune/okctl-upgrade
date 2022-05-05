@@ -1,4 +1,4 @@
-package s3
+package policies
 
 import (
 	"bytes"
@@ -14,8 +14,8 @@ import (
 	"time"
 )
 
-func createBucketStack(ctx context.Context, client *cloudformation.Client, clusterName, stackName, bucketName string) error {
-	bucketTemplate, err := generateTemplate(bucketName)
+func createBucketPolicyStack(ctx context.Context, client *cloudformation.Client, clusterName string, stackName string, bucketARN string) error {
+	policyTemplate, err := generateBucketPolicyTemplate(clusterName, bucketARN)
 	if err != nil {
 		return fmt.Errorf("generating template: %w", err)
 	}
@@ -23,8 +23,9 @@ func createBucketStack(ctx context.Context, client *cloudformation.Client, clust
 	_, err = client.CreateStack(ctx, &cloudformation.CreateStackInput{
 		StackName:        aws.String(stackName),
 		Tags:             cfn.GenerateTags(clusterName),
-		TemplateBody:     aws.String(bucketTemplate),
+		TemplateBody:     aws.String(policyTemplate),
 		TimeoutInMinutes: aws.Int32(defaultStackTimeoutMinutes),
+		Capabilities:     []types.Capability{types.CapabilityCapabilityNamedIam},
 	})
 	if err != nil {
 		var alreadyExists *types.AlreadyExistsException
@@ -50,18 +51,20 @@ func createBucketStack(ctx context.Context, client *cloudformation.Client, clust
 	return nil
 }
 
-func generateTemplate(bucketName string) (string, error) {
+func generateBucketPolicyTemplate(clusterName string, bucketARN string) (string, error) {
 	buf := bytes.Buffer{}
 
-	t, err := template.New("bucket").Parse(rawBucketTemplate)
+	t, err := template.New("bucket-policy").Parse(rawBucketPolicyTemplate)
 	if err != nil {
 		return "", fmt.Errorf("parsing template: %w", err)
 	}
 
 	err = t.Execute(&buf, struct {
-		BucketName string
+		ClusterName string
+		BucketARN   string
 	}{
-		BucketName: bucketName,
+		ClusterName: clusterName,
+		BucketARN:   bucketARN,
 	})
 	if err != nil {
 		return "", fmt.Errorf("interpolating template: %w", err)
@@ -70,5 +73,5 @@ func generateTemplate(bucketName string) (string, error) {
 	return buf.String(), nil
 }
 
-//go:embed bucket-template.yaml
-var rawBucketTemplate string
+//go:embed bucket-policy.yaml
+var rawBucketPolicyTemplate string
