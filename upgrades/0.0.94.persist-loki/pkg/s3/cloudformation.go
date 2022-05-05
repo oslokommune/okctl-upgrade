@@ -24,7 +24,7 @@ func createBucketStack(ctx context.Context, client *cloudformation.Client, clust
 		StackName:        aws.String(stackName),
 		Tags:             cfn.GenerateTags(clusterName),
 		TemplateBody:     aws.String(bucketTemplate),
-		TimeoutInMinutes: aws.Int32(defaultStackTimeoutMinutes),
+		TimeoutInMinutes: aws.Int32(cfn.DefaultStackTimeoutMinutes),
 	})
 	if err != nil {
 		var alreadyExists *types.AlreadyExistsException
@@ -41,7 +41,7 @@ func createBucketStack(ctx context.Context, client *cloudformation.Client, clust
 	err = waiter.Wait(
 		ctx,
 		&cloudformation.DescribeStacksInput{StackName: aws.String(stackName)},
-		time.Minute*defaultStackTimeoutMinutes,
+		time.Minute*cfn.DefaultStackTimeoutMinutes,
 	)
 	if err != nil {
 		return fmt.Errorf("waiting for stack: %w", err)

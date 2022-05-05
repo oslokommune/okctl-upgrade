@@ -11,7 +11,6 @@ import (
 )
 
 const (
-	defaultStackTimeoutMinutes     = 5
 	defaultLogicalBucketPolicyName = "LokiS3ServiceAccountPolicy"
 	defaultBucketPolicyOutputName  = "LokiS3ServiceAccountPolicy"
 )

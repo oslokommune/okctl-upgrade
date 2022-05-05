@@ -24,7 +24,7 @@ func createBucketPolicyStack(ctx context.Context, client *cloudformation.Client,
 		StackName:        aws.String(stackName),
 		Tags:             cfn.GenerateTags(clusterName),
 		TemplateBody:     aws.String(policyTemplate),
-		TimeoutInMinutes: aws.Int32(defaultStackTimeoutMinutes),
+		TimeoutInMinutes: aws.Int32(cfn.DefaultStackTimeoutMinutes),
 		Capabilities:     []types.Capability{types.CapabilityCapabilityNamedIam},
 	})
 	if err != nil {
@@ -42,7 +42,7 @@ func createBucketPolicyStack(ctx context.Context, client *cloudformation.Client,
 	err = waiter.Wait(
 		ctx,
 		&cloudformation.DescribeStacksInput{StackName: aws.String(stackName)},
-		time.Minute*defaultStackTimeoutMinutes,
+		time.Minute*cfn.DefaultStackTimeoutMinutes,
 	)
 	if err != nil {
 		return fmt.Errorf("waiting for stack: %w", err)
