@@ -11,8 +11,10 @@ import (
 )
 
 const (
-	defaultLogicalBucketPolicyName = "LokiS3ServiceAccountPolicy"
-	defaultBucketPolicyOutputName  = "LokiS3ServiceAccountPolicy"
+	defaultLogicalBucketPolicyName   = "LokiS3ServiceAccountPolicy"
+	defaultBucketPolicyOutputName    = "LokiS3ServiceAccountPolicy"
+	defaultLogicalDynamoDBPolicyName = "LokiDynamoDBServiceAccountPolicy"
+	defaultDynamoDBPolicyOutputName  = "LokiDynamoDBServiceAccountPolicy"
 )
 
 func CreateS3BucketPolicy(ctx context.Context, clusterName string, bucketARN string) (string, error) {
@@ -35,6 +37,40 @@ func CreateS3BucketPolicy(ctx context.Context, clusterName string, bucketARN str
 	}
 
 	arn, err := cfn.GetOutput(out, defaultLogicalBucketPolicyName, defaultBucketPolicyOutputName)
+	if err != nil {
+		return "", fmt.Errorf("getting ARN: %w", err)
+	}
+
+	return arn, nil
+}
+
+func CreateDynamoDBPolicy(ctx context.Context, awsAccountID string, awsRegion string, clusterName string) (string, error) {
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		return "", fmt.Errorf("preparing config: %w", err)
+	}
+
+	client := cloudformation.NewFromConfig(cfg)
+	stackName := fmt.Sprintf("okctl-dynamodbpolicy-%s-loki", clusterName)
+
+	err = createDynamoDBPolicyStack(createDynamoDBPolicyStackOpts{
+		ctx:          ctx,
+		client:       client,
+		stackName:    stackName,
+		awsAccountID: awsAccountID,
+		awsRegion:    awsRegion,
+		clusterName:  clusterName,
+	})
+	if err != nil {
+		return "", fmt.Errorf("creating stack: %w", err)
+	}
+
+	out, err := client.DescribeStacks(ctx, &cloudformation.DescribeStacksInput{StackName: aws.String(stackName)})
+	if err != nil {
+		return "", fmt.Errorf("describing stack: %w", err)
+	}
+
+	arn, err := cfn.GetOutput(out, defaultLogicalDynamoDBPolicyName, defaultDynamoDBPolicyOutputName)
 	if err != nil {
 		return "", fmt.Errorf("getting ARN: %w", err)
 	}

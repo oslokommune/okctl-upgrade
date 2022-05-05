@@ -9,8 +9,11 @@ import (
 )
 
 func upgrade(ctx context.Context, _ cmdflags.Flags) error {
-	bucketName := fmt.Sprintf("okctl-%s-loki", "upgrade-test")
 	clusterName := "upgrade-test"
+	awsAccountID := ""
+	awsRegion := "eu-west-1"
+
+	bucketName := fmt.Sprintf("okctl-%s-loki", clusterName)
 
 	arn, err := s3.CreateBucket(ctx, clusterName, bucketName)
 	if err != nil {
@@ -26,10 +29,17 @@ func upgrade(ctx context.Context, _ cmdflags.Flags) error {
 
 	fmt.Printf("Bucket policy ARN: %s\n", s3PolicyARN)
 
-	//dynamoDBPolicyARN, err := something.CreateDynamoDBPolicy()
-	//if err != nil {
-	//	return fmt.Errorf("creating Dynamo DB policy: %w", err)
-	//}
+	dynamoDBPolicyARN, err := policies.CreateDynamoDBPolicy(
+		ctx,
+		awsAccountID,
+		awsRegion,
+		clusterName,
+	)
+	if err != nil {
+		return fmt.Errorf("creating Dynamo DB policy: %w", err)
+	}
+
+	fmt.Printf("DynamoDB policy ARN: %s\n", dynamoDBPolicyARN)
 
 	//err = something.CreateServiceUser("loki", s3PolicyARN, dynamoDBPolicyARN)
 	//if err != nil {

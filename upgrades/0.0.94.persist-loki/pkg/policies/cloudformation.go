@@ -51,6 +51,43 @@ func createBucketPolicyStack(ctx context.Context, client *cloudformation.Client,
 	return nil
 }
 
+func createDynamoDBPolicyStack(opts createDynamoDBPolicyStackOpts) error {
+	policyTemplate, err := generateDynamoDBPolicyTemplate(opts.awsAccountID, opts.awsRegion, opts.clusterName)
+	if err != nil {
+		return fmt.Errorf("generating template: %w", err)
+	}
+
+	_, err = opts.client.CreateStack(opts.ctx, &cloudformation.CreateStackInput{
+		StackName:        aws.String(opts.stackName),
+		Tags:             cfn.GenerateTags(opts.clusterName),
+		TemplateBody:     aws.String(policyTemplate),
+		TimeoutInMinutes: aws.Int32(cfn.DefaultStackTimeoutMinutes),
+		Capabilities:     []types.Capability{types.CapabilityCapabilityNamedIam},
+	})
+	if err != nil {
+		var alreadyExists *types.AlreadyExistsException
+
+		if errors.As(err, &alreadyExists) {
+			return nil
+		}
+
+		return fmt.Errorf("creating stack: %w", err)
+	}
+
+	waiter := cloudformation.NewStackCreateCompleteWaiter(opts.client)
+
+	err = waiter.Wait(
+		opts.ctx,
+		&cloudformation.DescribeStacksInput{StackName: aws.String(opts.stackName)},
+		time.Minute*cfn.DefaultStackTimeoutMinutes,
+	)
+	if err != nil {
+		return fmt.Errorf("waiting for stack: %w", err)
+	}
+
+	return nil
+}
+
 func generateBucketPolicyTemplate(clusterName string, bucketARN string) (string, error) {
 	buf := bytes.Buffer{}
 
@@ -73,5 +110,33 @@ func generateBucketPolicyTemplate(clusterName string, bucketARN string) (string,
 	return buf.String(), nil
 }
 
-//go:embed bucket-policy.yaml
-var rawBucketPolicyTemplate string
+func generateDynamoDBPolicyTemplate(awsAccountID string, awsRegion string, clusterName string) (string, error) {
+	buf := bytes.Buffer{}
+
+	t, err := template.New("dynamodb-policy").Parse(rawDynamoDBPolicyTemplate)
+	if err != nil {
+		return "", fmt.Errorf("parsing template: %w", err)
+	}
+
+	err = t.Execute(&buf, struct {
+		ClusterName  string
+		AWSAccountID string
+		AWSRegion    string
+	}{
+		ClusterName:  clusterName,
+		AWSAccountID: awsAccountID,
+		AWSRegion:    awsRegion,
+	})
+	if err != nil {
+		return "", fmt.Errorf("interpolating template: %w", err)
+	}
+
+	return buf.String(), nil
+}
+
+var (
+	//go:embed bucket-policy.yaml
+	rawBucketPolicyTemplate string
+	//go:embed dynamodb-policy.yaml
+	rawDynamoDBPolicyTemplate string
+)
