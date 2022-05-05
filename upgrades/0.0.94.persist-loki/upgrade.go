@@ -8,7 +8,10 @@ import (
 )
 
 func upgrade(ctx context.Context, _ cmdflags.Flags) error {
-	arn, err := s3.CreateBucket(ctx, "upgrade-test")
+	bucketName := fmt.Sprintf("okctl-%s-loki", "upgrade-test")
+	clusterName := "upgrade-test"
+
+	arn, err := s3.CreateBucket(ctx, clusterName, bucketName)
 	if err != nil {
 		return fmt.Errorf("creating bucket: %w", err)
 	}

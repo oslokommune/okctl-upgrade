@@ -7,16 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
-	"time"
 )
 
-func CreateBucket(ctx context.Context, clusterName string) (string, error) {
-	bucketName := fmt.Sprintf("okctl-%s-loki", clusterName)
-
-	bucketTemplate, err := generateTemplate(bucketName)
-	if err != nil {
-		return "", fmt.Errorf("generating template: %w", err)
-	}
+// CreateBucket knows how to make a bucket through CloudFormation
+func CreateBucket(ctx context.Context, clusterName string, bucketName string) (string, error) {
+	stackName := fmt.Sprintf("okctl-s3bucket-%s-%s", clusterName, bucketName)
 
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
@@ -24,26 +19,20 @@ func CreateBucket(ctx context.Context, clusterName string) (string, error) {
 	}
 
 	client := cloudformation.NewFromConfig(cfg)
-	waiter := cloudformation.NewStackCreateCompleteWaiter(client)
-	stackName := fmt.Sprintf("okctl-s3bucket-%s-%s", clusterName, bucketName)
 
-	_, err = client.CreateStack(ctx, &cloudformation.CreateStackInput{
-		StackName:        aws.String(stackName),
-		Tags:             generateTags(clusterName),
-		TemplateBody:     aws.String(bucketTemplate),
-		TimeoutInMinutes: aws.Int32(defaultStackTimeoutMinutes),
-	})
+	err = createBucketStack(ctx, client, clusterName, stackName, bucketName)
 	if err != nil {
 		return "", fmt.Errorf("creating stack: %w", err)
 	}
 
-	out, err := waiter.WaitForOutput(
-		ctx,
-		&cloudformation.DescribeStacksInput{StackName: aws.String(stackName)},
-		time.Minute*defaultStackTimeoutMinutes,
-	)
+	out, err := client.DescribeStacks(ctx, &cloudformation.DescribeStacksInput{
+		StackName: aws.String(stackName),
+	})
+	if err != nil {
+		return "", fmt.Errorf("describing stack: %w", err)
+	}
 
-	arn, err := getOutput(out, "S3Bucket", "BucketARN")
+	arn, err := getOutput(out, defaultLogicalBucketName, defaultBucketARNOutputName)
 	if err != nil {
 		return "", fmt.Errorf("getting bucket ARN: %w", err)
 	}
