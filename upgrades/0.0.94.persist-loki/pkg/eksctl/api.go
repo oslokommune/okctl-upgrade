@@ -14,6 +14,7 @@ func CreateServiceUser(fs *afero.Afero, clusterName string, name string, policie
 	}
 
 	err = runEksctlCommand(eksctlPath,
+		"create", "iamserviceaccount",
 		"--name", name,
 		"--namespace", defaultMonitoringNamespace,
 		"--cluster", clusterName,
