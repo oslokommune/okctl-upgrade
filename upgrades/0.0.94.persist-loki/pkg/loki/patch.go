@@ -24,6 +24,11 @@ func patchValues(original io.Reader, region string, clusterName string, bucketNa
 			Path:  "/config/storage_config/aws",
 			Value: createAWSStorageConfig(region, bucketName),
 		},
+		jsp.Operation{
+			Type:  jsp.OperationTypeReplace,
+			Path:  "/config/table_manager",
+			Value: createTableManagerIndexTablesProvisioning(),
+		},
 	)
 
 	rawPatch, err := patch.MarshalJSON()
@@ -89,4 +94,30 @@ type StorageConfig struct {
 	S3          string            `json:"s3"`
 	BucketNames string            `json:"bucketnames"`
 	DynamoDB    map[string]string `json:"dynamodb"`
+}
+
+func createTableManagerIndexTablesProvisioning() TableManager {
+	return TableManager{
+		RetentionDeletesEnabled: true,
+		RetentionPeriod:         "1344h",
+		IndexTablesProvisioning: TableManagerIndexTablesProvisioning{
+			ProvisionedWriteThroughput: 1,
+			ProvisionedReadThroughput:  1,
+			InactiveWriteThroughput:    1,
+			InactiveReadThroughput:     1,
+		},
+	}
+}
+
+type TableManagerIndexTablesProvisioning struct {
+	ProvisionedWriteThroughput int `json:"provisioned_write_throughput"`
+	ProvisionedReadThroughput  int `json:"provisioned_read_throughput"`
+	InactiveWriteThroughput    int `json:"inactive_write_throughput"`
+	InactiveReadThroughput     int `json:"inactive_read_throughput"`
+}
+
+type TableManager struct {
+	RetentionDeletesEnabled bool                                `json:"retention_deletes_enabled"`
+	RetentionPeriod         string                              `json:"retention_period"`
+	IndexTablesProvisioning TableManagerIndexTablesProvisioning `json:"index_tables_provisioning"`
 }
