@@ -10,7 +10,7 @@ import (
 	jsp "github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/lib/jsonpatch"
 )
 
-func patchValues(original io.Reader, region string, clusterName string, bucketName string) (io.Reader, error) {
+func generateLokiPersistencePatch(region string, clusterName string, bucketName string) (io.Reader, error) {
 	patch := jsp.New()
 
 	patch.Add(
@@ -39,6 +39,20 @@ func patchValues(original io.Reader, region string, clusterName string, bucketNa
 	rawPatch, err := patch.MarshalJSON()
 	if err != nil {
 		return nil, fmt.Errorf("marshalling patch: %w", err)
+	}
+
+	return bytes.NewReader(rawPatch), nil
+}
+
+func patchValues(original io.Reader, region string, clusterName string, bucketName string) (io.Reader, error) {
+	patch, err := generateLokiPersistencePatch(region, clusterName, bucketName)
+	if err != nil {
+		return nil, fmt.Errorf("generating patch: %w", err)
+	}
+
+	rawPatch, err := io.ReadAll(patch)
+	if err != nil {
+		return nil, fmt.Errorf("buffering patch: %w", err)
 	}
 
 	p, err := jsonpatch.DecodePatch(rawPatch)

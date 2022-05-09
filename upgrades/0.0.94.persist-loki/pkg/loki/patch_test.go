@@ -57,3 +57,41 @@ func TestPatch(t *testing.T) {
 		})
 	}
 }
+
+func TestPatchGeneration(t *testing.T) {
+	testCases := []struct {
+		name            string
+		withRegion      string
+		withClusterName string
+		withBucketName  string
+	}{
+		{
+			name:            "Should produce expected JSON patch data",
+			withRegion:      "eu-test-1",
+			withClusterName: "mock-cluster",
+			withBucketName:  "mock-bucket",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			patch, err := generateLokiPersistencePatch(tc.withRegion, tc.withClusterName, tc.withBucketName)
+			assert.NoError(t, err)
+
+			rawPatch, err := io.ReadAll(patch)
+			assert.NoError(t, err)
+
+			prettyPrinted := bytes.Buffer{}
+
+			err = json.Indent(&prettyPrinted, rawPatch, "", "  ")
+			assert.NoError(t, err)
+
+			g := goldie.New(t)
+			g.Assert(t, tc.name, prettyPrinted.Bytes())
+		})
+	}
+}
