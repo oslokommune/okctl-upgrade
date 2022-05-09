@@ -173,9 +173,9 @@
     "type": "ClusterIP"
   },
   "serviceAccount": {
-    "annotations": {},
-    "create": true,
-    "name": null
+    "create": false,
+    "name": "loki",
+    "annotations": {}
   },
   "serviceMonitor": {
     "additionalLabels": {},

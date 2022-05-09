@@ -29,6 +29,11 @@ func patchValues(original io.Reader, region string, clusterName string, bucketNa
 			Path:  "/config/table_manager",
 			Value: createTableManagerIndexTablesProvisioning(),
 		},
+		jsp.Operation{
+			Type:  jsp.OperationTypeReplace,
+			Path:  "/serviceAccount",
+			Value: createServiceAccountConfig(),
+		},
 	)
 
 	rawPatch, err := patch.MarshalJSON()
@@ -120,4 +125,18 @@ type TableManager struct {
 	RetentionDeletesEnabled bool                                `json:"retention_deletes_enabled"`
 	RetentionPeriod         string                              `json:"retention_period"`
 	IndexTablesProvisioning TableManagerIndexTablesProvisioning `json:"index_tables_provisioning"`
+}
+
+func createServiceAccountConfig() ServiceAccountConfig {
+	return ServiceAccountConfig{
+		Create:      false,
+		Name:        "loki",
+		Annotations: make(map[string]string),
+	}
+}
+
+type ServiceAccountConfig struct {
+	Create      bool              `json:"create"`
+	Name        string            `json:"name"`
+	Annotations map[string]string `json:"annotations"`
 }
