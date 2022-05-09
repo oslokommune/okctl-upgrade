@@ -72,19 +72,6 @@ func createS3SchemaConfig(clusterName string) SchemaConfig {
 	}
 }
 
-type SchemaConfig struct {
-	From        string            `json:"from"`
-	Store       string            `json:"store"`
-	ObjectStore string            `json:"object_store"`
-	Schema      string            `json:"schema"`
-	Index       SchemaConfigIndex `json:"index"`
-}
-
-type SchemaConfigIndex struct {
-	Prefix string `json:"prefix"`
-	Period string `json:"period"`
-}
-
 func createAWSStorageConfig(region string, bucketName string) StorageConfig {
 	return StorageConfig{
 		S3:          fmt.Sprintf("s3://%s", region),
@@ -93,12 +80,6 @@ func createAWSStorageConfig(region string, bucketName string) StorageConfig {
 			"dynamodb_url": fmt.Sprintf("dynamodb://%s", region),
 		},
 	}
-}
-
-type StorageConfig struct {
-	S3          string            `json:"s3"`
-	BucketNames string            `json:"bucketnames"`
-	DynamoDB    map[string]string `json:"dynamodb"`
 }
 
 func createTableManagerIndexTablesProvisioning() TableManager {
@@ -114,29 +95,10 @@ func createTableManagerIndexTablesProvisioning() TableManager {
 	}
 }
 
-type TableManagerIndexTablesProvisioning struct {
-	ProvisionedWriteThroughput int `json:"provisioned_write_throughput"`
-	ProvisionedReadThroughput  int `json:"provisioned_read_throughput"`
-	InactiveWriteThroughput    int `json:"inactive_write_throughput"`
-	InactiveReadThroughput     int `json:"inactive_read_throughput"`
-}
-
-type TableManager struct {
-	RetentionDeletesEnabled bool                                `json:"retention_deletes_enabled"`
-	RetentionPeriod         string                              `json:"retention_period"`
-	IndexTablesProvisioning TableManagerIndexTablesProvisioning `json:"index_tables_provisioning"`
-}
-
 func createServiceAccountConfig() ServiceAccountConfig {
 	return ServiceAccountConfig{
 		Create:      false,
 		Name:        "loki",
 		Annotations: make(map[string]string),
 	}
-}
-
-type ServiceAccountConfig struct {
-	Create      bool              `json:"create"`
-	Name        string            `json:"name"`
-	Annotations map[string]string `json:"annotations"`
 }
