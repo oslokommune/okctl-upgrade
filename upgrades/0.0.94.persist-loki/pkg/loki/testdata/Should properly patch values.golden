@@ -34,16 +34,6 @@
     "schema_config": {
       "configs": [
         {
-          "from": "2022-05-09",
-          "store": "aws",
-          "object_store": "s3",
-          "schema": "v11",
-          "index": {
-            "prefix": "okctl-mock-cluster-loki-index_",
-            "period": "336h"
-          }
-        },
-        {
           "from": "2020-10-24",
           "index": {
             "period": "24h",
@@ -52,6 +42,16 @@
           "object_store": "filesystem",
           "schema": "v11",
           "store": "boltdb-shipper"
+        },
+        {
+          "from": "2022-05-09",
+          "store": "aws",
+          "object_store": "s3",
+          "schema": "v11",
+          "index": {
+            "prefix": "okctl-mock-cluster-loki-index_",
+            "period": "336h"
+          }
         }
       ]
     },
