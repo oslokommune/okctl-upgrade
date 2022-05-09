@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-//go:embed pre-persistence-values.yaml
+//go:embed testdata/pre-persistence-values.yaml
 var prePersistenceValues string
 
 func TestPatch(t *testing.T) {
