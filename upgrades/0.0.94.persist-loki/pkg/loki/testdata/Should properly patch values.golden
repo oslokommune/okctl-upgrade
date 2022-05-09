@@ -67,6 +67,13 @@
       },
       "filesystem": {
         "directory": "/data/loki/chunks"
+      },
+      "aws": {
+        "s3": "s3://eu-test-1",
+        "bucketnames": "mock-bucket",
+        "dynamodb": {
+          "dynamodb_url": "dynamodb://eu-test-1"
+        }
       }
     },
     "table_manager": {

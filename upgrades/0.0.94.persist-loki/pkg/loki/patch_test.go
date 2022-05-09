@@ -38,7 +38,9 @@ func TestPatch(t *testing.T) {
 
 			result, err := patchValues(
 				bytes.NewReader(originalAsJSON),
+				"eu-test-1",
 				"mock-cluster",
+				"mock-bucket",
 			)
 			assert.NoError(t, err)
 

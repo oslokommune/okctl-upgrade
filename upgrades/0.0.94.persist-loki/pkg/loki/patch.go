@@ -10,7 +10,7 @@ import (
 	jsp "github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/lib/jsonpatch"
 )
 
-func patchValues(original io.Reader, clusterName string) (io.Reader, error) {
+func patchValues(original io.Reader, region string, clusterName string, bucketName string) (io.Reader, error) {
 	patch := jsp.New()
 
 	patch.Add(
@@ -18,6 +18,11 @@ func patchValues(original io.Reader, clusterName string) (io.Reader, error) {
 			Type:  jsp.OperationTypeAdd,
 			Path:  "/config/schema_config/configs/-",
 			Value: createS3SchemaConfig(clusterName),
+		},
+		jsp.Operation{
+			Type:  jsp.OperationTypeAdd,
+			Path:  "/config/storage_config/aws",
+			Value: createAWSStorageConfig(region, bucketName),
 		},
 	)
 
@@ -68,4 +73,20 @@ type SchemaConfig struct {
 type SchemaConfigIndex struct {
 	Prefix string `json:"prefix"`
 	Period string `json:"period"`
+}
+
+func createAWSStorageConfig(region string, bucketName string) StorageConfig {
+	return StorageConfig{
+		S3:          fmt.Sprintf("s3://%s", region),
+		BucketNames: bucketName,
+		DynamoDB: map[string]string{
+			"dynamodb_url": fmt.Sprintf("dynamodb://%s", region),
+		},
+	}
+}
+
+type StorageConfig struct {
+	S3          string            `json:"s3"`
+	BucketNames string            `json:"bucketnames"`
+	DynamoDB    map[string]string `json:"dynamodb"`
 }
