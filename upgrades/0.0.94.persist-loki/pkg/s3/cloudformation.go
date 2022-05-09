@@ -6,12 +6,13 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"text/template"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/lib/cfn"
-	"text/template"
-	"time"
 )
 
 func createBucketStack(ctx context.Context, client *cloudformation.Client, clusterName, stackName, bucketName string) error {

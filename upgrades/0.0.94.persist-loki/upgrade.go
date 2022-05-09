@@ -3,13 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/eksctl"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/lib/cmdflags"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/loki"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/policies"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/s3"
 	"github.com/spf13/afero"
-	"os"
 )
 
 func upgrade(ctx context.Context, _ cmdflags.Flags) error {

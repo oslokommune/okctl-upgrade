@@ -2,9 +2,10 @@ package eksctl
 
 import (
 	"fmt"
-	"github.com/spf13/afero"
 	"os"
 	"strings"
+
+	"github.com/spf13/afero"
 )
 
 func CreateServiceUser(fs *afero.Afero, clusterName string, name string, policies []string) error {

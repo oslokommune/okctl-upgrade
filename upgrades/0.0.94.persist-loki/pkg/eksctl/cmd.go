@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/Masterminds/semver"
-	"github.com/spf13/afero"
 	"io/fs"
 	"os/exec"
 	"path"
 	"runtime"
+
+	"github.com/Masterminds/semver"
+	"github.com/spf13/afero"
 )
 
 func acquireEksctlPath(Fs *afero.Afero, homeDirFn func() (string, error)) (string, error) {

@@ -1,10 +1,11 @@
 package eksctl
 
 import (
-	"github.com/spf13/afero"
-	"github.com/stretchr/testify/assert"
 	"path"
 	"testing"
+
+	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAcquireEksctlPath(t *testing.T) {
