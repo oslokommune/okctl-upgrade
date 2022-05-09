@@ -24,6 +24,9 @@ PKGS  = $(or $(PKG),$(shell env GO111MODULE=on $(GO) list ./...))
 FILES = $(shell find . -name '.?*' -prune -o -name vendor -prune -o -name '*.go' -print)
 
 TIMEOUT  = 10m
+TESTPKGS = $(shell env GO111MODULE=on $(GO) list -f \
+	'{{ if or .TestGoFiles .XTestGoFiles }}{{ .ImportPath }}{{ end }}' \
+	$(PKGS))
 
 fmt: $(GOFUMPT)
 	$(GO) fmt $(PKGS)
