@@ -3,6 +3,7 @@ package loki
 import (
 	"bytes"
 	_ "embed"
+	"encoding/json"
 	"io"
 	"testing"
 
@@ -44,8 +45,13 @@ func TestPatch(t *testing.T) {
 			rawResult, err := io.ReadAll(result)
 			assert.NoError(t, err)
 
+			prettyResult := bytes.Buffer{}
+
+			err = json.Indent(&prettyResult, rawResult, "", "  ")
+			assert.NoError(t, err)
+
 			g := goldie.New(t)
-			g.Assert(t, tc.name, rawResult)
+			g.Assert(t, tc.name, prettyResult.Bytes())
 		})
 	}
 }
