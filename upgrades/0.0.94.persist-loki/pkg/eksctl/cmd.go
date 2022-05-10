@@ -46,9 +46,7 @@ func acquireEksctlPath(Fs *afero.Afero, homeDirFn func() (string, error)) (strin
 }
 
 func runEksctlCommand(binaryPath string, args ...string) error {
-	staticArgs := []string{}
-
-	cmd := exec.Command(binaryPath, append(staticArgs, args...)...) //nolint:gosec
+	cmd := exec.Command(binaryPath, args...) //nolint:gosec
 
 	stderr := bytes.Buffer{}
 	stdout := bytes.Buffer{}
