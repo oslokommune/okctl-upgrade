@@ -66,10 +66,21 @@ func upgrade(ctx context.Context, _ cmdflags.Flags) error {
 		return fmt.Errorf("creating service user: %w", err)
 	}
 
-	//err = something.PatchLoki()
-	//if err != nil {
-	//	return fmt.Errorf("patching Loki: %w", err)
-	//}
+	kubeconfigPath, err := eksctl.GenerateKubeconfig(fs, clusterManifest.Metadata.Name)
+	if err != nil {
+		return fmt.Errorf("generating kubeconfig: %w", err)
+	}
+
+	err = loki.AddPersistence(
+		fs,
+		kubeconfigPath,
+		clusterManifest.Metadata.Region,
+		clusterManifest.Metadata.Name,
+		bucketName,
+	)
+	if err != nil {
+		return fmt.Errorf("patching Loki: %w", err)
+	}
 
 	return nil
 }
