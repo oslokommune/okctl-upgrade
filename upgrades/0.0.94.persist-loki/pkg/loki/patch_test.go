@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"testing"
+	"time"
 
 	"sigs.k8s.io/yaml"
 
@@ -79,7 +80,10 @@ func TestPatchGeneration(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			patch, err := generateLokiPersistencePatch(tc.withRegion, tc.withClusterName, tc.withBucketName)
+			from, err := time.Parse("2006-01-02", "2022-05-09")
+			assert.NoError(t, err)
+
+			patch, err := generateLokiPersistencePatch(tc.withRegion, tc.withClusterName, tc.withBucketName, from)
 			assert.NoError(t, err)
 
 			rawPatch, err := io.ReadAll(patch)

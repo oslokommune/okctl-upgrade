@@ -10,14 +10,14 @@ import (
 	jsp "github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/lib/jsonpatch"
 )
 
-func generateLokiPersistencePatch(region string, clusterName string, bucketName string) (io.Reader, error) {
+func generateLokiPersistencePatch(region string, clusterName string, bucketName string, from time.Time) (io.Reader, error) {
 	patch := jsp.New()
 
 	patch.Add(
 		jsp.Operation{
 			Type:  jsp.OperationTypeAdd,
-			Path:  "/config/schema_config/configs/-",
-			Value: createS3SchemaConfig(clusterName),
+			Path:  "/schema_config/configs/-",
+			Value: createS3SchemaConfig(clusterName, from),
 		},
 		jsp.Operation{
 			Type:  jsp.OperationTypeAdd,
@@ -45,7 +45,7 @@ func generateLokiPersistencePatch(region string, clusterName string, bucketName 
 }
 
 func patchValues(original io.Reader, region string, clusterName string, bucketName string) (io.Reader, error) {
-	patch, err := generateLokiPersistencePatch(region, clusterName, bucketName)
+	patch, err := generateLokiPersistencePatch(region, clusterName, bucketName, time.Now())
 	if err != nil {
 		return nil, fmt.Errorf("generating patch: %w", err)
 	}
@@ -73,9 +73,9 @@ func patchValues(original io.Reader, region string, clusterName string, bucketNa
 	return bytes.NewReader(rawPatchedValues), nil
 }
 
-func createS3SchemaConfig(clusterName string) SchemaConfig {
+func createS3SchemaConfig(clusterName string, from time.Time) SchemaConfig {
 	return SchemaConfig{
-		From:        time.Now().Format("2006-01-02"),
+		From:        from.Format("2006-01-02"),
 		Store:       "aws",
 		ObjectStore: "s3",
 		Schema:      "v11",
