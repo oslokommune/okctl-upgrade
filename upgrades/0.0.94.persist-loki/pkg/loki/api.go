@@ -24,7 +24,12 @@ func AddPersistence(fs *afero.Afero, kubeconfigPath string, region string, clust
 		return fmt.Errorf("patching config: %w", err)
 	}
 
-	err = kubectl.UpdateLokiConfig(fs, kubeconfigPath, updatedConfig)
+	updatedConfigAsYAML, err := asYAML(updatedConfig)
+	if err != nil {
+		return fmt.Errorf("converting to YAML: %w", err)
+	}
+
+	err = kubectl.UpdateLokiConfig(fs, kubeconfigPath, updatedConfigAsYAML)
 	if err != nil {
 		return fmt.Errorf("updating config: %w", err)
 	}
