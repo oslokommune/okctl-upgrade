@@ -21,18 +21,13 @@ func generateLokiPersistencePatch(region string, clusterName string, bucketName 
 		},
 		jsp.Operation{
 			Type:  jsp.OperationTypeAdd,
-			Path:  "/config/storage_config/aws",
+			Path:  "/storage_config/aws",
 			Value: createAWSStorageConfig(region, bucketName),
 		},
 		jsp.Operation{
 			Type:  jsp.OperationTypeReplace,
-			Path:  "/config/table_manager",
+			Path:  "/table_manager",
 			Value: createTableManagerIndexTablesProvisioning(),
-		},
-		jsp.Operation{
-			Type:  jsp.OperationTypeReplace,
-			Path:  "/serviceAccount",
-			Value: createServiceAccountConfig(),
 		},
 	)
 
@@ -44,33 +39,28 @@ func generateLokiPersistencePatch(region string, clusterName string, bucketName 
 	return bytes.NewReader(rawPatch), nil
 }
 
-func patchValues(original io.Reader, region string, clusterName string, bucketName string) (io.Reader, error) {
-	patch, err := generateLokiPersistencePatch(region, clusterName, bucketName, time.Now())
-	if err != nil {
-		return nil, fmt.Errorf("generating patch: %w", err)
-	}
-
+func patchConfig(original io.Reader, patch io.Reader) (io.Reader, error) {
 	rawPatch, err := io.ReadAll(patch)
 	if err != nil {
 		return nil, fmt.Errorf("buffering patch: %w", err)
 	}
 
-	p, err := jsonpatch.DecodePatch(rawPatch)
+	decodedPatch, err := jsonpatch.DecodePatch(rawPatch)
 	if err != nil {
 		return nil, fmt.Errorf("decoding patch: %w", err)
 	}
 
-	rawValues, err := io.ReadAll(original)
+	configAsBytes, err := io.ReadAll(original)
 	if err != nil {
-		return nil, fmt.Errorf("buffering original: %w", err)
+		return nil, fmt.Errorf("buffering config: %w", err)
 	}
 
-	rawPatchedValues, err := p.Apply(rawValues)
+	rawUpdatedConfig, err := decodedPatch.Apply(configAsBytes)
 	if err != nil {
-		return nil, fmt.Errorf("patching values: %w", err)
+		return nil, fmt.Errorf("applying patch: %w", err)
 	}
 
-	return bytes.NewReader(rawPatchedValues), nil
+	return bytes.NewReader(rawUpdatedConfig), nil
 }
 
 func createS3SchemaConfig(clusterName string, from time.Time) SchemaConfig {
@@ -106,13 +96,5 @@ func createTableManagerIndexTablesProvisioning() TableManager {
 			InactiveWriteThroughput:    1,
 			InactiveReadThroughput:     1,
 		},
-	}
-}
-
-func createServiceAccountConfig() ServiceAccountConfig {
-	return ServiceAccountConfig{
-		Create:      false,
-		Name:        "loki",
-		Annotations: make(map[string]string),
 	}
 }

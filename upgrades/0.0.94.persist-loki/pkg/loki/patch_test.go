@@ -14,16 +14,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-//go:embed testdata/pre-persistence-values.yaml
+//go:embed testdata/pre-persistence-config.yaml
 var prePersistenceValues string
 
-func TestPatch(t *testing.T) {
+func TestPatchConfig(t *testing.T) {
 	testCases := []struct {
 		name         string
 		withOriginal string
 	}{
 		{
-			name:         "Should properly patch values",
+			name:         "Should properly patch config",
 			withOriginal: prePersistenceValues,
 		},
 	}
@@ -37,11 +37,20 @@ func TestPatch(t *testing.T) {
 			originalAsJSON, err := yaml.YAMLToJSON([]byte(tc.withOriginal))
 			assert.NoError(t, err)
 
-			result, err := patchValues(
-				bytes.NewReader(originalAsJSON),
+			from, err := time.Parse("2006-01-02", "2022-05-09")
+			assert.NoError(t, err)
+
+			patch, err := generateLokiPersistencePatch(
 				"eu-test-1",
 				"mock-cluster",
 				"mock-bucket",
+				from,
+			)
+			assert.NoError(t, err)
+
+			result, err := patchConfig(
+				bytes.NewReader(originalAsJSON),
+				patch,
 			)
 			assert.NoError(t, err)
 

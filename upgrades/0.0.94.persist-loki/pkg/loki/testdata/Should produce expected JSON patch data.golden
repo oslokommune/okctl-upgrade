@@ -1,7 +1,7 @@
 [
   {
     "op": "add",
-    "path": "/config/schema_config/configs/-",
+    "path": "/schema_config/configs/-",
     "value": {
       "from": "2022-05-09",
       "store": "aws",
@@ -15,7 +15,7 @@
   },
   {
     "op": "add",
-    "path": "/config/storage_config/aws",
+    "path": "/storage_config/aws",
     "value": {
       "s3": "s3://eu-test-1",
       "bucketnames": "mock-bucket",
@@ -26,7 +26,7 @@
   },
   {
     "op": "replace",
-    "path": "/config/table_manager",
+    "path": "/table_manager",
     "value": {
       "retention_deletes_enabled": true,
       "retention_period": "1344h",
@@ -36,15 +36,6 @@
         "inactive_write_throughput": 1,
         "inactive_read_throughput": 1
       }
-    }
-  },
-  {
-    "op": "replace",
-    "path": "/serviceAccount",
-    "value": {
-      "create": false,
-      "name": "loki",
-      "annotations": {}
     }
   }
 ]
