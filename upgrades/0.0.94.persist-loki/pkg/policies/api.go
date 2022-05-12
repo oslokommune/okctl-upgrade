@@ -1,9 +1,10 @@
 package policies
 
 import (
-	"context"
 	_ "embed"
 	"fmt"
+
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/lib/context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -19,7 +20,7 @@ const (
 )
 
 func CreateS3BucketPolicy(ctx context.Context, clusterName string, bucketARN string) (string, error) {
-	cfg, err := config.LoadDefaultConfig(ctx)
+	cfg, err := config.LoadDefaultConfig(ctx.Ctx)
 	if err != nil {
 		return "", fmt.Errorf("preparing config: %w", err)
 	}
@@ -27,12 +28,16 @@ func CreateS3BucketPolicy(ctx context.Context, clusterName string, bucketARN str
 	client := cloudformation.NewFromConfig(cfg)
 	stackName := fmt.Sprintf("okctl-s3bucketpolicy-%s-loki", clusterName)
 
-	err = createBucketPolicyStack(ctx, client, clusterName, stackName, bucketARN)
+	if ctx.Flags.DryRun {
+		return "arn:to:be:calculated:for:bucketpolicy", nil
+	}
+
+	err = createBucketPolicyStack(ctx.Ctx, client, clusterName, stackName, bucketARN)
 	if err != nil {
 		return "", fmt.Errorf("creating stack: %w", err)
 	}
 
-	out, err := client.DescribeStacks(ctx, &cloudformation.DescribeStacksInput{StackName: aws.String(stackName)})
+	out, err := client.DescribeStacks(ctx.Ctx, &cloudformation.DescribeStacksInput{StackName: aws.String(stackName)})
 	if err != nil {
 		return "", fmt.Errorf("describing stack: %w", err)
 	}
@@ -46,7 +51,7 @@ func CreateS3BucketPolicy(ctx context.Context, clusterName string, bucketARN str
 }
 
 func CreateDynamoDBPolicy(ctx context.Context, awsAccountID string, awsRegion string, clusterName string) (string, error) {
-	cfg, err := config.LoadDefaultConfig(ctx)
+	cfg, err := config.LoadDefaultConfig(ctx.Ctx)
 	if err != nil {
 		return "", fmt.Errorf("preparing config: %w", err)
 	}
@@ -54,8 +59,12 @@ func CreateDynamoDBPolicy(ctx context.Context, awsAccountID string, awsRegion st
 	client := cloudformation.NewFromConfig(cfg)
 	stackName := fmt.Sprintf("okctl-dynamodbpolicy-%s-loki", clusterName)
 
+	if ctx.Flags.DryRun {
+		return "arn:to:be:calculated:for:dynamodbpolicy", nil
+	}
+
 	err = createDynamoDBPolicyStack(createDynamoDBPolicyStackOpts{
-		ctx:          ctx,
+		ctx:          ctx.Ctx,
 		client:       client,
 		stackName:    stackName,
 		awsAccountID: awsAccountID,
@@ -66,7 +75,7 @@ func CreateDynamoDBPolicy(ctx context.Context, awsAccountID string, awsRegion st
 		return "", fmt.Errorf("creating stack: %w", err)
 	}
 
-	out, err := client.DescribeStacks(ctx, &cloudformation.DescribeStacksInput{StackName: aws.String(stackName)})
+	out, err := client.DescribeStacks(ctx.Ctx, &cloudformation.DescribeStacksInput{StackName: aws.String(stackName)})
 	if err != nil {
 		return "", fmt.Errorf("describing stack: %w", err)
 	}

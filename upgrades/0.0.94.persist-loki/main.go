@@ -45,24 +45,29 @@ func buildRootCommand() *cobra.Command {
 		SilenceErrors: true, // true as we print errors in the main() function
 		SilenceUsage:  true, // true because we don't want to show usage if an errors occurs
 		RunE: func(_ *cobra.Command, args []string) error {
-			ctx := applicationContext.NewContext(context.Background(), flags)
-			fs := &afero.Afero{Fs: afero.NewOsFs()}
+			ctx := applicationContext.NewContext(
+				context.Background(),
+				&afero.Afero{Fs: afero.NewOsFs()},
+				flags,
+			)
 
-			clusterManifest, err := getManifest(fs)
+			clusterManifest, err := getManifest(ctx.Fs)
 			if err != nil {
 				return fmt.Errorf("acquiring manifest: %w", err)
 			}
 
 			ctx.Logger.Debug("Running preflight checks")
 
-			err = preflight(fs, clusterManifest)
+			err = preflight(ctx.Fs, clusterManifest)
 			if err != nil {
 				return fmt.Errorf("running preflight: %w", err)
 			}
 
+			ctx.Logger.Debug("Preflight checks successful")
+
 			ctx.Logger.Debug("Starting upgrade")
 
-			return upgrade(ctx, fs, clusterManifest)
+			return upgrade(ctx, clusterManifest)
 		},
 	}
 

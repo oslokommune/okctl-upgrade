@@ -3,19 +3,18 @@ package eksctl
 import (
 	"fmt"
 	"os"
-	"path"
 	"strings"
 
-	"github.com/spf13/afero"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/lib/context"
 )
 
-func CreateServiceUser(fs *afero.Afero, clusterName string, name string, policies []string) error {
-	eksctlPath, err := acquireEksctlPath(fs, os.UserHomeDir)
+func CreateServiceUser(ctx context.Context, clusterName string, name string, policies []string) error {
+	eksctlPath, err := acquireEksctlPath(ctx.Fs, os.UserHomeDir)
 	if err != nil {
 		return fmt.Errorf("acquiring eksctl path: %w", err)
 	}
 
-	err = runEksctlCommand(eksctlPath,
+	args := []string{
 		"create", "iamserviceaccount",
 		"--name", name,
 		"--namespace", defaultMonitoringNamespace,
@@ -24,29 +23,18 @@ func CreateServiceUser(fs *afero.Afero, clusterName string, name string, policie
 		"--attach-policy-arn", strings.Join(policies, ","),
 		"--approve",
 		"--override-existing-serviceaccounts",
-	)
+	}
+
+	if ctx.Flags.DryRun {
+		ctx.Logger.Debugf("Running eksctl with args: %v", args)
+
+		return nil
+	}
+
+	err = runEksctlCommand(eksctlPath, args...)
 	if err != nil {
 		return fmt.Errorf("running command: %w", err)
 	}
 
 	return nil
-}
-
-func GenerateKubeconfig(fs *afero.Afero, clusterName string) (string, error) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return "", fmt.Errorf("acquiring home dir: %w", err)
-	}
-
-	eksctlPath, err := acquireEksctlPath(fs, os.UserHomeDir)
-	if err != nil {
-		return "", fmt.Errorf("acquiring eksctl path: %w", err)
-	}
-
-	err = runEksctlCommand(eksctlPath, "utils", "write-kubeconfig", "--auto-kubeconfig", "-c", clusterName)
-	if err != nil {
-		return "", fmt.Errorf("running command: %w", err)
-	}
-
-	return path.Join(homeDir, ".kube", "eksctl", "clusters", clusterName), nil
 }

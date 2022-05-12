@@ -3,11 +3,13 @@ package context
 import (
 	"context"
 
+	"github.com/spf13/afero"
+
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/lib/cmdflags"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/lib/logger"
 )
 
-func NewContext(ctx context.Context, flags cmdflags.Flags) Context {
+func NewContext(ctx context.Context, fs *afero.Afero, flags cmdflags.Flags) Context {
 	var level logger.Level
 	if flags.Debug {
 		level = logger.Debug
@@ -17,6 +19,7 @@ func NewContext(ctx context.Context, flags cmdflags.Flags) Context {
 
 	return Context{
 		Ctx:    ctx,
+		Fs:     fs,
 		Logger: logger.New(level),
 		Flags:  flags,
 	}

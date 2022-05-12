@@ -10,15 +10,14 @@ import (
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/loki"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/policies"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/s3"
-	"github.com/spf13/afero"
 )
 
-func upgrade(ctx context.Context, fs *afero.Afero, clusterManifest v1alpha1.Cluster) error {
+func upgrade(ctx context.Context, clusterManifest v1alpha1.Cluster) error {
 	bucketName := fmt.Sprintf("okctl-%s-loki", clusterManifest.Metadata.Name)
 
 	ctx.Logger.Debug("Creating S3 bucket")
 
-	arn, err := s3.CreateBucket(ctx.Ctx, clusterManifest.Metadata.Name, bucketName)
+	arn, err := s3.CreateBucket(ctx, clusterManifest.Metadata.Name, bucketName)
 	if err != nil {
 		return fmt.Errorf("creating bucket: %w", err)
 	}
@@ -27,7 +26,7 @@ func upgrade(ctx context.Context, fs *afero.Afero, clusterManifest v1alpha1.Clus
 
 	ctx.Logger.Debug("Creating S3 bucket policy")
 
-	s3PolicyARN, err := policies.CreateS3BucketPolicy(ctx.Ctx, clusterManifest.Metadata.Name, arn)
+	s3PolicyARN, err := policies.CreateS3BucketPolicy(ctx, clusterManifest.Metadata.Name, arn)
 	if err != nil {
 		return fmt.Errorf("creating bucket policy: %w", err)
 	}
@@ -37,7 +36,7 @@ func upgrade(ctx context.Context, fs *afero.Afero, clusterManifest v1alpha1.Clus
 	ctx.Logger.Debug("Creating DynamoDB policy")
 
 	dynamoDBPolicyARN, err := policies.CreateDynamoDBPolicy(
-		ctx.Ctx,
+		ctx,
 		clusterManifest.Metadata.AccountID,
 		clusterManifest.Metadata.Region,
 		clusterManifest.Metadata.Name,
@@ -51,7 +50,7 @@ func upgrade(ctx context.Context, fs *afero.Afero, clusterManifest v1alpha1.Clus
 	ctx.Logger.Debug("Creating Kubernetes service user -> role mapping with relevant policies")
 
 	err = eksctl.CreateServiceUser(
-		fs,
+		ctx,
 		clusterManifest.Metadata.Name,
 		"loki",
 		[]string{s3PolicyARN, dynamoDBPolicyARN},
@@ -65,7 +64,7 @@ func upgrade(ctx context.Context, fs *afero.Afero, clusterManifest v1alpha1.Clus
 	ctx.Logger.Debug("Patching Loki config to add new storage configuration")
 
 	err = loki.AddPersistence(
-		fs,
+		ctx,
 		clusterManifest.Metadata.Region,
 		clusterManifest.Metadata.Name,
 		bucketName,

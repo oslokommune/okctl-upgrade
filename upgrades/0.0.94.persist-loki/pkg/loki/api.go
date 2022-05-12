@@ -4,17 +4,18 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/lib/context"
+
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/kubectl"
-	"github.com/spf13/afero"
 )
 
-func AddPersistence(fs *afero.Afero, region string, clusterName string, bucketName string) error {
+func AddPersistence(ctx context.Context, region string, clusterName string, bucketName string) error {
 	patch, err := generateLokiPersistencePatch(region, clusterName, bucketName, time.Now())
 	if err != nil {
 		return fmt.Errorf("generating persistence patch: %w", err)
 	}
 
-	original, err := kubectl.GetLokiConfig(fs)
+	original, err := kubectl.GetLokiConfig(ctx.Fs)
 	if err != nil {
 		return fmt.Errorf("acquiring config: %w", err)
 	}
@@ -34,7 +35,13 @@ func AddPersistence(fs *afero.Afero, region string, clusterName string, bucketNa
 		return fmt.Errorf("converting to YAML: %w", err)
 	}
 
-	err = kubectl.UpdateLokiConfig(fs, updatedConfigAsYAML)
+	if ctx.Flags.DryRun {
+		ctx.Logger.Debug("Patching config locally successful. Applying to cluster")
+
+		return nil
+	}
+
+	err = kubectl.UpdateLokiConfig(ctx.Fs, updatedConfigAsYAML)
 	if err != nil {
 		return fmt.Errorf("updating config: %w", err)
 	}
