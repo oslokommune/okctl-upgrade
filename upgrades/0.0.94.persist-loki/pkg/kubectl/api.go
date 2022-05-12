@@ -83,3 +83,20 @@ func UpdateLokiConfig(fs *afero.Afero, config io.Reader) error {
 
 	return nil
 }
+
+func HasLoki(fs *afero.Afero) (bool, error) {
+	_, err := runCommand(fs,
+		"--namespace", defaultMonitoringNamespace,
+		"--output", "json",
+		"get", "pod", "loki-0",
+	)
+	if err != nil {
+		if isErrNotFound(err) {
+			return false, nil
+		}
+
+		return false, fmt.Errorf("running command: %w", err)
+	}
+
+	return true, nil
+}

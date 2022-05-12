@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/eksctl"
@@ -14,20 +13,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func upgrade(ctx context.Context, _ cmdflags.Flags) error {
-	fs := &afero.Afero{Fs: afero.NewOsFs()}
-	clusterManifestPath := os.Getenv("OKCTL_CLUSTER_DECLARATION")
-
-	rawManifest, err := fs.ReadFile(clusterManifestPath)
-	if err != nil {
-		return fmt.Errorf("reading manifest: %w", err)
-	}
-
-	clusterManifest, err := v1alpha1.Parse(rawManifest)
-	if err != nil {
-		return fmt.Errorf("parsing manifest: %w", err)
-	}
-
+func upgrade(ctx context.Context, fs *afero.Afero, clusterManifest v1alpha1.Cluster, _ cmdflags.Flags) error {
 	bucketName := fmt.Sprintf("okctl-%s-loki", clusterManifest.Metadata.Name)
 
 	arn, err := s3.CreateBucket(ctx, clusterManifest.Metadata.Name, bucketName)

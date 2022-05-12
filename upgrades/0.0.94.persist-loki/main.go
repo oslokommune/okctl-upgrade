@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/spf13/afero"
+
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/lib/cmdflags"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/lib/commonerrors"
 	"github.com/spf13/cobra"
@@ -42,8 +44,19 @@ func buildRootCommand() *cobra.Command {
 		SilenceUsage:  true, // true because we don't want to show usage if an errors occurs
 		RunE: func(_ *cobra.Command, args []string) error {
 			ctx := context.Background()
+			fs := &afero.Afero{Fs: afero.NewOsFs()}
 
-			return upgrade(ctx, flags)
+			clusterManifest, err := getManifest(fs)
+			if err != nil {
+				return fmt.Errorf("acquiring manifest: %w", err)
+			}
+
+			err = preflight(fs, clusterManifest)
+			if err != nil {
+				return fmt.Errorf("running preflight: %w", err)
+			}
+
+			return upgrade(ctx, fs, clusterManifest, flags)
 		},
 	}
 
