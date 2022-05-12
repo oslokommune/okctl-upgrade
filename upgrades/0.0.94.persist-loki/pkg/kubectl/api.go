@@ -14,13 +14,8 @@ type Secret struct {
 	Data map[string]interface{}
 }
 
-func GetLokiConfig(fs *afero.Afero, clusterName string) (io.Reader, error) {
-	kubeconfigPath, err := acquireKubeconfigPath(clusterName)
-	if err != nil {
-		return nil, fmt.Errorf("acquiring kubeconfig path: %w", err)
-	}
-
-	stdout, err := runCommand(fs, kubeconfigPath,
+func GetLokiConfig(fs *afero.Afero) (io.Reader, error) {
+	stdout, err := runCommand(fs,
 		"--namespace", defaultMonitoringNamespace,
 		"--output", "json",
 		"get", "secret",
@@ -50,12 +45,7 @@ func GetLokiConfig(fs *afero.Afero, clusterName string) (io.Reader, error) {
 	return strings.NewReader(lokiConfigAsString), nil
 }
 
-func UpdateLokiConfig(fs *afero.Afero, clusterName string, config io.Reader) error {
-	kubeconfigPath, err := acquireKubeconfigPath(clusterName)
-	if err != nil {
-		return fmt.Errorf("acquiring kubeconfig path: %w", err)
-	}
-
+func UpdateLokiConfig(fs *afero.Afero, config io.Reader) error {
 	rawConfig, err := io.ReadAll(config)
 	if err != nil {
 		return fmt.Errorf("buffering config: %w", err)
@@ -75,7 +65,7 @@ func UpdateLokiConfig(fs *afero.Afero, clusterName string, config io.Reader) err
 		return fmt.Errorf("marshalling patch: %w", err)
 	}
 
-	_, err = runCommand(fs, kubeconfigPath,
+	_, err = runCommand(fs,
 		"--namespace", defaultMonitoringNamespace,
 		"--type='json'",
 		"patch", "secret", "loki",

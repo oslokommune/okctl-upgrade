@@ -48,13 +48,13 @@ func acquireBinaryPath(Fs *afero.Afero, homeDirFn func() (string, error)) (strin
 	return path.Join(binaryDir, latest.String(), runtime.GOOS, runtime.GOARCH, defaultBinaryName), nil
 }
 
-func runCommand(fs *afero.Afero, kubeconfigPath string, args ...string) (io.Reader, error) {
+func runCommand(fs *afero.Afero, args ...string) (io.Reader, error) {
 	cmd := exec.Command(defaultBinaryName, args...) //nolint:gosec
 
 	stderr := bytes.Buffer{}
 	stdout := bytes.Buffer{}
 
-	env, err := generateEnv(fs, kubeconfigPath)
+	env, err := generateEnv(fs)
 	if err != nil {
 		return nil, fmt.Errorf("generating env: %w", err)
 	}
@@ -71,9 +71,7 @@ func runCommand(fs *afero.Afero, kubeconfigPath string, args ...string) (io.Read
 	return &stdout, nil
 }
 
-func generateEnv(fs *afero.Afero, kubeconfigPath string) ([]string, error) {
-	envMap := make(map[string]string)
-
+func generateEnv(fs *afero.Afero) ([]string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, fmt.Errorf("acquiring home directory: %w", err)
@@ -101,9 +99,12 @@ func generateEnv(fs *afero.Afero, kubeconfigPath string) ([]string, error) {
 		))
 	}
 
-	envMap["HOME"] = homeDir
-	envMap["KUBECONFIG"] = kubeconfigPath
-	envMap["PATH"] = strings.Join(toolDirectories, ":")
+	envMap := arrayAsEnv(os.Environ())
+
+	envMap["PATH"] = fmt.Sprintf("%s:%s",
+		envMap["PATH"],
+		strings.Join(toolDirectories, ":"),
+	)
 
 	return envAsArray(envMap), nil
 }
@@ -120,6 +121,20 @@ func envAsArray(m map[string]string) []string {
 	}
 
 	return result
+}
+
+func arrayAsEnv(a []string) map[string]string {
+	envMap := make(map[string]string)
+	const keyIndex = 0
+	const valueIndex = 1
+
+	for _, item := range a {
+		parts := strings.SplitN(item, "=", 2)
+
+		envMap[parts[keyIndex]] = parts[valueIndex]
+	}
+
+	return envMap
 }
 
 func gatherVersions(Fs *afero.Afero, baseDir string) (map[semver.Version]interface{}, error) {

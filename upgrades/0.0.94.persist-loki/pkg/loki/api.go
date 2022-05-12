@@ -14,7 +14,7 @@ func AddPersistence(fs *afero.Afero, region string, clusterName string, bucketNa
 		return fmt.Errorf("generating persistence patch: %w", err)
 	}
 
-	originalConfig, err := kubectl.GetLokiConfig(fs, clusterName)
+	originalConfig, err := kubectl.GetLokiConfig(fs)
 	if err != nil {
 		return fmt.Errorf("acquiring config: %w", err)
 	}
@@ -29,7 +29,7 @@ func AddPersistence(fs *afero.Afero, region string, clusterName string, bucketNa
 		return fmt.Errorf("converting to YAML: %w", err)
 	}
 
-	err = kubectl.UpdateLokiConfig(fs, clusterName, updatedConfigAsYAML)
+	err = kubectl.UpdateLokiConfig(fs, updatedConfigAsYAML)
 	if err != nil {
 		return fmt.Errorf("updating config: %w", err)
 	}
