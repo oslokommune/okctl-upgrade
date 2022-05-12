@@ -73,9 +73,9 @@ func UpdateLokiConfig(fs *afero.Afero, config io.Reader) error {
 
 	_, err = runCommand(fs,
 		"--namespace", defaultMonitoringNamespace,
-		"--type='json'",
+		"--type=json",
 		"patch", "secret", "loki",
-		fmt.Sprintf("--patch='%s'", string(patchAsBytes)),
+		"--patch", string(patchAsBytes),
 	)
 	if err != nil {
 		return fmt.Errorf("running command: %w", err)
