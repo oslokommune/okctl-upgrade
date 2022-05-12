@@ -14,17 +14,22 @@ func AddPersistence(fs *afero.Afero, region string, clusterName string, bucketNa
 		return fmt.Errorf("generating persistence patch: %w", err)
 	}
 
-	originalConfig, err := kubectl.GetLokiConfig(fs)
+	original, err := kubectl.GetLokiConfig(fs)
 	if err != nil {
 		return fmt.Errorf("acquiring config: %w", err)
 	}
 
-	updatedConfig, err := patchConfig(originalConfig, patch)
+	originalAsJSON, err := asJSON(original)
+	if err != nil {
+		return fmt.Errorf("converting to JSON: %w", err)
+	}
+
+	updated, err := patchConfig(originalAsJSON, patch)
 	if err != nil {
 		return fmt.Errorf("patching config: %w", err)
 	}
 
-	updatedConfigAsYAML, err := asYAML(updatedConfig)
+	updatedConfigAsYAML, err := asYAML(updated)
 	if err != nil {
 		return fmt.Errorf("converting to YAML: %w", err)
 	}
