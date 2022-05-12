@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	jsp "github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/lib/jsonpatch"
@@ -15,16 +14,16 @@ type Secret struct {
 	Data map[string]interface{}
 }
 
-func GetLokiConfig(fs *afero.Afero, kubeconfigPath string) (io.Reader, error) {
-	binaryPath, err := acquireBinaryPath(fs, os.UserHomeDir)
+func GetLokiConfig(fs *afero.Afero, clusterName string) (io.Reader, error) {
+	kubeconfigPath, err := acquireKubeconfigPath(clusterName)
 	if err != nil {
-		return nil, fmt.Errorf("acquiring binary path: %w", err)
+		return nil, fmt.Errorf("acquiring kubeconfig path: %w", err)
 	}
 
-	stdout, err := runCommand(binaryPath, kubeconfigPath,
+	stdout, err := runCommand(fs, kubeconfigPath,
 		"--namespace", defaultMonitoringNamespace,
 		"--output", "json",
-		"secret",
+		"get", "secret",
 		"loki",
 	)
 	if err != nil {
@@ -51,10 +50,10 @@ func GetLokiConfig(fs *afero.Afero, kubeconfigPath string) (io.Reader, error) {
 	return strings.NewReader(lokiConfigAsString), nil
 }
 
-func UpdateLokiConfig(fs *afero.Afero, kubeconfigPath string, config io.Reader) error {
-	binaryPath, err := acquireBinaryPath(fs, os.UserHomeDir)
+func UpdateLokiConfig(fs *afero.Afero, clusterName string, config io.Reader) error {
+	kubeconfigPath, err := acquireKubeconfigPath(clusterName)
 	if err != nil {
-		return fmt.Errorf("acquiring binary path: %w", err)
+		return fmt.Errorf("acquiring kubeconfig path: %w", err)
 	}
 
 	rawConfig, err := io.ReadAll(config)
@@ -76,7 +75,7 @@ func UpdateLokiConfig(fs *afero.Afero, kubeconfigPath string, config io.Reader) 
 		return fmt.Errorf("marshalling patch: %w", err)
 	}
 
-	_, err = runCommand(binaryPath, kubeconfigPath,
+	_, err = runCommand(fs, kubeconfigPath,
 		"--namespace", defaultMonitoringNamespace,
 		"--type='json'",
 		"patch", "secret", "loki",

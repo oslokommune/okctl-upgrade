@@ -8,13 +8,13 @@ import (
 	"github.com/spf13/afero"
 )
 
-func AddPersistence(fs *afero.Afero, kubeconfigPath string, region string, clusterName string, bucketName string) error {
+func AddPersistence(fs *afero.Afero, region string, clusterName string, bucketName string) error {
 	patch, err := generateLokiPersistencePatch(region, clusterName, bucketName, time.Now())
 	if err != nil {
 		return fmt.Errorf("generating persistence patch: %w", err)
 	}
 
-	originalConfig, err := kubectl.GetLokiConfig(fs, kubeconfigPath)
+	originalConfig, err := kubectl.GetLokiConfig(fs, clusterName)
 	if err != nil {
 		return fmt.Errorf("acquiring config: %w", err)
 	}
@@ -29,7 +29,7 @@ func AddPersistence(fs *afero.Afero, kubeconfigPath string, region string, clust
 		return fmt.Errorf("converting to YAML: %w", err)
 	}
 
-	err = kubectl.UpdateLokiConfig(fs, kubeconfigPath, updatedConfigAsYAML)
+	err = kubectl.UpdateLokiConfig(fs, clusterName, updatedConfigAsYAML)
 	if err != nil {
 		return fmt.Errorf("updating config: %w", err)
 	}
