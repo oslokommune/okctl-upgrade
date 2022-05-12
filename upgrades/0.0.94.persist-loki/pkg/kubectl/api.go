@@ -1,10 +1,11 @@
 package kubectl
 
 import (
+	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
-	"strings"
 
 	jsp "github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/lib/jsonpatch"
 	"github.com/spf13/afero"
@@ -42,7 +43,12 @@ func GetLokiConfig(fs *afero.Afero) (io.Reader, error) {
 		return nil, fmt.Errorf("converting config to string")
 	}
 
-	return strings.NewReader(lokiConfigAsString), nil
+	decodedLokiConfig, err := base64.StdEncoding.DecodeString(lokiConfigAsString)
+	if err != nil {
+		return nil, fmt.Errorf("decoding config: %w", err)
+	}
+
+	return bytes.NewReader(decodedLokiConfig), nil
 }
 
 func UpdateLokiConfig(fs *afero.Afero, config io.Reader) error {
