@@ -61,7 +61,7 @@ func buildRootCommand() *cobra.Command {
 			err = preflight(ctx.Fs, clusterManifest)
 			if err != nil {
 				if errors.Is(err, commonerrors.NoActionRequired) {
-					ctx.Logger.Debug("Preflight not satisfied. No actions required")
+					ctx.Logger.Debugf("Preflight unsuccessful: %s", err.Error())
 
 					return nil
 				}
