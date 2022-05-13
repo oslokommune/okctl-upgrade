@@ -46,5 +46,10 @@ func AddPersistence(ctx context.Context, region string, clusterName string, buck
 		return fmt.Errorf("updating config: %w", err)
 	}
 
+	err = kubectl.RestartLoki(ctx.Fs)
+	if err != nil {
+		return fmt.Errorf("restarting Loki: %w", err)
+	}
+
 	return nil
 }

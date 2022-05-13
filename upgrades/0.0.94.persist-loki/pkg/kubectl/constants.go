@@ -7,6 +7,5 @@ const (
 	defaultMonitoringNamespace     = "monitoring"
 	defaultArch                    = "amd64"
 	defaultAWSIAMAuthenticatorName = "aws-iam-authenticator"
-	defaultCredentialsDirName      = "credentials"
-	defaultKubeconfigFilename      = "kubeconfig"
+	defaultLokiPodName             = "loki-0"
 )

@@ -88,7 +88,7 @@ func HasLoki(fs *afero.Afero) (bool, error) {
 	_, err := runCommand(fs,
 		"--namespace", defaultMonitoringNamespace,
 		"--output", "json",
-		"get", "pod", "loki-0",
+		"get", "pod", defaultLokiPodName,
 	)
 	if err != nil {
 		if isErrNotFound(err) {
@@ -99,4 +99,16 @@ func HasLoki(fs *afero.Afero) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func RestartLoki(fs *afero.Afero) error {
+	_, err := runCommand(fs,
+		"--namespace", defaultMonitoringNamespace,
+		"delete", "pod", defaultLokiPodName,
+	)
+	if err != nil {
+		return fmt.Errorf("running command: %w", err)
+	}
+
+	return nil
 }
