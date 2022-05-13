@@ -26,7 +26,7 @@ func CreateServiceUser(ctx context.Context, clusterName string, name string, pol
 	}
 
 	if ctx.Flags.DryRun {
-		ctx.Logger.Debugf("Running eksctl with args: %v", args)
+		ctx.Logger.Debugf("Running eksctl with args: %v\n", args)
 
 		return nil
 	}
