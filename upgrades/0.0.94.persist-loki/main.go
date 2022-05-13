@@ -71,6 +71,15 @@ func buildRootCommand() *cobra.Command {
 
 			ctx.Logger.Debug("Preflight checks successful")
 
+			confirmed, err := requestConfirmation()
+			if err != nil {
+				return fmt.Errorf("requesting confirmation to continue: %w", err)
+			}
+
+			if !confirmed {
+				return commonerrors.ErrUserAborted
+			}
+
 			ctx.Logger.Debug("Starting upgrade")
 
 			return upgrade(ctx, clusterManifest)
