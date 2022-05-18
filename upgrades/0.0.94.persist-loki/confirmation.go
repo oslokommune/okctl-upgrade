@@ -10,8 +10,7 @@ const confirmationMessage = `Warning!
 
 This upgrade will restart Loki. If persistent logging has not been set up, this will destroy existing logs.
 
-For information on how to set up persistens before the upgrade, you can check out this thread here:
-https://oslokommune.slack.com/archives/CV9EGL9UG/p1629718366030700
+Learn how to set up persistence here: https://oslokommune.slack.com/archives/CV9EGL9UG/p1629718366030700
 
 Proceed with the upgrade?`
 
