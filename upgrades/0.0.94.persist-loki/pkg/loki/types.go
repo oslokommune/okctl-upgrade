@@ -20,10 +20,8 @@ type StorageConfig struct {
 }
 
 type TableManagerIndexTablesProvisioning struct {
-	ProvisionedWriteThroughput int `json:"provisioned_write_throughput"`
-	ProvisionedReadThroughput  int `json:"provisioned_read_throughput"`
-	InactiveWriteThroughput    int `json:"inactive_write_throughput"`
-	InactiveReadThroughput     int `json:"inactive_read_throughput"`
+	EnableOnDemandThroughputMode         bool `json:"enable_ondemand_throughput_mode"`
+	EnableInactiveThroughputOnDemandMode bool `json:"enable_inactive_throughput_on_demand_mode"`
 }
 
 type TableManager struct {

@@ -91,10 +91,8 @@ func createTableManagerIndexTablesProvisioning() TableManager {
 		RetentionDeletesEnabled: true,
 		RetentionPeriod:         "1344h",
 		IndexTablesProvisioning: TableManagerIndexTablesProvisioning{
-			ProvisionedWriteThroughput: 1,
-			ProvisionedReadThroughput:  1,
-			InactiveWriteThroughput:    1,
-			InactiveReadThroughput:     1,
+			EnableOnDemandThroughputMode:         true,
+			EnableInactiveThroughputOnDemandMode: true,
 		},
 	}
 }
