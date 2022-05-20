@@ -180,3 +180,15 @@ func AddNodeSelector(fs *afero.Afero, statefulsetName string, key string, value 
 
 	return nil
 }
+
+func DeleteServiceAccount(fs *afero.Afero, name string) error {
+	_, err := runCommand(fs,
+		"--namespace", defaultMonitoringNamespace,
+		"delete", serviceAccountResourceKind, name,
+	)
+	if err != nil {
+		return fmt.Errorf("deleting: %w", err)
+	}
+
+	return nil
+}

@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/kubectl"
+
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/lib/context"
 
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/apis/okctl.io/v1alpha1"
@@ -48,6 +50,13 @@ func upgrade(ctx context.Context, clusterManifest v1alpha1.Cluster) error {
 	ctx.Logger.Debugf("Successfully created DynamoDB policy with ARN: %s\n", dynamoDBPolicyARN)
 
 	ctx.Logger.Debug("Creating Kubernetes service user -> role mapping with relevant policies")
+
+	if !ctx.Flags.DryRun {
+		err = kubectl.DeleteServiceAccount(ctx.Fs, "loki")
+		if err != nil {
+			return fmt.Errorf("deleting existing service account: %w", err)
+		}
+	}
 
 	err = eksctl.CreateServiceUser(
 		ctx,

@@ -17,4 +17,5 @@ const (
 	secretResourceKind                = "secret"
 	podResourceKind                   = "pod"
 	statefulSetResourceKind           = "statefulset"
+	serviceAccountResourceKind        = "serviceaccount"
 )
