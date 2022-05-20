@@ -11,15 +11,11 @@ import (
 	"github.com/spf13/afero"
 )
 
-type Secret struct {
-	Data map[string]interface{}
-}
-
 func GetLokiConfig(fs *afero.Afero) (io.Reader, error) {
 	stdout, err := runCommand(fs,
 		"--namespace", defaultMonitoringNamespace,
 		"--output", "json",
-		"get", "secret",
+		"get", secretResourceKind,
 		"loki",
 	)
 	if err != nil {
@@ -38,7 +34,7 @@ func GetLokiConfig(fs *afero.Afero) (io.Reader, error) {
 		return nil, fmt.Errorf("unmarshalling secret: %w", err)
 	}
 
-	lokiConfigAsString, ok := secret.Data["loki.yaml"].(string)
+	lokiConfigAsString, ok := secret.Data[defaultLokiConfigSecretKey].(string)
 	if !ok {
 		return nil, fmt.Errorf("converting config to string")
 	}
@@ -74,7 +70,7 @@ func UpdateLokiConfig(fs *afero.Afero, config io.Reader) error {
 	_, err = runCommand(fs,
 		"--namespace", defaultMonitoringNamespace,
 		"--type=json",
-		"patch", "secret", "loki",
+		"patch", secretResourceKind, "loki",
 		"--patch", string(patchAsBytes),
 	)
 	if err != nil {
@@ -88,7 +84,7 @@ func HasLoki(fs *afero.Afero) (bool, error) {
 	_, err := runCommand(fs,
 		"--namespace", defaultMonitoringNamespace,
 		"--output", "json",
-		"get", "pod", defaultLokiPodName,
+		"get", podResourceKind, defaultLokiPodName,
 	)
 	if err != nil {
 		if isErrNotFound(err) {
@@ -104,7 +100,7 @@ func HasLoki(fs *afero.Afero) (bool, error) {
 func RestartLoki(fs *afero.Afero) error {
 	_, err := runCommand(fs,
 		"--namespace", defaultMonitoringNamespace,
-		"delete", "pod", defaultLokiPodName,
+		"delete", podResourceKind, defaultLokiPodName,
 	)
 	if err != nil {
 		return fmt.Errorf("running command: %w", err)
