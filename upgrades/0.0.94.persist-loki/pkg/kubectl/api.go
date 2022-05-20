@@ -113,7 +113,7 @@ func HasVolumeClaim(fs *afero.Afero, claimName string) (bool, error) {
 	result, err := runCommand(fs,
 		"--namespace", defaultMonitoringNamespace,
 		"--output", "json",
-		"get", persistentVolumeClaimResourceKind, claimName,
+		"get", persistentVolumeClaimResourceKind,
 	)
 	if err != nil {
 		return false, fmt.Errorf("acquiring volume claims: %w", err)
