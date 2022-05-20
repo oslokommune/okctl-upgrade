@@ -156,9 +156,11 @@ func GetVolumeClaimAZ(fs *afero.Afero, claimName string) (string, error) {
 
 func AddNodeSelector(fs *afero.Afero, statefulsetName string, key string, value string) error {
 	patch := jsp.New().Add(jsp.Operation{
-		Type:  jsp.OperationTypeAdd,
-		Path:  fmt.Sprintf("/spec/template/spec/nodeSelector/%s", key),
-		Value: value,
+		Type: jsp.OperationTypeAdd,
+		Path: "/spec/template/spec/nodeSelector",
+		Value: map[string]string{
+			key: value,
+		},
 	})
 
 	rawPatch, err := patch.MarshalJSON()
@@ -168,8 +170,8 @@ func AddNodeSelector(fs *afero.Afero, statefulsetName string, key string, value 
 
 	_, err = runCommand(fs,
 		"--namespace", defaultMonitoringNamespace,
-		"--type=json",
 		"patch", statefulSetResourceKind, statefulsetName,
+		"--type=json",
 		"--patch", string(rawPatch),
 	)
 	if err != nil {
