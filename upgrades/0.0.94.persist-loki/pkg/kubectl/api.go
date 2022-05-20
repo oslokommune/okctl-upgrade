@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/afero"
 )
 
+// GetLokiConfig knows how to retrieve the Loki configuration
 func GetLokiConfig(fs *afero.Afero) (io.Reader, error) {
 	stdout, err := runCommand(fs,
 		"--namespace", defaultMonitoringNamespace,
@@ -27,7 +28,7 @@ func GetLokiConfig(fs *afero.Afero) (io.Reader, error) {
 		return nil, fmt.Errorf("buffering secret: %w", err)
 	}
 
-	var secret Secret
+	var secret secret
 
 	err = json.Unmarshal(rawSecret, &secret)
 	if err != nil {
@@ -47,6 +48,7 @@ func GetLokiConfig(fs *afero.Afero) (io.Reader, error) {
 	return bytes.NewReader(decodedLokiConfig), nil
 }
 
+// UpdateLokiConfig knows how to update the Loki configuration
 func UpdateLokiConfig(fs *afero.Afero, config io.Reader) error {
 	rawConfig, err := io.ReadAll(config)
 	if err != nil {
@@ -80,6 +82,7 @@ func UpdateLokiConfig(fs *afero.Afero, config io.Reader) error {
 	return nil
 }
 
+// HasLoki knows how to check if Loki exists
 func HasLoki(fs *afero.Afero) (bool, error) {
 	_, err := runCommand(fs,
 		"--namespace", defaultMonitoringNamespace,
@@ -97,6 +100,7 @@ func HasLoki(fs *afero.Afero) (bool, error) {
 	return true, nil
 }
 
+// RestartLoki knows how to make Loki restart
 func RestartLoki(fs *afero.Afero) error {
 	_, err := runCommand(fs,
 		"--namespace", defaultMonitoringNamespace,
@@ -109,6 +113,7 @@ func RestartLoki(fs *afero.Afero) error {
 	return nil
 }
 
+// HasVolumeClaim knows how to check if Loki has a Persistent Volume Claim (PVC)
 func HasVolumeClaim(fs *afero.Afero, claimName string) (bool, error) {
 	result, err := runCommand(fs,
 		"--namespace", defaultMonitoringNamespace,
@@ -140,6 +145,7 @@ func HasVolumeClaim(fs *afero.Afero, claimName string) (bool, error) {
 	return false, nil
 }
 
+// GetVolumeClaimAZ knows how to retrieve the availability zone a volume resides in
 func GetVolumeClaimAZ(fs *afero.Afero, claimName string) (string, error) {
 	volumeID, err := getVolumeID(fs, claimName)
 	if err != nil {
@@ -154,6 +160,7 @@ func GetVolumeClaimAZ(fs *afero.Afero, claimName string) (string, error) {
 	return zone, nil
 }
 
+// AddNodeSelector knows how to add a NodeSelector to a statefulset resource
 func AddNodeSelector(fs *afero.Afero, statefulsetName string, key string, value string) error {
 	patch := jsp.New().Add(jsp.Operation{
 		Type: jsp.OperationTypeAdd,
@@ -181,6 +188,7 @@ func AddNodeSelector(fs *afero.Afero, statefulsetName string, key string, value 
 	return nil
 }
 
+// DeleteServiceAccount knows how to delete a service account resource
 func DeleteServiceAccount(fs *afero.Afero, name string) error {
 	_, err := runCommand(fs,
 		"--namespace", defaultMonitoringNamespace,

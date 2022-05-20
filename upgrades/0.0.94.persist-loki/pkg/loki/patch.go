@@ -63,21 +63,21 @@ func patchConfig(original io.Reader, patch io.Reader) (io.Reader, error) {
 	return bytes.NewReader(rawUpdatedConfig), nil
 }
 
-func createS3SchemaConfig(clusterName string, from time.Time) SchemaConfig {
-	return SchemaConfig{
+func createS3SchemaConfig(clusterName string, from time.Time) schemaConfig {
+	return schemaConfig{
 		From:        from.Format("2006-01-02"),
 		Store:       "aws",
 		ObjectStore: "s3",
 		Schema:      "v11",
-		Index: SchemaConfigIndex{
+		Index: schemaConfigIndex{
 			Prefix: fmt.Sprintf("okctl-%s-loki-index_", clusterName),
 			Period: "336h",
 		},
 	}
 }
 
-func createAWSStorageConfig(region string, bucketName string) StorageConfig {
-	return StorageConfig{
+func createAWSStorageConfig(region string, bucketName string) storageConfig {
+	return storageConfig{
 		S3:          fmt.Sprintf("s3://%s", region),
 		BucketNames: bucketName,
 		DynamoDB: map[string]string{
@@ -87,11 +87,11 @@ func createAWSStorageConfig(region string, bucketName string) StorageConfig {
 	}
 }
 
-func createTableManagerIndexTablesProvisioning() TableManager {
-	return TableManager{
+func createTableManagerIndexTablesProvisioning() tableManager {
+	return tableManager{
 		RetentionDeletesEnabled: true,
 		RetentionPeriod:         "1344h",
-		IndexTablesProvisioning: TableManagerIndexTablesProvisioning{
+		IndexTablesProvisioning: tableManagerIndexTablesProvisioning{
 			EnableOnDemandThroughputMode:         true,
 			EnableInactiveThroughputOnDemandMode: true,
 		},

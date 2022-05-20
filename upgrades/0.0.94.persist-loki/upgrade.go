@@ -14,7 +14,7 @@ import (
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/s3"
 )
 
-func upgrade(ctx context.Context, clusterManifest v1alpha1.Cluster) error {
+func upgrade(ctx context.Context, clusterManifest v1alpha1.Cluster) error { //nolint:funlen
 	bucketName := fmt.Sprintf("okctl-%s-loki", clusterManifest.Metadata.Name)
 
 	ctx.Logger.Debug("Creating S3 bucket")
@@ -58,7 +58,7 @@ func upgrade(ctx context.Context, clusterManifest v1alpha1.Cluster) error {
 		}
 	}
 
-	err = eksctl.CreateServiceUser(
+	err = eksctl.CreateServiceAccount(
 		ctx,
 		clusterManifest.Metadata.Name,
 		"loki",

@@ -1,3 +1,4 @@
+// Package v1alpha1 defines common data types and functionality on them
 package v1alpha1
 
 import (

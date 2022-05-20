@@ -1,7 +1,7 @@
 package policies
 
 import (
-	_ "embed"
+	_ "embed" //nolint:revive
 	"fmt"
 
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/lib/context"
@@ -19,6 +19,7 @@ const (
 	defaultDynamoDBPolicyOutputName  = "LokiDynamoDBServiceAccountPolicy"
 )
 
+// CreateS3BucketPolicy knows how to create a S3 bucket policy allowing Loki to do necessary operations
 func CreateS3BucketPolicy(ctx context.Context, clusterName string, bucketARN string) (string, error) {
 	cfg, err := config.LoadDefaultConfig(ctx.Ctx)
 	if err != nil {
@@ -50,6 +51,7 @@ func CreateS3BucketPolicy(ctx context.Context, clusterName string, bucketARN str
 	return arn, nil
 }
 
+// CreateDynamoDBPolicy knows how to create a DynamoDB policy allowing Loki to do necessary operations
 func CreateDynamoDBPolicy(ctx context.Context, awsAccountID string, awsRegion string, clusterName string) (string, error) {
 	cfg, err := config.LoadDefaultConfig(ctx.Ctx)
 	if err != nil {

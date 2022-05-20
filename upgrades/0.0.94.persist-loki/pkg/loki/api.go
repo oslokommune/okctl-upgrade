@@ -9,6 +9,7 @@ import (
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/kubectl"
 )
 
+// AddPersistence knows how to configure Loki for persistence
 func AddPersistence(ctx context.Context, region string, clusterName string, bucketName string) error {
 	err := ensureNodeSelector(ctx, "loki", "loki")
 	if err != nil {
@@ -16,7 +17,7 @@ func AddPersistence(ctx context.Context, region string, clusterName string, buck
 	}
 
 	// The new config should be active the next calendar preventing issues with index tables spanning two configurations
-	from := time.Now().Add(24 * time.Hour)
+	from := time.Now().Add(oneDay)
 
 	patch, err := generateLokiPersistencePatch(region, clusterName, bucketName, from)
 	if err != nil {

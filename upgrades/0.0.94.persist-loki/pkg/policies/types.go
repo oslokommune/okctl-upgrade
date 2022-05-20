@@ -1,3 +1,4 @@
+// Package policies exposes a simplified API for dealing with policies
 package policies
 
 import (

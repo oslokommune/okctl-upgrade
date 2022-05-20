@@ -1,6 +1,7 @@
+// Package kubectl exposes a simplified API for operations done with kubectl
 package kubectl
 
-type Secret struct {
+type secret struct {
 	Data map[string]interface{} `json:"data"`
 }
 

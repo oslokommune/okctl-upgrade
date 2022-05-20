@@ -1,7 +1,6 @@
 package s3
 
 import (
-	_ "embed"
 	"fmt"
 
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.persist-loki/pkg/lib/context"

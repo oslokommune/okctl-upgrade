@@ -32,7 +32,7 @@ func main() {
 	}
 }
 
-func buildRootCommand() *cobra.Command {
+func buildRootCommand() *cobra.Command { //nolint:funlen
 	flags := cmdflags.Flags{}
 
 	filename := filepath.Base(os.Args[0])
@@ -60,7 +60,7 @@ func buildRootCommand() *cobra.Command {
 
 			err = preflight(ctx.Fs, clusterManifest)
 			if err != nil {
-				if errors.Is(err, commonerrors.NoActionRequired) {
+				if errors.Is(err, commonerrors.ErrNoActionRequired) {
 					ctx.Logger.Debugf("Preflight unsuccessful: %s\n", err.Error())
 
 					return nil

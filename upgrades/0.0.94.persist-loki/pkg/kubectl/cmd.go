@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/fs"
+	fileSystem "io/fs"
 	"os"
 	"os/exec"
 	"path"
@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func acquireBinaryPath(Fs *afero.Afero, homeDirFn func() (string, error)) (string, error) {
+func acquireBinaryPath(fs *afero.Afero, homeDirFn func() (string, error)) (string, error) {
 	homeDir, err := homeDirFn()
 	if err != nil {
 		return "", fmt.Errorf("acquiring home directory: %w", err)
@@ -24,7 +24,7 @@ func acquireBinaryPath(Fs *afero.Afero, homeDirFn func() (string, error)) (strin
 
 	binaryDir := path.Join(homeDir, defaultOkctlConfigDirName, defaultOkctlBinariesDirName, defaultBinaryName)
 
-	exists, err := Fs.DirExists(binaryDir)
+	exists, err := fs.DirExists(binaryDir)
 	if err != nil {
 		return "", fmt.Errorf("checking binary directory existence: %w", err)
 	}
@@ -33,7 +33,7 @@ func acquireBinaryPath(Fs *afero.Afero, homeDirFn func() (string, error)) (strin
 		return "", errors.New("missing binary directory")
 	}
 
-	versions, err := gatherVersions(Fs, binaryDir)
+	versions, err := gatherVersions(fs, binaryDir)
 	if err != nil {
 		return "", fmt.Errorf("gathering versions: %w", err)
 	}
@@ -125,11 +125,14 @@ func envAsArray(m map[string]string) []string {
 
 func arrayAsEnv(a []string) map[string]string {
 	envMap := make(map[string]string)
-	const keyIndex = 0
-	const valueIndex = 1
+
+	const (
+		keyIndex   = 0
+		valueIndex = 1
+	)
 
 	for _, item := range a {
-		parts := strings.SplitN(item, "=", 2)
+		parts := strings.SplitN(item, "=", envPartsLength)
 
 		envMap[parts[keyIndex]] = parts[valueIndex]
 	}
@@ -137,15 +140,15 @@ func arrayAsEnv(a []string) map[string]string {
 	return envMap
 }
 
-func gatherVersions(Fs *afero.Afero, baseDir string) (map[semver.Version]interface{}, error) {
+func gatherVersions(fs *afero.Afero, baseDir string) (map[semver.Version]interface{}, error) {
 	versions := make(map[semver.Version]interface{})
 
-	err := Fs.Walk(baseDir, func(currentPath string, info fs.FileInfo, err error) error {
+	err := fs.Walk(baseDir, func(currentPath string, info fileSystem.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		isDirectory, err := Fs.IsDir(currentPath)
+		isDirectory, err := fs.IsDir(currentPath)
 		if err != nil {
 			return fmt.Errorf("checking path type: %w", err)
 		}

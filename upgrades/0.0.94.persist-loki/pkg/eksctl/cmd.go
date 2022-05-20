@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/fs"
+	fileSystem "io/fs"
 	"os/exec"
 	"path"
 	"runtime"
@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func acquireEksctlPath(Fs *afero.Afero, homeDirFn func() (string, error)) (string, error) {
+func acquireEksctlPath(fs *afero.Afero, homeDirFn func() (string, error)) (string, error) {
 	homeDir, err := homeDirFn()
 	if err != nil {
 		return "", fmt.Errorf("acquiring home directory: %w", err)
@@ -21,7 +21,7 @@ func acquireEksctlPath(Fs *afero.Afero, homeDirFn func() (string, error)) (strin
 
 	eksctlDir := path.Join(homeDir, defaultOkctlConfigDirName, defaultOkctlBinariesDirName, defaultEksctlName)
 
-	exists, err := Fs.DirExists(eksctlDir)
+	exists, err := fs.DirExists(eksctlDir)
 	if err != nil {
 		return "", fmt.Errorf("checking eksctl directory existence: %w", err)
 	}
@@ -30,7 +30,7 @@ func acquireEksctlPath(Fs *afero.Afero, homeDirFn func() (string, error)) (strin
 		return "", errors.New("missing eksctl directory")
 	}
 
-	versions, err := gatherVersions(Fs, eksctlDir)
+	versions, err := gatherVersions(fs, eksctlDir)
 	if err != nil {
 		return "", fmt.Errorf("gathering versions: %w", err)
 	}
@@ -62,15 +62,15 @@ func runEksctlCommand(binaryPath string, args ...string) error {
 	return nil
 }
 
-func gatherVersions(Fs *afero.Afero, baseDir string) (map[semver.Version]interface{}, error) {
+func gatherVersions(fs *afero.Afero, baseDir string) (map[semver.Version]interface{}, error) {
 	versions := make(map[semver.Version]interface{})
 
-	err := Fs.Walk(baseDir, func(currentPath string, info fs.FileInfo, err error) error {
+	err := fs.Walk(baseDir, func(currentPath string, info fileSystem.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		isDirectory, err := Fs.IsDir(currentPath)
+		isDirectory, err := fs.IsDir(currentPath)
 		if err != nil {
 			return fmt.Errorf("checking path type: %w", err)
 		}

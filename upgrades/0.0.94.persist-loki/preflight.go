@@ -14,7 +14,7 @@ import (
 
 func preflight(fs *afero.Afero, clusterManifest v1alpha1.Cluster) error {
 	if !clusterManifest.Integrations.Loki {
-		return fmt.Errorf("loki integration disabled: %w", commonerrors.NoActionRequired)
+		return fmt.Errorf("loki integration disabled: %w", commonerrors.ErrNoActionRequired)
 	}
 
 	lokiExists, err := kubectl.HasLoki(fs)
@@ -23,7 +23,7 @@ func preflight(fs *afero.Afero, clusterManifest v1alpha1.Cluster) error {
 	}
 
 	if !lokiExists {
-		return fmt.Errorf("missing loki installation: %w", commonerrors.NoActionRequired)
+		return fmt.Errorf("missing loki installation: %w", commonerrors.ErrNoActionRequired)
 	}
 
 	awsStorageExists, err := hasAWSStorageDefined(fs)
@@ -32,7 +32,7 @@ func preflight(fs *afero.Afero, clusterManifest v1alpha1.Cluster) error {
 	}
 
 	if awsStorageExists {
-		return fmt.Errorf("storage configuration already exists: %w", commonerrors.NoActionRequired)
+		return fmt.Errorf("storage configuration already exists: %w", commonerrors.ErrNoActionRequired)
 	}
 
 	return nil
