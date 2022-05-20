@@ -14,9 +14,10 @@ type SchemaConfigIndex struct {
 }
 
 type StorageConfig struct {
-	S3          string            `json:"s3"`
-	BucketNames string            `json:"bucketnames"`
-	DynamoDB    map[string]string `json:"dynamodb"`
+	S3                   string            `json:"s3"`
+	BucketNames          string            `json:"bucketnames"`
+	DynamoDB             map[string]string `json:"dynamodb"`
+	ServerSideEncryption bool              `json:"sse_encryption"`
 }
 
 type TableManagerIndexTablesProvisioning struct {

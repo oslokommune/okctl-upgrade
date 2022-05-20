@@ -83,6 +83,7 @@ func createAWSStorageConfig(region string, bucketName string) StorageConfig {
 		DynamoDB: map[string]string{
 			"dynamodb_url": fmt.Sprintf("dynamodb://%s", region),
 		},
+		ServerSideEncryption: true,
 	}
 }
 
