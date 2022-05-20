@@ -10,7 +10,10 @@ import (
 )
 
 func AddPersistence(ctx context.Context, region string, clusterName string, bucketName string) error {
-	patch, err := generateLokiPersistencePatch(region, clusterName, bucketName, time.Now())
+	// The new config should be active the next calendar preventing issues with index tables spanning two configurations
+	from := time.Now().Add(24 * time.Hour)
+
+	patch, err := generateLokiPersistencePatch(region, clusterName, bucketName, from)
 	if err != nil {
 		return fmt.Errorf("generating persistence patch: %w", err)
 	}
