@@ -55,5 +55,5 @@ func getVolumeZone(fs *afero.Afero, volumeName string) (string, error) {
 		return "", fmt.Errorf("unmarshalling: %w", err)
 	}
 
-	return volume.Labels[AvailabilityZoneLabelKey], nil
+	return volume.Metadata.Labels[AvailabilityZoneLabelKey], nil
 }

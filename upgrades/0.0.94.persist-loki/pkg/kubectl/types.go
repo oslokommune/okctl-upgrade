@@ -9,7 +9,8 @@ type pvcSpec struct {
 }
 
 type metadata struct {
-	Name string `json:"name"`
+	Name   string            `json:"name"`
+	Labels map[string]string `json:"labels"`
 }
 
 type pvc struct {
@@ -18,8 +19,7 @@ type pvc struct {
 }
 
 type pv struct {
-	Metadata metadata          `json:"metadata"`
-	Labels   map[string]string `json:"labels"`
+	Metadata metadata `json:"metadata"`
 }
 
 type iteratorItem struct {
