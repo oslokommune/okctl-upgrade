@@ -82,7 +82,7 @@ func ensureNodeSelector(ctx context.Context, volumeClaimName string, statefulSet
 		return fmt.Errorf("acquiring volume claim AZ: %w", err)
 	}
 
-	ctx.Logger.Debug("Found volume AZ %s, adding node selector to loki", zone)
+	ctx.Logger.Debugf("Found volume AZ %s, adding node selector to loki", zone)
 
 	if ctx.Flags.DryRun {
 		return nil
