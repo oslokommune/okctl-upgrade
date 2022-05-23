@@ -79,57 +79,6 @@ spec:
 
 Deploy these changes (with `kubectl apply ...`, or `git` commit and push if you use ArgoCD).
 
-## Spin up new nodes
-
-We're using 3 nodes to ensure we have 1 node for every AZ. We need one in every AZ to ensure that any applications using PVCs can
-be placed on a node in the same AZ as the PVC. For instance: If some-app use a PVC in AZ B, we need to have a node in AZ B as
-well. If it was possible to specify   
-
-```shell
-CLUSTER_NAME="my-cluster"
-REGION="eu-west-1"
-
-cat <<EOF >nodegroup_config.yaml
-apiVersion: eksctl.io/v1alpha5
-kind: ClusterConfig
-metadata:
-  name: $CLUSTER_NAME
-  region: $REGION
-nodeGroups:
-EOF
-
-for AZ_ID in a b c
-do
-  AZ="${REGION}${AZ_ID}"
-
-  cat <<EOF >>nodegroup_config.yaml
-  - name: "ng-generic-1-20-1${AZ_ID}"
-    availabilityZones: ["$AZ"]
-    instanceType: "m5.large"
-    # desiredCapacity: 1 # TODO
-    minSize: 0
-    maxSize: 10
-    labels:
-      pool: ng-generic-$AZ
-    tags:
-      k8s.io/cluster-autoscaler/enabled: "true"
-      k8s.io/cluster-autoscaler/$CLUSTER_NAME: owned
-    privateNetworking: true
-EOF
-done
-
-```
-
-Replace
-* `CLUSTER_NAME` with the name from `eksctl get cluster`
-* `REGION` with your region.
-
-Now, create a new nodegroup:
-
-```shell
-eksctl create nodegroup --config-file=nodegroup_config.yaml
-```
-
 # Update EKS add-on: vpc-cni
 
 The recommended vpc-cni addon version for all Kubernetes versions is `1.11.0-eksbuild.1`
@@ -189,6 +138,63 @@ eksctl update addon \
 
 ```
 
+
+## Spin up new nodes
+
+We're using 3 nodes to ensure we have 1 node for every AZ. We need one in every AZ to ensure that any applications using PVCs can
+be placed on a node in the same AZ as the PVC. For instance: If some-app use a PVC in AZ B, we need to have a node in AZ B as
+well. If it was possible to specify
+
+```shell
+CLUSTER_NAME="my-cluster"
+REGION="eu-west-1"
+
+cat <<EOF >nodegroup_config.yaml
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: $CLUSTER_NAME
+  region: $REGION
+nodeGroups:
+EOF
+
+for AZ_ID in a b c
+do
+  AZ="${REGION}${AZ_ID}"
+
+  cat <<EOF >>nodegroup_config.yaml
+  - name: "ng-generic-1-20-1${AZ_ID}"
+    availabilityZones: ["$AZ"]
+    instanceType: "m5.large"
+    # desiredCapacity: 1 # TODO
+    minSize: 0
+    maxSize: 10
+    labels:
+      pool: ng-generic-$AZ
+    tags:
+      k8s.io/cluster-autoscaler/enabled: "true"
+      k8s.io/cluster-autoscaler/$CLUSTER_NAME: owned
+    privateNetworking: true
+EOF
+done
+
+```
+
+Replace
+* `CLUSTER_NAME` with the name from `eksctl get cluster`
+* `REGION` with your region.
+
+Now, create a new nodegroup:
+
+```shell
+eksctl create nodegroup --config-file=nodegroup_config.yaml
+
+kubectl -n kube-system set env daemonset aws-node ENABLE_POD_ENI=true --v=9
+
+kubectl patch daemonset aws-node \
+  -n kube-system \
+  -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
+```
 
 ## Drain old node(s)
 
