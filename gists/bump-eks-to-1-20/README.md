@@ -1,7 +1,5 @@
 This guide describes how to upgrade EKS from 1.19 to 1.20 in an EKS cluster.
 
-**Note!** If you have not persisted your Loki logs with a PVC or in S3, they will disappear!
-
 # Update tools
 
 * Download latest verison of okctl. Run `okctl venv` to log in to the cluster. This should also download latest version of tools.
@@ -13,11 +11,19 @@ or
 
 # Prepare applications
 
+## Make sure applications are configured correctly
+
+Google how to apply using `maxUnavailable=0` and `type: RollingUpdate`, or `type: Recreate`.
+
+This is to have as little downtime as possible.
+
 ## Add node selectors to pods using PVCs
 
-Before we can bump nodes, we need to make sure that pods that use volumes (via PVCs), spawn on a node in the same AZ as the volumes. If not the pod will not start, as it cannot find the PV.
+Before we can bump nodes, we need to make sure that pods that use volumes (via PVCs), spawn on a node in the same AZ as the
+volumes. If not the pod will not start, as it cannot find the PV.
 
-To do this, we need to specify which AZ pods in Kubernetes should spawn on. The AZ should be the same as the AZ of the PVC the application is using.
+To do this, we need to specify which AZ pods in Kubernetes should spawn on. The AZ should be the same as the AZ of the PVC the
+application is using.
 
 ### List PVCs
 
@@ -66,11 +72,21 @@ spec:
         - name: hello
 ```
 
-Don't git commit or kubectl apply these changes yet. We will do that when new nodes are up an running.
+Apply changes:
 
-## Add node selectors to Loki
+```shell
+git add .
+git commit -m "Add node selector to deployments"
+git push
+``` 
 
-Do [set-loki-az.sh](set-loki-az.sh) - STEP 1. Wait with step 2.
+ArgoCD will then update your apps.
+
+If you don't want to wait, you can run
+
+```shell
+kustomize build infrastructure/applications/my-app/overlays/$CLUSTER_NAME | kubectl apply -f -
+```
 
 # Bump EKS control plane
 
@@ -193,7 +209,6 @@ We're using 3 nodes to ensure we have 1 node for every AZ. We need one in every 
 be placed on a node in the same AZ as the PVC. For instance: If some-app use a PVC in AZ B, we need to have a node in AZ B as
 well.
 
-
 In the following code snippet, replace:
 * `CLUSTER_NAME` with the name from `eksctl get cluster`
 * `REGION` with your region.
@@ -272,7 +287,6 @@ eksctl get nodegroup --cluster $CLUSTER_NAME
 
 to have a look at the new node groups.
 
-
 Optional: If you really need to, you can in nodegroup_config.yaml set desiredCapacity to `1`. Or run:
 
 ```
@@ -280,6 +294,8 @@ aws autoscaling set-desired-capacity --desired-capacity 1 --auto-scaling-group-n
 ```
 
 to have less down time. This is at the cost of having more nodes than needed.
+
+# Delete old node(s)
 
 ## Verify node(s) to delete before deleting them
 
@@ -318,32 +334,6 @@ Then delete the nodegroup:
 
 ```shell
 eksctl delete nodegroup --cluster $CLUSTER_NAME ng-generic
-```
-
-NOW, CLOCK IS TICKING AND STUFF IS GOING DOWN. DO NEXT STEP IMMEDIATELY.
-
-# Apply your updated deployments
-
-## Loki
-
-Do [set-loki-az.sh](set-loki-az.sh) - STEP 2.
-
-## Your application(s)
-
-In a previous step, you updated your deployments with new node selectors. Now is the time to apply these changes.
-
-```shell
-git add .
-git commit -m "Add node selector to deployments"
-git push
-``` 
-
-ArgoCD will then update your apps.
-
-If you don't want to wait, you can run
-
-```shell
-kustomize build infrastructure/applications/my-app/overlays/$CLUSTER_NAME | kubectl apply -f -
 ```
 
 # Other details
