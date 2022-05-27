@@ -85,6 +85,7 @@ ArgoCD will then update your apps.
 If you don't want to wait, you can run
 
 ```shell
+CLUSTER_NAME="my-cluster" # See "eksctl get cluster"
 kustomize build infrastructure/applications/my-app/overlays/$CLUSTER_NAME | kubectl apply -f -
 ```
 
@@ -104,6 +105,12 @@ eksctl upgrade cluster --name $CLUSTER_NAME --version 1.20 --approve
 ```
 
 # Update EKS add-ons
+
+Remember to set
+
+```sh
+CLUSTER_NAME="my-cluster" # See "eksctl get cluster"
+```
 
 ## Default addons
 
@@ -216,6 +223,7 @@ In the following code snippet, replace:
 Then run it.
 
 ```shell
+CLUSTER_NAME="my-cluster" # See "eksctl get cluster"
 REGION="eu-west-1"
 ACCOUNT="123456789012"
 
@@ -294,6 +302,16 @@ aws autoscaling set-desired-capacity --desired-capacity 1 --auto-scaling-group-n
 ```
 
 to have less down time. This is at the cost of having more nodes than needed.
+
+Make sure these nodes have correct settings:
+
+```
+kubectl -n kube-system set env daemonset aws-node ENABLE_POD_ENI=true --v=9
+
+kubectl patch daemonset aws-node \
+  -n kube-system \
+  -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
+```
 
 # Delete old node(s)
 
