@@ -303,7 +303,7 @@ aws autoscaling set-desired-capacity --desired-capacity 1 --auto-scaling-group-n
 
 to have less down time. This is at the cost of having more nodes than needed.
 
-Make sure these nodes have correct settings:
+Make sure these nodes have correct settings (not sure if this is really needed):
 
 ```
 kubectl -n kube-system set env daemonset aws-node ENABLE_POD_ENI=true --v=9
