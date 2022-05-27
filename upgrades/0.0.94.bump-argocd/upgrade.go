@@ -29,8 +29,6 @@ func upgrade(context Context, flags cmdflags.Flags) error {
 		return fmt.Errorf("found version %s, ignoring", currentVersion.String())
 	}
 
-	fmt.Printf("Found version %s", currentVersion.String())
-
 	err = kubectl.UpdateImageVersion(argocdServerSelector, targetVersion)
 	if err != nil {
 		return fmt.Errorf("updating version: %w", err)
