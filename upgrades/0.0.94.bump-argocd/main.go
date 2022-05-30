@@ -3,11 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.bump-argocd/pkg/lib/cmdflags"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.bump-argocd/pkg/lib/commonerrors"
 	"github.com/spf13/cobra"
-	"os"
-	"path/filepath"
 )
 
 func main() {

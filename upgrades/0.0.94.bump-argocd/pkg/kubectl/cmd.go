@@ -20,6 +20,12 @@ func runCommand(args ...string) (io.Reader, error) {
 
 	err := cmd.Run()
 	if err != nil {
+		err = fmt.Errorf("%s: %w", stderr.String(), err)
+
+		if isErrNotFound(err) {
+			return nil, errNotFound
+		}
+
 		return nil, fmt.Errorf("%s: %w", stderr.String(), err)
 	}
 

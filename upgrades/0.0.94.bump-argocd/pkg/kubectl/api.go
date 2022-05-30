@@ -2,12 +2,16 @@ package kubectl
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"strings"
+
 	"github.com/Masterminds/semver"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.bump-argocd/pkg/jsonpatch"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.bump-argocd/pkg/kubectl/resources"
-	"io"
-	"strings"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.bump-argocd/pkg/lib/cmdflags"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.94.bump-argocd/pkg/lib/logger"
 )
 
 type Selector struct {
@@ -62,11 +66,15 @@ func GetImageVersion(selector Selector) (semver.Version, error) {
 	return *version, nil
 }
 
-func UpdateImageVersion(selector Selector, newVersion semver.Version) error {
+func UpdateImageVersion(log logger.Logger, flags cmdflags.Flags, selector Selector, newVersion semver.Version) error {
+	log.Debug("Acquiring relevant container")
+
 	serverContainerIndex, err := acquireContainerIndex(selector)
 	if err != nil {
 		return fmt.Errorf("acquiring container index: %w", err)
 	}
+
+	log.Debugf("Found relevant container at index %d, generating patch\n", serverContainerIndex)
 
 	patch := jsonpatch.New().Add(jsonpatch.Operation{
 		Type:  jsonpatch.OperationTypeReplace,
@@ -79,17 +87,50 @@ func UpdateImageVersion(selector Selector, newVersion semver.Version) error {
 		return fmt.Errorf("marshalling: %w", err)
 	}
 
-	_, err = runCommand(
+	log.Debugf("Generated %s\n", rawPatch)
+
+	args := []string{
 		"--namespace", selector.Namespace,
 		"patch", selector.Kind, selector.Name,
 		"--type", "json",
 		"--patch", string(rawPatch),
-	)
+	}
+
+	if flags.DryRun {
+		args = append(args, "--dry-run=server")
+	}
+
+	stdout, err := runCommand(args...)
 	if err != nil {
 		return fmt.Errorf("running command: %w", err)
 	}
 
+	rawStdout, err := io.ReadAll(stdout)
+	if err != nil {
+		return fmt.Errorf("buffering: %w", err)
+	}
+
+	log.Debugf("Kubectl: %s", rawStdout)
+
+	log.Debug("Patching complete, upgrade successful")
+
 	return nil
+}
+
+func HasResource(selector Selector) (bool, error) {
+	_, err := runCommand(
+		"--namespace", selector.Namespace,
+		"get", selector.Kind, selector.Name,
+	)
+	if err != nil {
+		if errors.Is(err, errNotFound) {
+			return false, nil
+		}
+
+		return false, fmt.Errorf("running command: %w", err)
+	}
+
+	return true, nil
 }
 
 func acquireContainerIndex(selector Selector) (int, error) {
