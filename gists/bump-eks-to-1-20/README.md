@@ -17,11 +17,29 @@ or
 
 # Prepare applications
 
-## Make sure applications are configured correctly
+To have no downtime, your applications need the following configureation
+
+* Deployment: Use `RollingUpdate` strategy
+* Deployment: Use `replicas: 2` or more
+* Create a `PodDisruptionBudget`
+
+## Use RollingUpdate
 
 Google how to apply using `maxUnavailable=0` and `type: RollingUpdate`, or `type: Recreate`.
 
-This is to have as little downtime as possible.
+Example:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello
+  namespace: hello
+spec:
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+```
 
 ## Add node selectors to pods using PVCs
 
@@ -54,7 +72,7 @@ So for instance, in `deployment.yaml`, you can change from
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: helloworld
+  name: hello
 spec:
   template:
     spec:
@@ -68,7 +86,7 @@ to
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: helloworld
+  name: hello
 spec:
   template:
     spec:
@@ -78,7 +96,41 @@ spec:
         - name: hello
 ```
 
-Apply changes:
+## Add a PodDisruptionBudget for every application
+
+A `PodDisruptionBudget` can be used to make sure for instance 1 pod is always in Running state when draining nodes.
+
+For each application, create a `infrastructure/applications/hello/base/pod-disruption-budget.yaml` with contents:
+
+```yaml
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: hello
+  namespace: hello
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: hello
+```
+
+**Important!** Your app's deployment must have `replicas: 2` or more. If not, it will be impossible to drain a node, because the pod can never be moved to a new node. Follow steps above to set `replicas` on your deployment.
+
+Update `infrastructure/applications/hello/base/kustomization.yaml` so it includes `pod-disruption-budget.yaml`. For isntance:
+
+```yaml
+resources:
+- service.yaml
+- ingress.yaml
+- namespace.yaml
+- deployment.yaml
+- pod-disruption-budget.yaml
+```
+
+## Apply changes
+
+Run
 
 ```shell
 git add .
@@ -92,7 +144,7 @@ If you don't want to wait, you can run
 
 ```shell
 CLUSTER_NAME="my-cluster" # See "eksctl get cluster"
-kustomize build infrastructure/applications/my-app/overlays/$CLUSTER_NAME | kubectl apply -f -
+kustomize build infrastructure/applications/hello/overlays/$CLUSTER_NAME | kubectl apply -f -
 ```
 
 # Bump EKS control plane
@@ -328,7 +380,7 @@ node groups.
 
 (Draining also sets a taint on the nodes, i.e. prohibits new pods to be scheduled on them. So there is no need to taint nodes before draining them.)
 
-To see which nodes are going to be drained, run:
+To see which nodes and pods are going to be drained, run:
 
 ```shell
 kubectl drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic' --ignore-daemonsets --delete-emptydir-data --dry-run=client
@@ -360,7 +412,14 @@ Then delete the nodegroup:
 eksctl delete nodegroup --cluster $CLUSTER_NAME --name ng-generic
 ```
 
-# Other details
+# Something wrong happened
+
+## Apps have downtime when draining nodes
+
+* Your app's Deployment must have `replicas: 2`.
+* You need a working `PodDisruptionBudget`.
+
+## Upgrading VPC-CNI addon fails
 
 When upgrading vpc-cni addon to 1.10.3 without --force, this error is returned from eksctl:
 
