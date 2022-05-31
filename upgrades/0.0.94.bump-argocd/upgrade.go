@@ -42,7 +42,10 @@ func upgrade(ctx Context, flags cmdflags.Flags) error {
 	ctx.logger.Debugf("Found version %s\n", currentVersion.String())
 
 	if !expectedVersion.Equal(&currentVersion) {
-		ctx.logger.Debugf("Current version does not equal expected version %s, ignoring upgrade", expectedVersion.String())
+		ctx.logger.Debugf("Current version %s does not equal expected version %s, ignoring upgrade",
+			currentVersion.String(),
+			expectedVersion.String(),
+		)
 
 		return nil
 	}
