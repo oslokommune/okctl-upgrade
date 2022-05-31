@@ -1,5 +1,11 @@
 This guide describes how to upgrade EKS from 1.19 to 1.20 in an EKS cluster.
 
+# Upgrade Okctl environments
+
+Download okctl 0.0.95 and run `okctl upgrade`.
+
+This is required in order to make sure Loki spawns in the correct AZ.
+
 # Update tools
 
 * Download latest verison of okctl. Run `okctl venv` to log in to the cluster. This should also download latest version of tools.
@@ -351,7 +357,7 @@ Use `eksctl get nodegroup` to verify names of the old node group. It should be `
 Then delete the nodegroup:
 
 ```shell
-eksctl delete nodegroup --cluster $CLUSTER_NAME ng-generic
+eksctl delete nodegroup --cluster $CLUSTER_NAME --name ng-generic
 ```
 
 # Other details
