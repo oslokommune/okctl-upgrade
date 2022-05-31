@@ -8,11 +8,7 @@ This is required in order to make sure Loki spawns in the correct AZ.
 
 # Update tools
 
-* Download latest verison of okctl. Run `okctl venv` to log in to the cluster. This should also download latest version of tools.
-
-or
-
-* Download the latest version of [eksctl](https://github.com/weaveworks/eksctl/releases). (This guide is tested with 0.98.0)
+* Download the latest version of [eksctl](https://github.com/weaveworks/eksctl/releases). (This guide is tested with 0.98.0). (Important: You need to run okctl upgrade before running this, as this breaks the 0.0.95 Loki upgrade)
 * Download kubectl CLI version 1.20
 
 # Prepare applications
