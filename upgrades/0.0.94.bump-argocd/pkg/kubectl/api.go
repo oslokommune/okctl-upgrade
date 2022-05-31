@@ -22,6 +22,13 @@ type Selector struct {
 }
 
 func GetImageVersion(selector Selector) (semver.Version, error) {
+	if !contains(validKinds, selector.Kind) {
+		return semver.Version{}, fmt.Errorf("kind %s is not supported. Valid kinds are %s",
+			selector.Kind,
+			validKinds,
+		)
+	}
+
 	result, err := runCommand(
 		"--namespace", selector.Namespace,
 		"--output", "json",
@@ -162,4 +169,16 @@ func acquireContainerIndex(selector Selector) (int, error) {
 	}
 
 	return -1, fmt.Errorf("no container with name %s found", selector.ContainerName)
+}
+
+var validKinds = []string{"deployment", "statefulset", "daemonset"}
+
+func contains(haystack []string, needle string) bool {
+	for _, item := range haystack {
+		if strings.EqualFold(item, needle) {
+			return true
+		}
+	}
+
+	return false
 }
