@@ -9,7 +9,7 @@ This is required in order to make sure Loki spawns in the correct AZ.
 # Update tools
 
 * Download the latest version of [eksctl](https://github.com/weaveworks/eksctl/releases). (This guide is tested with 0.98.0). (Important: You need to run okctl upgrade before running this, as this breaks the 0.0.95 Loki upgrade)
-* Download kubectl CLI version 1.20
+* Download [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) CLI version 1.20
 
 # Prepare applications
 
@@ -94,7 +94,7 @@ spec:
 
 ## Add a PodDisruptionBudget for every application
 
-A `PodDisruptionBudget` can be used to make sure for instance 1 pod is always in Running state when draining nodes.
+A `PodDisruptionBudget` can be used to make sure for instance 1 pod is always in Running state when draining nodes. For more details, see [documentation](https://kubernetes.io/docs/tasks/run-application/configure-pdb/).
 
 For each application, create a `infrastructure/applications/hello/base/pod-disruption-budget.yaml` with contents:
 
@@ -400,7 +400,7 @@ kubectl get pod -o wide
 
 ## Delete the old nodegroup
 
-Use `eksctl get nodegroup` to verify names of the old node group. It should be `ng-generic`.
+Use `eksctl get nodegroup --cluster $CLUSTER_NAME` to verify names of the old node group. It should be `ng-generic`.
 
 Then delete the nodegroup:
 
@@ -449,3 +449,7 @@ conflicts with "kubectl-client-side-apply" using apps/v1:
 - .spec.template.spec.containers[name="aws-node"].resources.requests
 - .spec.template.spec.containers[name="aws-node"].resources.requests.cpu ResourceIDs:[]}
 ```
+
+# Resources
+
+- https://eksctl.io/usage/cluster-upgrade/
