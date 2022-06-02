@@ -2,13 +2,10 @@ package cfn
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"strings"
 	"time"
-
-	"github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -51,13 +48,7 @@ func UpdateStackTemplate(ctx context.Context, name string, template io.Reader) e
 		TemplateBody: aws.String(string(rawTemplate)),
 	})
 	if err != nil {
-		var alreadyExists *types.AlreadyExistsException
-
-		if errors.As(err, &alreadyExists) {
-			return nil
-		}
-
-		return fmt.Errorf("creating stack: %w", err)
+		return fmt.Errorf("updating stack: %w", err)
 	}
 
 	waiter := cloudformation.NewStackUpdateCompleteWaiter(client)
