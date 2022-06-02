@@ -1,11 +1,12 @@
 package patch
 
 import (
-	"github.com/sebdah/goldie/v2"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"strings"
 	"testing"
+
+	"github.com/sebdah/goldie/v2"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAddBucketVersioning(t *testing.T) {

@@ -2,9 +2,10 @@ package manifest
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.96.remote-state-versioning/pkg/manifest/apis/okctl.io/v1alpha1"
 	"github.com/spf13/afero"
-	"os"
 )
 
 func Cluster(fs *afero.Afero) (v1alpha1.Cluster, error) {

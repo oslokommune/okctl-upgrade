@@ -3,9 +3,11 @@ package patch
 import (
 	"bytes"
 	"fmt"
+	"io"
+
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	jsp "github.com/oslokommune/okctl-upgrade/upgrades/0.0.96.remote-state-versioning/pkg/lib/jsonpatch"
-	"io"
+
 	"sigs.k8s.io/yaml"
 )
 

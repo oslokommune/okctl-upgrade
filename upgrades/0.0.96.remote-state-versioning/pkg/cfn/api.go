@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"io"
 	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
