@@ -20,21 +20,23 @@ func upgrade(ctx context.Context, log logging.Logger, fs *afero.Afero, flags cmd
 
 	stackName := generateStackName(clusterManifest.Metadata.Name)
 
-	log.Debugf("Fetching stack with name %s", stackName)
+	log.Debugf("Fetching stack with name %s\n", stackName)
 
 	template, err := cfn.FetchStackTemplate(ctx, stackName)
 	if err != nil {
 		return fmt.Errorf("fetching template: %w", err)
 	}
 
-	log.Debug("Found stack. Starting patch operation")
+	log.Debug("Found stack")
+	log.Debug("Starting patch operation")
 
 	patchedTemplate, err := patch.AddBucketVersioning(template)
 	if err != nil {
 		return fmt.Errorf("patching: %w", err)
 	}
 
-	log.Debug("Patching successful. Updating stack.")
+	log.Debug("Patching successful")
+	log.Debug("Updating stack")
 
 	if !flags.DryRun {
 		err = cfn.UpdateStackTemplate(ctx, stackName, patchedTemplate)
