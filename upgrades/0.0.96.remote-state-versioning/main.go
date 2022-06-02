@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.96.remote-state-versioning/pkg/lib/cmdflags"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.96.remote-state-versioning/pkg/lib/commonerrors"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.96.remote-state-versioning/pkg/lib/logging"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
@@ -29,7 +31,10 @@ func main() {
 func buildRootCommand() *cobra.Command {
 	flags := cmdflags.Flags{}
 
-	var context Context
+	var (
+		log logging.Logger
+		ctx context.Context
+	)
 
 	filename := filepath.Base(os.Args[0])
 
@@ -41,11 +46,18 @@ func buildRootCommand() *cobra.Command {
 		SilenceErrors: true, // true as we print errors in the main() function
 		SilenceUsage:  true, // true because we don't want to show usage if an errors occurs
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			context = newContext(flags)
+			ctx = context.Background()
+
+			if flags.Debug {
+				log = logging.New(logging.Debug)
+			} else {
+				log = logging.New(logging.Info)
+			}
+
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			return upgrade(context, flags)
+			return upgrade(ctx, log, flags)
 		},
 	}
 
