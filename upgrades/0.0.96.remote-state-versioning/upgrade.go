@@ -28,9 +28,11 @@ func upgrade(ctx context.Context, log logging.Logger, flags cmdflags.Flags) erro
 
 	log.Debug("Patching successful. Updating stack.")
 
-	err = cfn.UpdateStackTemplate(ctx, stackName, patchedTemplate)
-	if err != nil {
-		return fmt.Errorf("updating template: %w", err)
+	if !flags.DryRun {
+		err = cfn.UpdateStackTemplate(ctx, stackName, patchedTemplate)
+		if err != nil {
+			return fmt.Errorf("updating template: %w", err)
+		}
 	}
 
 	log.Debug("Update success.")
