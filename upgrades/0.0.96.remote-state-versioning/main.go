@@ -4,12 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/spf13/afero"
+
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.96.remote-state-versioning/pkg/lib/cmdflags"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.96.remote-state-versioning/pkg/lib/commonerrors"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.96.remote-state-versioning/pkg/lib/logging"
 	"github.com/spf13/cobra"
-	"os"
-	"path/filepath"
 )
 
 func main() {
@@ -34,6 +37,7 @@ func buildRootCommand() *cobra.Command {
 	var (
 		log logging.Logger
 		ctx context.Context
+		fs  *afero.Afero
 	)
 
 	filename := filepath.Base(os.Args[0])
@@ -54,10 +58,12 @@ func buildRootCommand() *cobra.Command {
 				log = logging.New(logging.Info)
 			}
 
+			fs = &afero.Afero{Fs: afero.NewOsFs()}
+
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			return upgrade(ctx, log, flags)
+			return upgrade(ctx, log, fs, flags)
 		},
 	}
 
