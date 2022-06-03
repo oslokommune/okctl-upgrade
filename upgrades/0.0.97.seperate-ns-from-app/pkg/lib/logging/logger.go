@@ -1,4 +1,4 @@
-package logger
+package logging
 
 import (
 	"fmt"
@@ -66,7 +66,15 @@ func (l Logger) levelIsEnabled(level Level) bool {
 	return l.level <= level
 }
 
-func New(level Level) Logger {
+func New(debug bool) Logger {
+	var level Level
+
+	if debug {
+		level = Debug
+	} else {
+		level = Info
+	}
+
 	return Logger{
 		level: level,
 	}

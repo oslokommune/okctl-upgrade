@@ -1,13 +1,17 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/lib/cmdflags"
-	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/lib/commonerrors"
-	"github.com/spf13/cobra"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/upgrade"
 	"os"
 	"path/filepath"
+
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/lib/cmdflags"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/lib/commonerrors"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/lib/logging"
+	"github.com/spf13/cobra"
 )
 
 func main() {
@@ -29,7 +33,10 @@ func main() {
 func buildRootCommand() *cobra.Command {
 	flags := cmdflags.Flags{}
 
-	var context Context
+	var (
+		ctx    context.Context
+		logger logging.Logger
+	)
 
 	filename := filepath.Base(os.Args[0])
 
@@ -41,11 +48,13 @@ func buildRootCommand() *cobra.Command {
 		SilenceErrors: true, // true as we print errors in the main() function
 		SilenceUsage:  true, // true because we don't want to show usage if an errors occurs
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			context = newContext(flags)
+			ctx = context.Background()
+			logger = logging.New(flags.Debug)
+
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			return upgrade(context, flags)
+			return upgrade.Start(ctx, logger, flags)
 		},
 	}
 
