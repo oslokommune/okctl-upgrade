@@ -4,9 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/upgrade"
 	"os"
 	"path/filepath"
+
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/lib/manifest"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/lib/manifest/apis/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/upgrade"
+	"github.com/spf13/afero"
 
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/lib/cmdflags"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/lib/commonerrors"
@@ -34,8 +38,10 @@ func buildRootCommand() *cobra.Command {
 	flags := cmdflags.Flags{}
 
 	var (
-		ctx    context.Context
-		logger logging.Logger
+		ctx     context.Context
+		logger  logging.Logger
+		cluster v1alpha1.Cluster
+		fs      *afero.Afero
 	)
 
 	filename := filepath.Base(os.Args[0])
@@ -47,14 +53,20 @@ func buildRootCommand() *cobra.Command {
 		Example:       fmt.Sprintf("%s --debug=false", filename),
 		SilenceErrors: true, // true as we print errors in the main() function
 		SilenceUsage:  true, // true because we don't want to show usage if an errors occurs
-		PreRunE: func(_ *cobra.Command, args []string) error {
+		PreRunE: func(_ *cobra.Command, args []string) (err error) {
 			ctx = context.Background()
 			logger = logging.New(flags.Debug)
+			fs = &afero.Afero{Fs: afero.NewOsFs()}
+
+			cluster, err = manifest.Cluster(fs)
+			if err != nil {
+				return fmt.Errorf("acquiring cluster manifest: %w", err)
+			}
 
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			return upgrade.Start(ctx, logger, flags)
+			return upgrade.Start(ctx, logger, fs, flags, cluster)
 		},
 	}
 
