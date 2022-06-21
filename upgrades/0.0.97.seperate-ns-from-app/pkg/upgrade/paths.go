@@ -10,10 +10,13 @@ import (
 )
 
 const (
-	argocdConfigDir           = "argocd"
-	argocdConfigNamespacesDir = "namespaces"
-	defaultFolderPermissions  = 0o600
-	defaultReadmeFilename     = "README.md"
+	argocdConfigDir             = "argocd"
+	argocdConfigNamespacesDir   = "namespaces"
+	argocdConfigApplicationsDir = "applications"
+	applicationsDir             = "applications"
+	applicationBaseDir          = "base"
+	defaultFolderPermissions    = 0o600
+	defaultReadmeFilename       = "README.md"
 )
 
 func argoCDConfigDir(cluster v1alpha1.Cluster) string {
@@ -22,6 +25,10 @@ func argoCDConfigDir(cluster v1alpha1.Cluster) string {
 
 func namespacesDir(cluster v1alpha1.Cluster) string {
 	return path.Join(argoCDConfigDir(cluster), argocdConfigNamespacesDir)
+}
+
+func argoCDApplicationsDir(cluster v1alpha1.Cluster) string {
+	return path.Join(argoCDConfigDir(cluster), argocdConfigApplicationsDir)
 }
 
 // getRepositoryRootDirectory returns the absolute path of the repository root no matter what the current working

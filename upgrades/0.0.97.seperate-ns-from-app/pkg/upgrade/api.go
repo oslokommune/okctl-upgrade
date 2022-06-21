@@ -12,7 +12,7 @@ import (
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/lib/logging"
 )
 
-func Start(ctx context.Context, logger logging.Logger, fs *afero.Afero, flags cmdflags.Flags, cluster v1alpha1.Cluster) error {
+func Start(_ context.Context, logger logging.Logger, fs *afero.Afero, flags cmdflags.Flags, cluster v1alpha1.Cluster) error {
 	absoluteRepositoryRootDir, err := getRepositoryRootDirectory()
 	if err != nil {
 		return fmt.Errorf("acquiring repository root dir: %w", err)
