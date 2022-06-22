@@ -50,3 +50,7 @@ func migrateApplication(fs *afero.Afero, cluster v1alpha1.Cluster, absoluteRepos
 
 	return nil
 }
+
+func removeRedundantNamespacesFromBase(fs *afero.Afero, absoluteRepositoryRoot string) error {
+	return nil
+}

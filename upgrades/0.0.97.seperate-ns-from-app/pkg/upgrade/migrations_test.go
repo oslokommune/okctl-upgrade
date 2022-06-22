@@ -96,7 +96,7 @@ func namespace(name string) io.Reader {
 	return &buf
 }
 
-func addAppNamespace(t *testing.T, fs *afero.Afero, appName string, namespaceName string) {
+func addOldAppNamespace(t *testing.T, fs *afero.Afero, appName string, namespaceName string) {
 	appBaseDir := path.Join("/infrastructure/applications", appName, "base")
 
 	err := fs.MkdirAll(appBaseDir, defaultFolderPermissions)
@@ -119,7 +119,7 @@ func TestMigrateApplication(t *testing.T) {
 			withFs: func() *afero.Afero {
 				fs := &afero.Afero{Fs: afero.NewMemMapFs()}
 
-				addAppNamespace(t, fs, "mock-app-one", "mock-namespace")
+				addOldAppNamespace(t, fs, "mock-app-one", "mock-namespace")
 
 				return fs
 			}(),
@@ -150,6 +150,140 @@ func TestMigrateApplication(t *testing.T) {
 				assert.NoError(t, err)
 
 				assert.True(t, exists)
+			}
+		})
+	}
+}
+
+// One app "exists" when the /infrastructure/applications/<app name> directory exists
+func createApp(t *testing.T, fs *afero.Afero, appName string) {
+	absOutputDir := path.Join("/", "infrastructure")
+	absAppDir := path.Join(absOutputDir, "applications", appName)
+	absBaseDir := path.Join(absAppDir, "base")
+
+	err := fs.MkdirAll(absBaseDir, defaultFolderPermissions)
+	assert.NoError(t, err)
+}
+
+// One cluster "exists" when the /infrastructure/<cluster name> directory exists
+func createCluster(t *testing.T, fs *afero.Afero, clusterName string) {
+	absOutputDir := path.Join("/", "infrastructure")
+	absArgoCDApplicationsConfigDir := path.Join(absOutputDir, clusterName, "argocd", "applications")
+
+	err := fs.MkdirAll(absArgoCDApplicationsConfigDir, defaultFolderPermissions)
+	assert.NoError(t, err)
+}
+
+// An app is added to a cluster when the /infrastructure/<cluster name>/argocd/applications/<app name>.yaml file exists
+func addAppToCluster(t *testing.T, fs *afero.Afero, appName string, clusterName string) {
+	absOutputDir := path.Join("/", "infrastructure")
+	absArgoCDApplicationsConfigDir := path.Join(absOutputDir, clusterName, "argocd", "applications")
+
+	err := fs.MkdirAll(absArgoCDApplicationsConfigDir, defaultFolderPermissions)
+	assert.NoError(t, err)
+
+	err = fs.WriteReader(
+		path.Join(absArgoCDApplicationsConfigDir, fmt.Sprintf("%s.yaml", appName)),
+		strings.NewReader(""),
+	)
+	assert.NoError(t, err)
+}
+
+func addNewAppNamespace(t *testing.T, fs *afero.Afero, clusterName string, namespaceName string) {
+	absOutputDir := path.Join("/", "infrastructure")
+	absArgoCDNamespacesConfigDir := path.Join(absOutputDir, clusterName, "argocd", "namespaces")
+
+	err := fs.MkdirAll(absArgoCDNamespacesConfigDir, defaultFolderPermissions)
+	assert.NoError(t, err)
+
+	err = fs.WriteReader(
+		path.Join(absArgoCDNamespacesConfigDir, fmt.Sprintf("%s.yaml", namespaceName)),
+		namespace(namespaceName),
+	)
+	assert.NoError(t, err)
+}
+
+func TestRemoveRedundantNamespacesFromBase(t *testing.T) {
+	testCases := []struct {
+		name                     string
+		withFs                   *afero.Afero
+		expectedNonExistantPaths []string
+		expectedExistantPaths    []string
+	}{
+		{
+			name: "Should remove base ns with one app and one upgraded cluster",
+			withFs: func() *afero.Afero {
+				fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+
+				clusterOne := "mock-prod"
+				createCluster(t, fs, clusterOne)
+
+				appOne := "mock-app-one"
+				createApp(t, fs, appOne)
+
+				appOneNamespace := "apps"
+				addOldAppNamespace(t, fs, appOne, appOneNamespace)
+				addNewAppNamespace(t, fs, clusterOne, appOneNamespace)
+
+				addAppToCluster(t, fs, appOne, clusterOne)
+
+				return fs
+			}(),
+			expectedNonExistantPaths: []string{"/infrastructure/applications/mock-app-one/base/namespace.yaml"},
+			expectedExistantPaths:    []string{"/infrastructure/mock-prod/argocd/namespaces/apps.yaml"},
+		},
+		{
+			name: "Should leave ns in base with one upgraded cluster and one not upgraded cluster",
+			withFs: func() *afero.Afero {
+				fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+
+				clusterOne := "mock-prod"
+				createCluster(t, fs, clusterOne)
+
+				clusterTwo := "mock-test"
+				createCluster(t, fs, clusterTwo)
+
+				appOne := "mock-app-one"
+				createApp(t, fs, appOne)
+
+				appOneNamespace := "apps"
+				addOldAppNamespace(t, fs, appOne, appOneNamespace)
+				addNewAppNamespace(t, fs, clusterOne, appOneNamespace)
+
+				addAppToCluster(t, fs, appOne, clusterOne)
+				addAppToCluster(t, fs, appOne, clusterTwo)
+
+				return fs
+			}(),
+			expectedNonExistantPaths: []string{},
+			expectedExistantPaths: []string{
+				"/infrastructure/mock-prod/argocd/namespaces/apps.yaml",
+				"/infrastructure/applications/mock-app-one/base/namespace.yaml",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := removeRedundantNamespacesFromBase(tc.withFs, "/")
+			assert.NoError(t, err)
+
+			for _, currentPath := range tc.expectedExistantPaths {
+				exists, err := tc.withFs.Exists(currentPath)
+				assert.NoError(t, err)
+
+				assert.True(t, exists)
+			}
+
+			for _, currentPath := range tc.expectedNonExistantPaths {
+				exists, err := tc.withFs.Exists(currentPath)
+				assert.NoError(t, err)
+
+				assert.False(t, exists)
 			}
 		})
 	}
