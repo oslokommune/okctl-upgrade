@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"path"
 
-	"sigs.k8s.io/yaml"
-
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/lib/manifest/apis/okctl.io/v1alpha1"
 	"github.com/spf13/afero"
 )
@@ -38,7 +36,7 @@ func migrateApplication(fs *afero.Afero, cluster v1alpha1.Cluster, absoluteRepos
 
 	sourcePath := path.Join(absoluteApplicationBaseDir, "namespace.yaml")
 
-	namespaceName, err := acquireNamespaceName(fs, sourcePath)
+	namespaceName, err := getNamespaceName(fs, sourcePath)
 	if err != nil {
 		return fmt.Errorf("acquiring namespace name: %w", err)
 	}
@@ -127,6 +125,7 @@ func clusterHasNamespace(fs *afero.Afero, absoluteRepositoryOutputDir string, cl
 	return exists, nil
 }
 
+// Adjacent meaning other clusters in an output folder, i.e.: "infrastructure"
 func allAdjacentClustersHasNamespace(fs *afero.Afero, absoluteRepositoryRoot string, cluster v1alpha1.Cluster, namespaceName string) (bool, error) {
 	absoluteRepositoryOutputDir := path.Join(absoluteRepositoryRoot, cluster.Github.OutputPath)
 
@@ -170,28 +169,4 @@ func getClusters(fs *afero.Afero, absoluteRepositoryOutputDir string) ([]string,
 	}
 
 	return clusters, nil
-}
-
-type nsResourceMetadata struct {
-	Name string `json:"name"`
-}
-
-type nsResource struct {
-	Metadata nsResourceMetadata `json:"metadata"`
-}
-
-func getNamespaceName(fs *afero.Afero, targetPath string) (string, error) {
-	raw, err := fs.ReadFile(targetPath)
-	if err != nil {
-		return "", fmt.Errorf("reading: %w", err)
-	}
-
-	var ns nsResource
-
-	err = yaml.Unmarshal(raw, &ns)
-	if err != nil {
-		return "", fmt.Errorf("unmarshalling: %w", err)
-	}
-
-	return ns.Metadata.Name, nil
 }
