@@ -3,9 +3,9 @@ package upgrade
 import (
 	"context"
 	"fmt"
-	"path"
 
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/argocd"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/migration"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/paths"
 
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/lib/manifest/apis/okctl.io/v1alpha1"
@@ -21,14 +21,12 @@ func Start(_ context.Context, logger logging.Logger, fs *afero.Afero, flags cmdf
 		return fmt.Errorf("acquiring repository root dir: %w", err)
 	}
 
-	absoluteNamespacesDir := path.Join(absoluteRepositoryRootDir, paths.RelativeNamespacesDir(cluster))
-
 	err = argocd.EnableNamespacesSync(fs, cluster)
 	if err != nil {
 		return fmt.Errorf("adding namespaces app manifest: %w", err)
 	}
 
-	err = migrateExistingNamespacesToDir(fs, cluster, absoluteNamespacesDir)
+	err = migration.MigrateExistingApplicationNamespacesToCluster(fs, cluster, absoluteRepositoryRootDir)
 	if err != nil {
 		return fmt.Errorf("migrating existing namespaces: %w", err)
 	}
