@@ -9,6 +9,8 @@ import (
 	"testing"
 	"text/template"
 
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/paths"
+
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/lib/manifest/apis/okctl.io/v1alpha1"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -48,7 +50,7 @@ func TestScanForRelevantApps(t *testing.T) {
 			withFs: func() *afero.Afero {
 				fs := &afero.Afero{Fs: afero.NewMemMapFs()}
 
-				_ = fs.MkdirAll("/infrastructure/mock-cluster/argocd/applications", defaultFolderPermissions)
+				_ = fs.MkdirAll("/infrastructure/mock-cluster/argocd/applications", paths.DefaultFolderPermissions)
 				_ = fs.WriteReader("/infrastructure/mock-cluster/argocd/applications/mock-app-one.yaml", strings.NewReader(appTemplate))
 
 				return fs
@@ -99,7 +101,7 @@ func namespace(name string) io.Reader {
 func addOldAppNamespace(t *testing.T, fs *afero.Afero, appName string, namespaceName string) {
 	appBaseDir := path.Join("/infrastructure/applications", appName, "base")
 
-	err := fs.MkdirAll(appBaseDir, defaultFolderPermissions)
+	err := fs.MkdirAll(appBaseDir, paths.DefaultFolderPermissions)
 	assert.NoError(t, err)
 
 	err = fs.WriteReader(path.Join(appBaseDir, "namespace.yaml"), namespace(namespaceName))
@@ -161,7 +163,7 @@ func createApp(t *testing.T, fs *afero.Afero, appName string) {
 	absAppDir := path.Join(absOutputDir, "applications", appName)
 	absBaseDir := path.Join(absAppDir, "base")
 
-	err := fs.MkdirAll(absBaseDir, defaultFolderPermissions)
+	err := fs.MkdirAll(absBaseDir, paths.DefaultFolderPermissions)
 	assert.NoError(t, err)
 }
 
@@ -170,7 +172,7 @@ func createCluster(t *testing.T, fs *afero.Afero, clusterName string) {
 	absOutputDir := path.Join("/", "infrastructure")
 	absArgoCDApplicationsConfigDir := path.Join(absOutputDir, clusterName, "argocd", "applications")
 
-	err := fs.MkdirAll(absArgoCDApplicationsConfigDir, defaultFolderPermissions)
+	err := fs.MkdirAll(absArgoCDApplicationsConfigDir, paths.DefaultFolderPermissions)
 	assert.NoError(t, err)
 }
 
@@ -183,7 +185,7 @@ func addAppToCluster(t *testing.T, fs *afero.Afero, appName string, clusterName 
 	absOutputDir := path.Join("/", "infrastructure")
 	absArgoCDApplicationsConfigDir := path.Join(absOutputDir, clusterName, "argocd", "applications")
 
-	err := fs.MkdirAll(absArgoCDApplicationsConfigDir, defaultFolderPermissions)
+	err := fs.MkdirAll(absArgoCDApplicationsConfigDir, paths.DefaultFolderPermissions)
 	assert.NoError(t, err)
 
 	err = fs.WriteReader(
@@ -197,7 +199,7 @@ func addNewAppNamespace(t *testing.T, fs *afero.Afero, clusterName string, names
 	absOutputDir := path.Join("/", "infrastructure")
 	absArgoCDNamespacesConfigDir := path.Join(absOutputDir, clusterName, "argocd", "namespaces")
 
-	err := fs.MkdirAll(absArgoCDNamespacesConfigDir, defaultFolderPermissions)
+	err := fs.MkdirAll(absArgoCDNamespacesConfigDir, paths.DefaultFolderPermissions)
 	assert.NoError(t, err)
 
 	err = fs.WriteReader(

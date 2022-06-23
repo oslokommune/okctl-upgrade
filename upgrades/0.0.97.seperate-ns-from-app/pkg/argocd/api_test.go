@@ -1,4 +1,4 @@
-package upgrade
+package argocd
 
 import (
 	"fmt"
@@ -37,7 +37,7 @@ func TestSetupNamespacesSync(t *testing.T) {
 
 			fs := &afero.Afero{Fs: afero.NewMemMapFs()}
 
-			err := setupNamespacesSync(fs, tc.withCluster)
+			err := EnableNamespacesSync(fs, tc.withCluster)
 			assert.NoError(t, err)
 
 			g := goldie.New(t)

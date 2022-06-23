@@ -1,38 +1,42 @@
 package argocd
 
 import (
-	"bytes"
 	_ "embed"
 	"fmt"
-	"io"
-	"text/template"
+	"path"
+	"strings"
 
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/lib/manifest/apis/okctl.io/v1alpha1"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/paths"
+	"github.com/spf13/afero"
 )
 
-func ScaffoldApplication(cluster v1alpha1.Cluster, name string, targetDir string) (io.Reader, error) {
-	t, err := template.New("argo-app").Parse(argoCDApplicationTemplate)
+func EnableNamespacesSync(fs *afero.Afero, cluster v1alpha1.Cluster) error {
+	err := fs.MkdirAll(paths.RelativeNamespacesDir(cluster), paths.DefaultFolderPermissions)
 	if err != nil {
-		return nil, fmt.Errorf("parsing: %w", err)
+		return fmt.Errorf("preparing namespaces dir: %w", err)
 	}
 
-	buf := bytes.Buffer{}
-
-	err = t.Execute(&buf, struct {
-		Name          string
-		TargetDir     string
-		RepositoryURI string
-	}{
-		Name:          name,
-		TargetDir:     targetDir,
-		RepositoryURI: cluster.Github.URL(),
-	})
+	err = fs.WriteReader(
+		path.Join(paths.RelativeNamespacesDir(cluster), paths.DefaultReadmeFilename),
+		strings.NewReader(namespacesReadmeTemplate),
+	)
 	if err != nil {
-		return nil, fmt.Errorf("executing: %w", err)
+		return fmt.Errorf("creating namespaces readme: %w", err)
 	}
 
-	return &buf, nil
+	argoApp, err := scaffoldApplication(cluster, "namespaces", paths.RelativeNamespacesDir(cluster))
+	if err != nil {
+		return fmt.Errorf("scaffolding ArgoCD application: %w", err)
+	}
+
+	err = fs.WriteReader(path.Join(paths.RelativeArgoCDConfigDir(cluster), "namespaces.yaml"), argoApp)
+	if err != nil {
+		return fmt.Errorf("writing ArgoCD application: %w", err)
+	}
+
+	return nil
 }
 
-//go:embed templates/argocd-application.yaml
-var argoCDApplicationTemplate string
+//go:embed templates/namespaces-readme.md
+var namespacesReadmeTemplate string

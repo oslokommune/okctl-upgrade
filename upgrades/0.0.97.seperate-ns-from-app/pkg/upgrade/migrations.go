@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/paths"
+
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/lib/manifest/apis/okctl.io/v1alpha1"
 	"github.com/spf13/afero"
 )
@@ -25,13 +27,13 @@ func migrateExistingNamespacesToDir(fs *afero.Afero, cluster v1alpha1.Cluster, a
 }
 
 func migrateApplication(fs *afero.Afero, cluster v1alpha1.Cluster, absoluteRepositoryRoot string, appName string) error {
-	absoluteNamespacesDir := path.Join(absoluteRepositoryRoot, namespacesDir(cluster))
+	absoluteNamespacesDir := path.Join(absoluteRepositoryRoot, paths.RelativeNamespacesDir(cluster))
 	absoluteApplicationBaseDir := path.Join(
 		absoluteRepositoryRoot,
 		cluster.Github.OutputPath,
-		applicationsDir,
+		paths.ApplicationsDir,
 		appName,
-		applicationBaseDir,
+		paths.ApplicationBaseDir,
 	)
 
 	sourcePath := path.Join(absoluteApplicationBaseDir, "namespace.yaml")
@@ -55,9 +57,9 @@ func isFullyMigrated(fs *afero.Afero, cluster v1alpha1.Cluster, absoluteReposito
 	absAppBasePath := path.Join(
 		absoluteRepositoryRoot,
 		cluster.Github.OutputPath,
-		applicationsDir,
+		paths.ApplicationsDir,
 		appName,
-		applicationBaseDir,
+		paths.ApplicationBaseDir,
 	)
 
 	exists, err := fs.Exists(path.Join(absAppBasePath, "namespace.yaml"))
@@ -84,8 +86,8 @@ func removeRedundantNamespacesFromBase(fs *afero.Afero, cluster v1alpha1.Cluster
 			continue
 		}
 
-		absoluteApplicationDir := path.Join(absoluteRepositoryRoot, cluster.Github.OutputPath, applicationsDir, app)
-		absoluteNamespacePath := path.Join(absoluteApplicationDir, applicationBaseDir, "namespace.yaml")
+		absoluteApplicationDir := path.Join(absoluteRepositoryRoot, cluster.Github.OutputPath, paths.ApplicationsDir, app)
+		absoluteNamespacePath := path.Join(absoluteApplicationDir, paths.ApplicationBaseDir, "namespace.yaml")
 
 		namespaceName, err := getNamespaceName(fs, absoluteNamespacePath)
 		if err != nil {
@@ -112,7 +114,7 @@ func clusterHasNamespace(fs *afero.Afero, absoluteRepositoryOutputDir string, cl
 	potentialNamespacePath := path.Join(
 		absoluteRepositoryOutputDir,
 		clusterName,
-		argocdConfigDir,
+		paths.ArgocdConfigDir,
 		"namespaces",
 		fmt.Sprintf("%s.yaml", namespaceName),
 	)
@@ -159,7 +161,7 @@ func getClusters(fs *afero.Afero, absoluteRepositoryOutputDir string) ([]string,
 	for _, target := range targets {
 		name := target.Name()
 
-		if name == applicationsDir {
+		if name == paths.ApplicationsDir {
 			continue
 		}
 
