@@ -74,7 +74,7 @@ func filenameWithoutExtension(filename string) string {
 	return strings.Replace(path.Base(filename), path.Ext(filename), "", 1)
 }
 
-func scanForRelevantApplications(fs *afero.Afero, cluster v1alpha1.Cluster, absoluteRepositoryRoot string) ([]string, error) {
+func getApplicationsInCluster(fs *afero.Afero, cluster v1alpha1.Cluster, absoluteRepositoryRoot string) ([]string, error) {
 	absoluteApplicationsDir := path.Join(absoluteRepositoryRoot, argoCDApplicationsDir(cluster))
 
 	files, err := fs.ReadDir(absoluteApplicationsDir)

@@ -14,9 +14,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func mockCluster() v1alpha1.Cluster {
+func mockCluster(name string) v1alpha1.Cluster {
 	return v1alpha1.Cluster{
-		Metadata: v1alpha1.ClusterMeta{Name: "mock-cluster"},
+		Metadata: v1alpha1.ClusterMeta{Name: name},
 		Github:   v1alpha1.ClusterGithub{OutputPath: "infrastructure"},
 	}
 }
@@ -44,7 +44,7 @@ func TestScanForRelevantApps(t *testing.T) {
 	}{
 		{
 			name:        "Should return correct apps",
-			withCluster: mockCluster(),
+			withCluster: mockCluster("mock-cluster"),
 			withFs: func() *afero.Afero {
 				fs := &afero.Afero{Fs: afero.NewMemMapFs()}
 
@@ -63,7 +63,7 @@ func TestScanForRelevantApps(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			apps, err := scanForRelevantApplications(tc.withFs, tc.withCluster, "/")
+			apps, err := getApplicationsInCluster(tc.withFs, tc.withCluster, "/")
 			assert.NoError(t, err)
 
 			assert.Equal(t, len(tc.expectApps), len(apps))
@@ -123,7 +123,7 @@ func TestMigrateApplication(t *testing.T) {
 
 				return fs
 			}(),
-			withCluster:      mockCluster(),
+			withCluster:      mockCluster("mock-cluster"),
 			withAppName:      "mock-app-one",
 			expectNamespaces: []string{"mock-namespace"},
 		},
@@ -174,6 +174,10 @@ func createCluster(t *testing.T, fs *afero.Afero, clusterName string) {
 	assert.NoError(t, err)
 }
 
+const argoCDApplicationTemplate = `apiVersion: argoproj.io/v1alpha1
+kind: Application
+`
+
 // An app is added to a cluster when the /infrastructure/<cluster name>/argocd/applications/<app name>.yaml file exists
 func addAppToCluster(t *testing.T, fs *afero.Afero, appName string, clusterName string) {
 	absOutputDir := path.Join("/", "infrastructure")
@@ -184,7 +188,7 @@ func addAppToCluster(t *testing.T, fs *afero.Afero, appName string, clusterName 
 
 	err = fs.WriteReader(
 		path.Join(absArgoCDApplicationsConfigDir, fmt.Sprintf("%s.yaml", appName)),
-		strings.NewReader(""),
+		strings.NewReader(argoCDApplicationTemplate),
 	)
 	assert.NoError(t, err)
 }
@@ -209,9 +213,11 @@ func TestRemoveRedundantNamespacesFromBase(t *testing.T) {
 		withFs                   *afero.Afero
 		expectedNonExistantPaths []string
 		expectedExistantPaths    []string
+		withCurrentCluster       v1alpha1.Cluster
 	}{
 		{
-			name: "Should remove base ns with one app and one upgraded cluster",
+			name:               "Should remove base ns with one app and one upgraded cluster",
+			withCurrentCluster: mockCluster("mock-prod"),
 			withFs: func() *afero.Afero {
 				fs := &afero.Afero{Fs: afero.NewMemMapFs()}
 
@@ -233,7 +239,8 @@ func TestRemoveRedundantNamespacesFromBase(t *testing.T) {
 			expectedExistantPaths:    []string{"/infrastructure/mock-prod/argocd/namespaces/apps.yaml"},
 		},
 		{
-			name: "Should leave ns in base with one upgraded cluster and one not upgraded cluster",
+			name:               "Should leave ns in base with one upgraded cluster and one not upgraded cluster",
+			withCurrentCluster: mockCluster("mock-prod"),
 			withFs: func() *afero.Afero {
 				fs := &afero.Afero{Fs: afero.NewMemMapFs()}
 
@@ -269,7 +276,7 @@ func TestRemoveRedundantNamespacesFromBase(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := removeRedundantNamespacesFromBase(tc.withFs, "/")
+			err := removeRedundantNamespacesFromBase(tc.withFs, tc.withCurrentCluster, "/")
 			assert.NoError(t, err)
 
 			for _, currentPath := range tc.expectedExistantPaths {
@@ -284,6 +291,56 @@ func TestRemoveRedundantNamespacesFromBase(t *testing.T) {
 				assert.NoError(t, err)
 
 				assert.False(t, exists)
+			}
+		})
+	}
+}
+
+func TestGetApplicationsInCluster(t *testing.T) {
+	testCases := []struct {
+		name              string
+		withFs            *afero.Afero
+		withClusterName   string
+		expectedAppsFound []string
+	}{
+		{
+			name:            "Should work",
+			withClusterName: "mock-cluster",
+			withFs: func() *afero.Afero {
+				fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+
+				createCluster(t, fs, "mock-cluster")
+				createApp(t, fs, "mock-app-one")
+
+				addAppToCluster(t, fs, "mock-app-one", "mock-cluster")
+
+				return fs
+			}(),
+			expectedAppsFound: []string{"mock-app-one"},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			apps, err := getApplicationsInCluster(
+				tc.withFs,
+				mockCluster(tc.withClusterName),
+				"/",
+			)
+			assert.NoError(t, err)
+
+			assert.Equal(t, len(tc.expectedAppsFound), len(apps))
+
+			for _, app := range apps {
+				assert.True(t, contains(tc.expectedAppsFound, app))
+			}
+
+			for _, app := range tc.expectedAppsFound {
+				assert.True(t, contains(apps, app))
 			}
 		})
 	}
