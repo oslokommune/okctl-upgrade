@@ -117,7 +117,7 @@ func TestMigrateApplication(t *testing.T) {
 		expectNamespaces []string
 	}{
 		{
-			name: "Should work",
+			name: "Should successfully migrate app with old namespace",
 			withFs: func() *afero.Afero {
 				fs := &afero.Afero{Fs: afero.NewMemMapFs()}
 
@@ -128,6 +128,20 @@ func TestMigrateApplication(t *testing.T) {
 			withCluster:      mockCluster("mock-cluster"),
 			withAppName:      "mock-app-one",
 			expectNamespaces: []string{"mock-namespace"},
+		},
+		{
+			name: "Should do nothing when theres no namespace manifest in base to be found",
+			withFs: func() *afero.Afero {
+				fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+
+				addOldAppNamespace(t, fs, "mock-app-one", "mock-namespace")
+				_ = fs.Remove("/infrastructure/applications/mock-app-one/base/namespace.yaml")
+
+				return fs
+			}(),
+			withCluster:      mockCluster("mock-cluster"),
+			withAppName:      "mock-app-one",
+			expectNamespaces: []string{},
 		},
 	}
 

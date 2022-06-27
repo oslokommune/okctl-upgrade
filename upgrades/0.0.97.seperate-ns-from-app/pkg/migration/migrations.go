@@ -1,7 +1,9 @@
 package migration
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"path"
 
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/paths"
@@ -24,6 +26,10 @@ func migrateApplication(fs *afero.Afero, cluster v1alpha1.Cluster, absoluteRepos
 
 	namespaceName, err := getNamespaceName(fs, sourcePath)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+
 		return fmt.Errorf("acquiring namespace name: %w", err)
 	}
 
