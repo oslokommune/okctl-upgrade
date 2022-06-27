@@ -2,6 +2,7 @@ package argocd
 
 import (
 	"fmt"
+	"io"
 	"path"
 	"testing"
 
@@ -37,7 +38,7 @@ func TestSetupNamespacesSync(t *testing.T) {
 
 			fs := &afero.Afero{Fs: afero.NewMemMapFs()}
 
-			err := EnableNamespacesSync(&mockDebugLogger{}, false, fs, tc.withCluster)
+			err := EnableNamespacesSync(&mockDebugLogger{}, false, fs, &mockKubectlClient{}, tc.withCluster)
 			assert.NoError(t, err)
 
 			g := goldie.New(t)
@@ -64,3 +65,7 @@ func TestSetupNamespacesSync(t *testing.T) {
 type mockDebugLogger struct{}
 
 func (receiver mockDebugLogger) Debug(_ ...interface{}) {}
+
+type mockKubectlClient struct{}
+
+func (m mockKubectlClient) Apply(_ io.Reader) error { return nil }

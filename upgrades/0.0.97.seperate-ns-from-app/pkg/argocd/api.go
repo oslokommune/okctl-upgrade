@@ -1,8 +1,10 @@
 package argocd
 
 import (
+	"bytes"
 	_ "embed"
 	"fmt"
+	"io"
 	"path"
 	"strings"
 
@@ -11,7 +13,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func EnableNamespacesSync(logger debugLogger, dryRun bool, fs *afero.Afero, cluster v1alpha1.Cluster) error {
+func EnableNamespacesSync(logger debugLogger, dryRun bool, fs *afero.Afero, kubectlClient applier, cluster v1alpha1.Cluster) error {
 	if !dryRun {
 		logger.Debug("Preparing directory structure")
 
@@ -36,10 +38,23 @@ func EnableNamespacesSync(logger debugLogger, dryRun bool, fs *afero.Afero, clus
 		return fmt.Errorf("scaffolding ArgoCD application: %w", err)
 	}
 
+	rawArgoApp, err := io.ReadAll(argoApp)
+	if err != nil {
+		return fmt.Errorf("buffering ArgoCD application: %w", err)
+	}
+
 	if !dryRun {
-		err = fs.WriteReader(path.Join(paths.RelativeArgoCDConfigDir(cluster), "namespaces.yaml"), argoApp)
+		err = fs.WriteReader(
+			path.Join(paths.RelativeArgoCDConfigDir(cluster), "namespaces.yaml"),
+			bytes.NewReader(rawArgoApp),
+		)
 		if err != nil {
 			return fmt.Errorf("writing ArgoCD application: %w", err)
+		}
+
+		err = kubectlClient.Apply(bytes.NewReader(rawArgoApp))
+		if err != nil {
+			return fmt.Errorf("applying namespaces ArgoCD application: %w", err)
 		}
 	}
 

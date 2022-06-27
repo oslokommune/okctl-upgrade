@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/kubectl"
+
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/argocd"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/migration"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/paths"
@@ -23,7 +25,7 @@ func Start(_ context.Context, logger logging.Logger, fs *afero.Afero, flags cmdf
 
 	logger.Debug("Enabling namespace synchronization")
 
-	err = argocd.EnableNamespacesSync(&logger, flags.DryRun, fs, cluster)
+	err = argocd.EnableNamespacesSync(&logger, flags.DryRun, fs, &kubectl.Client{}, cluster)
 	if err != nil {
 		return fmt.Errorf("adding namespaces app manifest: %w", err)
 	}
