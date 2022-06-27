@@ -20,5 +20,10 @@ func MigrateExistingApplicationNamespacesToCluster(fs *afero.Afero, cluster v1al
 		}
 	}
 
+	err = removeRedundantNamespacesFromBase(fs, cluster, absoluteRepositoryRoot)
+	if err != nil {
+		return fmt.Errorf("removing redundant namespace manifests from application base folders: %w", err)
+	}
+
 	return nil
 }
