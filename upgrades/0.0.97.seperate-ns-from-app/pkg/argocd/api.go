@@ -11,18 +11,22 @@ import (
 	"github.com/spf13/afero"
 )
 
-func EnableNamespacesSync(logger debugLogger, fs *afero.Afero, cluster v1alpha1.Cluster) error {
-	err := fs.MkdirAll(paths.RelativeNamespacesDir(cluster), paths.DefaultFolderPermissions)
-	if err != nil {
-		return fmt.Errorf("preparing namespaces dir: %w", err)
-	}
+func EnableNamespacesSync(logger debugLogger, dryRun bool, fs *afero.Afero, cluster v1alpha1.Cluster) error {
+	if !dryRun {
+		logger.Debug("Preparing directory structure")
 
-	err = fs.WriteReader(
-		path.Join(paths.RelativeNamespacesDir(cluster), paths.DefaultReadmeFilename),
-		strings.NewReader(namespacesReadmeTemplate),
-	)
-	if err != nil {
-		return fmt.Errorf("creating namespaces readme: %w", err)
+		err := fs.MkdirAll(paths.RelativeNamespacesDir(cluster), paths.DefaultFolderPermissions)
+		if err != nil {
+			return fmt.Errorf("preparing namespaces dir: %w", err)
+		}
+
+		err = fs.WriteReader(
+			path.Join(paths.RelativeNamespacesDir(cluster), paths.DefaultReadmeFilename),
+			strings.NewReader(namespacesReadmeTemplate),
+		)
+		if err != nil {
+			return fmt.Errorf("creating namespaces readme: %w", err)
+		}
 	}
 
 	logger.Debug("Adding namespaces ArgoCD application")
@@ -32,9 +36,11 @@ func EnableNamespacesSync(logger debugLogger, fs *afero.Afero, cluster v1alpha1.
 		return fmt.Errorf("scaffolding ArgoCD application: %w", err)
 	}
 
-	err = fs.WriteReader(path.Join(paths.RelativeArgoCDConfigDir(cluster), "namespaces.yaml"), argoApp)
-	if err != nil {
-		return fmt.Errorf("writing ArgoCD application: %w", err)
+	if !dryRun {
+		err = fs.WriteReader(path.Join(paths.RelativeArgoCDConfigDir(cluster), "namespaces.yaml"), argoApp)
+		if err != nil {
+			return fmt.Errorf("writing ArgoCD application: %w", err)
+		}
 	}
 
 	return nil

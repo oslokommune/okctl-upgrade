@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func migrateApplication(logger debugLogger, fs *afero.Afero, cluster v1alpha1.Cluster, absoluteRepositoryRoot string, appName string) error {
+func migrateApplication(logger debugLogger, dryRun bool, fs *afero.Afero, cluster v1alpha1.Cluster, absoluteRepositoryRoot string, appName string) error {
 	absoluteNamespacesDir := path.Join(absoluteRepositoryRoot, paths.RelativeNamespacesDir(cluster))
 	absoluteApplicationBaseDir := path.Join(
 		absoluteRepositoryRoot,
@@ -41,6 +41,10 @@ func migrateApplication(logger debugLogger, fs *afero.Afero, cluster v1alpha1.Cl
 
 	destinationPath := path.Join(absoluteNamespacesDir, fmt.Sprintf("%s.yaml", namespaceName))
 
+	if dryRun {
+		return nil
+	}
+
 	err = copyFile(fs, sourcePath, destinationPath)
 	if err != nil {
 		return fmt.Errorf("copying: %w", err)
@@ -66,7 +70,7 @@ func isFullyMigrated(fs *afero.Afero, cluster v1alpha1.Cluster, absoluteReposito
 	return !exists, nil
 }
 
-func removeRedundantNamespacesFromBase(logger debugLogger, fs *afero.Afero, cluster v1alpha1.Cluster, absoluteRepositoryRoot string) error {
+func removeRedundantNamespacesFromBase(logger debugLogger, dryRun bool, fs *afero.Afero, cluster v1alpha1.Cluster, absoluteRepositoryRoot string) error {
 	apps, err := getApplicationsInCluster(fs, cluster, absoluteRepositoryRoot)
 	if err != nil {
 		return fmt.Errorf("acquiring apps: %w", err)
@@ -103,6 +107,10 @@ func removeRedundantNamespacesFromBase(logger debugLogger, fs *afero.Afero, clus
 
 		if cleanable {
 			logger.Debug("Found redundant namespace, removing")
+
+			if dryRun {
+				continue
+			}
 
 			err = fs.Remove(absoluteNamespacePath)
 			if err != nil {

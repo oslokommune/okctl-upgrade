@@ -151,7 +151,7 @@ func TestMigrateApplication(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := migrateApplication(&mockDebugLogger{}, tc.withFs, tc.withCluster, "/", tc.withAppName)
+			err := migrateApplication(&mockDebugLogger{}, false, tc.withFs, tc.withCluster, "/", tc.withAppName)
 			assert.NoError(t, err)
 
 			for _, ns := range tc.expectNamespaces {
@@ -292,7 +292,7 @@ func TestRemoveRedundantNamespacesFromBase(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := removeRedundantNamespacesFromBase(&mockDebugLogger{}, tc.withFs, tc.withCurrentCluster, "/")
+			err := removeRedundantNamespacesFromBase(&mockDebugLogger{}, false, tc.withFs, tc.withCurrentCluster, "/")
 			assert.NoError(t, err)
 
 			for _, currentPath := range tc.expectedExistantPaths {
