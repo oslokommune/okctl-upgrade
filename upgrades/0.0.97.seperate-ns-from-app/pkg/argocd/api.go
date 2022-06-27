@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func EnableNamespacesSync(fs *afero.Afero, cluster v1alpha1.Cluster) error {
+func EnableNamespacesSync(logger debugLogger, fs *afero.Afero, cluster v1alpha1.Cluster) error {
 	err := fs.MkdirAll(paths.RelativeNamespacesDir(cluster), paths.DefaultFolderPermissions)
 	if err != nil {
 		return fmt.Errorf("preparing namespaces dir: %w", err)
@@ -24,6 +24,8 @@ func EnableNamespacesSync(fs *afero.Afero, cluster v1alpha1.Cluster) error {
 	if err != nil {
 		return fmt.Errorf("creating namespaces readme: %w", err)
 	}
+
+	logger.Debug("Adding namespaces ArgoCD application")
 
 	argoApp, err := scaffoldApplication(cluster, "namespaces", paths.RelativeNamespacesDir(cluster))
 	if err != nil {

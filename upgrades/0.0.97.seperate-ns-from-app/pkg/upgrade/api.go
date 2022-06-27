@@ -21,12 +21,16 @@ func Start(_ context.Context, logger logging.Logger, fs *afero.Afero, flags cmdf
 		return fmt.Errorf("acquiring repository root dir: %w", err)
 	}
 
-	err = argocd.EnableNamespacesSync(fs, cluster)
+	logger.Debug("Enabling namespace synchronization")
+
+	err = argocd.EnableNamespacesSync(&logger, fs, cluster)
 	if err != nil {
 		return fmt.Errorf("adding namespaces app manifest: %w", err)
 	}
 
-	err = migration.MigrateExistingApplicationNamespacesToCluster(fs, cluster, absoluteRepositoryRootDir)
+	logger.Debug("Migrate application owned namespaces")
+
+	err = migration.MigrateExistingApplicationNamespacesToCluster(logger, fs, cluster, absoluteRepositoryRootDir)
 	if err != nil {
 		return fmt.Errorf("migrating existing namespaces: %w", err)
 	}

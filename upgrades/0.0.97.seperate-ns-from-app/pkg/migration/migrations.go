@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func migrateApplication(fs *afero.Afero, cluster v1alpha1.Cluster, absoluteRepositoryRoot string, appName string) error {
+func migrateApplication(logger debugLogger, fs *afero.Afero, cluster v1alpha1.Cluster, absoluteRepositoryRoot string, appName string) error {
 	absoluteNamespacesDir := path.Join(absoluteRepositoryRoot, paths.RelativeNamespacesDir(cluster))
 	absoluteApplicationBaseDir := path.Join(
 		absoluteRepositoryRoot,
@@ -22,16 +22,22 @@ func migrateApplication(fs *afero.Afero, cluster v1alpha1.Cluster, absoluteRepos
 		paths.ApplicationBaseDir,
 	)
 
+	logger.Debug(fmt.Sprintf("Migrating %s", appName))
+
 	sourcePath := path.Join(absoluteApplicationBaseDir, "namespace.yaml")
 
 	namespaceName, err := getNamespaceName(fs, sourcePath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
+			logger.Debug("Namespace owned by application not found, ignoring")
+
 			return nil
 		}
 
 		return fmt.Errorf("acquiring namespace name: %w", err)
 	}
+
+	logger.Debug(fmt.Sprintf("Namespace %s owned by application found, migrating", namespaceName))
 
 	destinationPath := path.Join(absoluteNamespacesDir, fmt.Sprintf("%s.yaml", namespaceName))
 
@@ -60,19 +66,25 @@ func isFullyMigrated(fs *afero.Afero, cluster v1alpha1.Cluster, absoluteReposito
 	return !exists, nil
 }
 
-func removeRedundantNamespacesFromBase(fs *afero.Afero, cluster v1alpha1.Cluster, absoluteRepositoryRoot string) error {
+func removeRedundantNamespacesFromBase(logger debugLogger, fs *afero.Afero, cluster v1alpha1.Cluster, absoluteRepositoryRoot string) error {
 	apps, err := getApplicationsInCluster(fs, cluster, absoluteRepositoryRoot)
 	if err != nil {
 		return fmt.Errorf("acquiring apps: %w", err)
 	}
 
+	logger.Debug("Removing redundant application owned namespaces")
+
 	for _, app := range apps {
+		logger.Debug(fmt.Sprintf("Checking %s for redundant namespaces", app))
+
 		migrated, err := isFullyMigrated(fs, cluster, absoluteRepositoryRoot, app)
 		if err != nil {
 			return fmt.Errorf("checking for base namespace: %w", err)
 		}
 
 		if migrated {
+			logger.Debug("Fully migrated, ignoring")
+
 			continue
 		}
 
@@ -90,6 +102,8 @@ func removeRedundantNamespacesFromBase(fs *afero.Afero, cluster v1alpha1.Cluster
 		}
 
 		if cleanable {
+			logger.Debug("Found redundant namespace, removing")
+
 			err = fs.Remove(absoluteNamespacePath)
 			if err != nil {
 				return fmt.Errorf("removing base namespace: %w", err)

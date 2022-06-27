@@ -37,7 +37,7 @@ func TestSetupNamespacesSync(t *testing.T) {
 
 			fs := &afero.Afero{Fs: afero.NewMemMapFs()}
 
-			err := EnableNamespacesSync(fs, tc.withCluster)
+			err := EnableNamespacesSync(&mockDebugLogger{}, fs, tc.withCluster)
 			assert.NoError(t, err)
 
 			g := goldie.New(t)
@@ -60,3 +60,7 @@ func TestSetupNamespacesSync(t *testing.T) {
 		})
 	}
 }
+
+type mockDebugLogger struct{}
+
+func (receiver mockDebugLogger) Debug(_ ...interface{}) {}
