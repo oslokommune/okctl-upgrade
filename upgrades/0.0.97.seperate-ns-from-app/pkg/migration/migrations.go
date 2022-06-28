@@ -53,23 +53,6 @@ func migrateApplication(logger debugLogger, dryRun bool, fs *afero.Afero, cluste
 	return nil
 }
 
-func isFullyMigrated(fs *afero.Afero, cluster v1alpha1.Cluster, absoluteRepositoryRoot string, appName string) (bool, error) {
-	absAppBasePath := path.Join(
-		absoluteRepositoryRoot,
-		cluster.Github.OutputPath,
-		paths.ApplicationsDir,
-		appName,
-		paths.ApplicationBaseDir,
-	)
-
-	exists, err := fs.Exists(path.Join(absAppBasePath, "namespace.yaml"))
-	if err != nil {
-		return false, fmt.Errorf(": %w", err)
-	}
-
-	return !exists, nil
-}
-
 func removeRedundantNamespacesFromBase(logger debugLogger, dryRun bool, fs *afero.Afero, cluster v1alpha1.Cluster, absoluteRepositoryRoot string) error {
 	apps, err := getApplicationsInCluster(fs, cluster, absoluteRepositoryRoot)
 	if err != nil {
@@ -95,12 +78,7 @@ func removeRedundantNamespacesFromBase(logger debugLogger, dryRun bool, fs *afer
 		absoluteApplicationDir := path.Join(absoluteRepositoryRoot, cluster.Github.OutputPath, paths.ApplicationsDir, app)
 		absoluteNamespacePath := path.Join(absoluteApplicationDir, paths.ApplicationBaseDir, "namespace.yaml")
 
-		namespaceName, err := getNamespaceName(fs, absoluteNamespacePath)
-		if err != nil {
-			return fmt.Errorf("acquiring namespace name: %w", err)
-		}
-
-		cleanable, err := allAdjacentClustersHasNamespace(fs, absoluteRepositoryRoot, cluster, namespaceName)
+		cleanable, err := isCleanable(fs, absoluteRepositoryRoot, cluster, app)
 		if err != nil {
 			return fmt.Errorf("checking if all adjacent clusters has namespace: %w", err)
 		}
@@ -122,7 +100,24 @@ func removeRedundantNamespacesFromBase(logger debugLogger, dryRun bool, fs *afer
 	return nil
 }
 
-func clusterHasNamespace(fs *afero.Afero, absoluteRepositoryOutputDir string, clusterName string, namespaceName string) (bool, error) {
+func isFullyMigrated(fs *afero.Afero, cluster v1alpha1.Cluster, absoluteRepositoryRoot string, appName string) (bool, error) {
+	absAppBasePath := path.Join(
+		absoluteRepositoryRoot,
+		cluster.Github.OutputPath,
+		paths.ApplicationsDir,
+		appName,
+		paths.ApplicationBaseDir,
+	)
+
+	exists, err := fs.Exists(path.Join(absAppBasePath, "namespace.yaml"))
+	if err != nil {
+		return false, fmt.Errorf(": %w", err)
+	}
+
+	return !exists, nil
+}
+
+func clusterHasNewStyleNamespace(fs *afero.Afero, absoluteRepositoryOutputDir string, clusterName string, namespaceName string) (bool, error) {
 	potentialNamespacePath := path.Join(
 		absoluteRepositoryOutputDir,
 		clusterName,
@@ -139,48 +134,55 @@ func clusterHasNamespace(fs *afero.Afero, absoluteRepositoryOutputDir string, cl
 	return exists, nil
 }
 
-// Adjacent meaning other clusters in an output folder, i.e.: "infrastructure"
-func allAdjacentClustersHasNamespace(fs *afero.Afero, absoluteRepositoryRoot string, cluster v1alpha1.Cluster, namespaceName string) (bool, error) {
-	absoluteRepositoryOutputDir := path.Join(absoluteRepositoryRoot, cluster.Github.OutputPath)
-
-	clusters, err := getClusters(fs, absoluteRepositoryOutputDir)
+func getAssociatedClusters(fs *afero.Afero, absoluteApplicationDir string) ([]string, error) {
+	items, err := fs.ReadDir(path.Join(absoluteApplicationDir, paths.ApplicationOverlaysDir))
 	if err != nil {
-		return false, fmt.Errorf("acquiring adjacent clusters: %w", err)
+		return nil, fmt.Errorf("listing directory: %w", err)
 	}
 
-	for _, currentCluster := range clusters {
-		hasNamespace, err := clusterHasNamespace(fs, absoluteRepositoryOutputDir, currentCluster, namespaceName)
+	relevantClusters := make([]string, 0)
+
+	for _, item := range items {
+		if item.IsDir() {
+			relevantClusters = append(relevantClusters, item.Name())
+		}
+	}
+
+	return relevantClusters, nil
+}
+
+// An app is cleanable IF and only IF all associated clusters has a new style namespace for the select namespace
+func isCleanable(fs *afero.Afero, absoluteRepositoryRoot string, cluster v1alpha1.Cluster, appName string) (bool, error) {
+	absoluteApplicationDir := path.Join(absoluteRepositoryRoot, paths.RelativeApplicationDir(cluster, appName))
+
+	relevantClusters, err := getAssociatedClusters(fs, absoluteApplicationDir)
+	if err != nil {
+		return false, fmt.Errorf("acquiring relevant clusters: %w", err)
+	}
+
+	namespaceName, err := getNamespaceName(
+		fs,
+		path.Join(absoluteApplicationDir, paths.ApplicationBaseDir, "namespace.yaml"),
+	)
+	if err != nil {
+		return false, fmt.Errorf("acquiring namespace name: %w", err)
+	}
+
+	for _, clusterName := range relevantClusters {
+		hasNewStyleNamespace, err := clusterHasNewStyleNamespace(
+			fs,
+			path.Join(absoluteRepositoryRoot, cluster.Github.OutputPath),
+			clusterName,
+			namespaceName,
+		)
 		if err != nil {
-			return false, fmt.Errorf("checking for namespace in cluster: %w", err)
+			return false, fmt.Errorf("checking for namespace: %w", err)
 		}
 
-		if !hasNamespace {
+		if !hasNewStyleNamespace {
 			return false, nil
 		}
 	}
 
 	return true, nil
-}
-
-func getClusters(fs *afero.Afero, absoluteRepositoryOutputDir string) ([]string, error) {
-	targets, err := fs.ReadDir(absoluteRepositoryOutputDir)
-	if err != nil {
-		return nil, fmt.Errorf("listing dir: %w", err)
-	}
-
-	clusters := make([]string, 0)
-
-	for _, target := range targets {
-		name := target.Name()
-
-		if name == paths.ApplicationsDir {
-			continue
-		}
-
-		if target.IsDir() {
-			clusters = append(clusters, target.Name())
-		}
-	}
-
-	return clusters, nil
 }

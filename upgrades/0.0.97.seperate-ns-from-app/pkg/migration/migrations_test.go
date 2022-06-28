@@ -207,6 +207,10 @@ func addAppToCluster(t *testing.T, fs *afero.Afero, appName string, clusterName 
 		strings.NewReader(argoCDApplicationTemplate),
 	)
 	assert.NoError(t, err)
+
+	absAppClusterOverlaysDir := path.Join(absOutputDir, "applications", appName, "overlays", clusterName)
+	err = fs.MkdirAll(absAppClusterOverlaysDir, paths.DefaultFolderPermissions)
+	assert.NoError(t, err)
 }
 
 func addNewAppNamespace(t *testing.T, fs *afero.Afero, clusterName string, namespaceName string) {
@@ -283,6 +287,44 @@ func TestRemoveRedundantNamespacesFromBase(t *testing.T) {
 				"/infrastructure/mock-prod/argocd/namespaces/apps.yaml",
 				"/infrastructure/applications/mock-app-one/base/namespace.yaml",
 			},
+		},
+		{
+			name: "Should remove namespace from app even with another irrelevant app has a namespace of the same name",
+			withFs: func() *afero.Afero {
+				fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+
+				clusterOne := "mock-cluster-one"
+				createCluster(t, fs, clusterOne)
+
+				clusterTwo := "mock-cluster-two"
+				createCluster(t, fs, clusterTwo)
+
+				appOne := "mock-app-one"
+				createApp(t, fs, appOne)
+
+				appTwo := "mock-app-two"
+				createApp(t, fs, "mock-app-two")
+
+				appOneNamespace := "mock-namespace-one"
+				addOldAppNamespace(t, fs, appOne, appOneNamespace)
+				addNewAppNamespace(t, fs, clusterOne, appOneNamespace)
+
+				appTwoNamespace := appOneNamespace
+				addOldAppNamespace(t, fs, appTwo, appTwoNamespace)
+
+				addAppToCluster(t, fs, appOne, clusterOne)
+				addAppToCluster(t, fs, appTwo, clusterTwo)
+
+				return fs
+			}(),
+			expectedNonExistantPaths: []string{
+				"/infrastructure/applications/mock-app-one/base/namespace.yaml",
+				"/infrastructure/mock-cluster-two/argocd/namespaces/apps.yaml",
+			},
+			expectedExistantPaths: []string{
+				"/infrastructure/applications/mock-app-two/base/namespace.yaml",
+			},
+			withCurrentCluster: mockCluster("mock-cluster-one"),
 		},
 	}
 

@@ -15,6 +15,7 @@ const (
 	argocdConfigApplicationsDir = "applications"
 	ApplicationsDir             = "applications"
 	ApplicationBaseDir          = "base"
+	ApplicationOverlaysDir      = "overlays"
 	DefaultFolderPermissions    = 0o700
 	DefaultReadmeFilename       = "README.md"
 )
@@ -29,6 +30,10 @@ func RelativeNamespacesDir(cluster v1alpha1.Cluster) string {
 
 func RelativeArgoCDApplicationsDir(cluster v1alpha1.Cluster) string {
 	return path.Join(RelativeArgoCDConfigDir(cluster), argocdConfigApplicationsDir)
+}
+
+func RelativeApplicationDir(cluster v1alpha1.Cluster, appName string) string {
+	return path.Join(cluster.Github.OutputPath, ApplicationsDir, appName)
 }
 
 // GetRepositoryRootDirectory returns the absolute path of the repository root no matter what the current working
