@@ -37,8 +37,16 @@ func TestSetupNamespacesSync(t *testing.T) {
 			t.Parallel()
 
 			fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+			absoluteRepositoryRootDirectory := "/"
 
-			err := EnableNamespacesSync(&mockDebugLogger{}, false, fs, &mockKubectlClient{}, tc.withCluster)
+			err := EnableNamespacesSync(EnableNamespaceSyncOpts{
+				Log:                             &mockDebugLogger{},
+				DryRun:                          false,
+				Fs:                              fs,
+				Kubectl:                         &mockKubectlClient{},
+				AbsoluteRepositoryRootDirectory: absoluteRepositoryRootDirectory,
+				Cluster:                         tc.withCluster,
+			})
 			assert.NoError(t, err)
 
 			g := goldie.New(t)
@@ -49,12 +57,17 @@ func TestSetupNamespacesSync(t *testing.T) {
 				"argocd",
 			)
 
-			readmeExists, err := fs.Exists(path.Join(argocdConfigDir, "namespaces", "README.md"))
+			readmeExists, err := fs.Exists(path.Join(
+				absoluteRepositoryRootDirectory,
+				argocdConfigDir,
+				"namespaces",
+				"README.md",
+			))
 			assert.NoError(t, err)
 
 			assert.True(t, readmeExists)
 
-			argoapp, err := fs.ReadFile(path.Join(argocdConfigDir, "namespaces.yaml"))
+			argoapp, err := fs.ReadFile(path.Join(absoluteRepositoryRootDirectory, argocdConfigDir, "namespaces.yaml"))
 			assert.NoError(t, err)
 
 			g.Assert(t, fmt.Sprintf("argoapp-%s", tc.name), argoapp)

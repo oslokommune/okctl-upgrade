@@ -8,22 +8,22 @@ import (
 	"path"
 	"strings"
 
-	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/lib/manifest/apis/okctl.io/v1alpha1"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/paths"
-	"github.com/spf13/afero"
 )
 
-func EnableNamespacesSync(logger debugLogger, dryRun bool, fs *afero.Afero, kubectlClient applier, cluster v1alpha1.Cluster) error {
-	if !dryRun {
-		logger.Debug("Preparing directory structure")
+func EnableNamespacesSync(opts EnableNamespaceSyncOpts) error {
+	absoluteNamespacesDir := path.Join(opts.AbsoluteRepositoryRootDirectory, paths.RelativeNamespacesDir(opts.Cluster))
 
-		err := fs.MkdirAll(paths.RelativeNamespacesDir(cluster), paths.DefaultFolderPermissions)
+	if !opts.DryRun {
+		opts.Log.Debug("Preparing directory structure")
+
+		err := opts.Fs.MkdirAll(absoluteNamespacesDir, paths.DefaultFolderPermissions)
 		if err != nil {
 			return fmt.Errorf("preparing namespaces dir: %w", err)
 		}
 
-		err = fs.WriteReader(
-			path.Join(paths.RelativeNamespacesDir(cluster), paths.DefaultReadmeFilename),
+		err = opts.Fs.WriteReader(
+			path.Join(absoluteNamespacesDir, paths.DefaultReadmeFilename),
 			strings.NewReader(namespacesReadmeTemplate),
 		)
 		if err != nil {
@@ -31,9 +31,9 @@ func EnableNamespacesSync(logger debugLogger, dryRun bool, fs *afero.Afero, kube
 		}
 	}
 
-	logger.Debug("Adding namespaces ArgoCD application")
+	opts.Log.Debug("Adding namespaces ArgoCD application")
 
-	argoApp, err := scaffoldApplication(cluster, "namespaces", paths.RelativeNamespacesDir(cluster))
+	argoApp, err := scaffoldApplication(opts.Cluster, "namespaces", paths.RelativeNamespacesDir(opts.Cluster))
 	if err != nil {
 		return fmt.Errorf("scaffolding ArgoCD application: %w", err)
 	}
@@ -43,16 +43,20 @@ func EnableNamespacesSync(logger debugLogger, dryRun bool, fs *afero.Afero, kube
 		return fmt.Errorf("buffering ArgoCD application: %w", err)
 	}
 
-	if !dryRun {
-		err = fs.WriteReader(
-			path.Join(paths.RelativeArgoCDConfigDir(cluster), "namespaces.yaml"),
+	if !opts.DryRun {
+		err = opts.Fs.WriteReader(
+			path.Join(
+				opts.AbsoluteRepositoryRootDirectory,
+				paths.RelativeArgoCDConfigDir(opts.Cluster),
+				"namespaces.yaml",
+			),
 			bytes.NewReader(rawArgoApp),
 		)
 		if err != nil {
 			return fmt.Errorf("writing ArgoCD application: %w", err)
 		}
 
-		err = kubectlClient.Apply(bytes.NewReader(rawArgoApp))
+		err = opts.Kubectl.Apply(bytes.NewReader(rawArgoApp))
 		if err != nil {
 			return fmt.Errorf("applying namespaces ArgoCD application: %w", err)
 		}

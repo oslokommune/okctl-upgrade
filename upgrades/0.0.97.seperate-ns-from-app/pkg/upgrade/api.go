@@ -25,7 +25,14 @@ func Start(_ context.Context, logger logging.Logger, fs *afero.Afero, flags cmdf
 
 	logger.Debug("Enabling namespace synchronization")
 
-	err = argocd.EnableNamespacesSync(&logger, flags.DryRun, fs, &kubectl.Client{}, cluster)
+	err = argocd.EnableNamespacesSync(argocd.EnableNamespaceSyncOpts{
+		Log:                             &logger,
+		DryRun:                          flags.DryRun,
+		Fs:                              fs,
+		Kubectl:                         &kubectl.Client{},
+		AbsoluteRepositoryRootDirectory: absoluteRepositoryRootDir,
+		Cluster:                         cluster,
+	})
 	if err != nil {
 		return fmt.Errorf("adding namespaces app manifest: %w", err)
 	}
