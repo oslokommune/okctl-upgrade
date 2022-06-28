@@ -56,7 +56,7 @@ func isPathAnArgoCDApplication(fs *afero.Afero, absoluteApplicationPath string) 
 
 	err = yaml.Unmarshal(rawFile, &potentialApp)
 	if err != nil {
-		return false, fmt.Errorf("unmarshalling: %w", err)
+		return false, nil
 	}
 
 	return potentialApp.Valid(), nil
