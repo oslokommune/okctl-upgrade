@@ -7,7 +7,7 @@ import (
 func MigrateExistingApplicationNamespacesToCluster(opts MigrateExistingApplicationNamespacesToClusterOpts) error {
 	apps, err := getApplicationsInCluster(opts.Fs, opts.Cluster, opts.AbsoluteRepositoryRoot)
 	if err != nil {
-		return fmt.Errorf("scanning for : %w", err)
+		return fmt.Errorf("scanning for applications: %w", err)
 	}
 
 	for _, app := range apps {
