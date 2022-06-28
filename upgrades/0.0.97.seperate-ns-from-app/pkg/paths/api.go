@@ -15,7 +15,7 @@ const (
 	argocdConfigApplicationsDir = "applications"
 	ApplicationsDir             = "applications"
 	ApplicationBaseDir          = "base"
-	DefaultFolderPermissions    = 0o600
+	DefaultFolderPermissions    = 0o700
 	DefaultReadmeFilename       = "README.md"
 )
 
