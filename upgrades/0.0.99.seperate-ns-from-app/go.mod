@@ -1,4 +1,4 @@
-module github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app
+module github.com/oslokommune/okctl-upgrade/upgrades/0.0.99.seperate-ns-from-app
 
 go 1.18
 

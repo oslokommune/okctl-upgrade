@@ -8,7 +8,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.97.seperate-ns-from-app/pkg/paths"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.99.seperate-ns-from-app/pkg/paths"
 )
 
 func EnableNamespacesSync(opts EnableNamespaceSyncOpts) error {
