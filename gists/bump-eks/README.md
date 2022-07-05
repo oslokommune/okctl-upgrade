@@ -59,20 +59,18 @@ To avoid downtime, **make sure** you have completed the steps described in this 
 
 **Note!** If you do not follow the steps below, your applications **probably will stop working** after upgrading to Kubernetes 1.22.
 
-In Kubernetes 1.22, there are some resources that stop working. The following guide describe these in detail: https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html#update-1.22
-
-For applications made with `okctl apply application`, you should be able to follow these steps to update your manifests to the latest version:
+In Kubernetes 1.22, there are some resources that stop working. The following guide describe these in detail: https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html#update-1.22. For applications made with `okctl apply application`, you don't need to read that guide, but you can just follow the steps below.
 
 ### Ingress
 
-Find occurrences of old resources by running
+Find occurrences of old Ingresses by running
 
 ```
 grep -A 1 -B 50 -nRsH "apiVersion: networking.k8s.io/v1beta1"
 grep -A 1 -B 50 -nRsH "apiVersion: extensions/v1beta1"
 ```
 
-Replace all matches to
+For every file in the result, edit it and replace the `apiVersion` so it becomes like this:
 
 ```yaml
 apiVersion: networking.k8s.io/v1
