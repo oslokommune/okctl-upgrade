@@ -6,11 +6,25 @@ Download okctl **TODO** and run `okctl upgrade`.
 
 This is to ensure that `okctl apply cluster` and other commands support EKS 1.22.
 
-# Update tools
+# Download or update tools
 
 Download by using the commands, so we get the correct version expected by this upgrade.
 
 TODO: Replace versions below.
+
+## yq
+
+### Linux / snap
+
+```sh
+snap install yq
+```
+
+###  macOS / Linux via Homebrrew
+
+```sh
+brew install yq
+```
 
 ## eksctl
 
@@ -50,6 +64,33 @@ sudo mv kubectl /usr/local/bin/kubectl2
 # Prepare applications
 
 Make sure you have followed the guide for preparing your applications here: https://github.com/oslokommune/okctl-upgrade/tree/main/gists/bump-eks-to-1-20#prepare-applications
+
+# Run upgrade
+
+Log into your kubernetes environment. The default way to do this is:
+
+```sh
+export AWS_PROFILE=my-profile
+aws sso login
+okctl venv -c cluster-dev.yaml
+```
+
+Run the upgrade
+
+```sh
+curl --silent --location "https://raw.githubusercontent.com/oslokommune/okctl-upgrade/main/gists/bump-eks-to-1-22/upgrade-1-22.sh"
+
+./upgrade-1-22.sh cluster-dev.yaml
+```
+
+
+
+
+
+
+
+
+
 
 # Bump EKS control plane
 
