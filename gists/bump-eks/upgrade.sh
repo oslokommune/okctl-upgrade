@@ -11,6 +11,7 @@ function run_no_output() {
 
 function run_cmd() {
   local GET_OUTPUT=$1
+  # shellcheck disable=SC2124
   local CMD="${@:2}"
 
   echo "" >&2
@@ -19,7 +20,7 @@ function run_cmd() {
   echo "~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~" >&2
 
   local RESULT=""
-  if [[ $ECHO_OUTPUT == "true" ]]; then
+  if [[ GET_OUTPUT == "true" ]]; then
     RESULT=$($CMD)
   else
     $CMD
@@ -127,14 +128,15 @@ fi
 
 EKS_TARGET_VERSION=$3
 if [[ ! "$EKS_TARGET_VERSION" =~ ^1\.[0-9]{2}$ ]]; then
-  echo Target EKS verison must match regex '^1\.[0-9]{2}$'
+  echo "Target EKS verison must match regex '^1\.[0-9]{2}$'"
+  echo "You used: $EKS_TARGET_VERSION"
   exit 1
 fi
 
-#EKS_VERSION_WITH_SLASH=$(echo "$EKS_TARGET_VERSION" | sed 's/\./-/')
+# EKS_VERSION_WITH_DASH=$(echo "$EKS_TARGET_VERSION" | sed 's/\./-/')
 # Convert 1.22 to 1-22
-EKS_VERSION_WITH_SLASH=${EKS_TARGET_VERSION//\.//-}
-TARGET_BINARY_DIR=/tmp/$EKS_VERSION_WITH_SLASH
+EKS_VERSION_WITH_DASH=${EKS_TARGET_VERSION//\./-}
+TARGET_BINARY_DIR=/tmp/eks-upgrade/$EKS_VERSION_WITH_DASH
 KUBECTL_VERSION=$(get_kubectl_version "$EKS_TARGET_VERSION")
 
 CLUSTER_NAME=$(yq e '.metadata.name' "$CLUSTER_MANIFEST")
@@ -148,7 +150,7 @@ echo
 echo "------------------------------------------------------------------------------------------------------------------------"
 echo "Download dependencies to $TARGET_BINARY_DIR"
 echo "------------------------------------------------------------------------------------------------------------------------"
-mkdir -p $TARGET_BINARY_DIR
+mkdir -p "$TARGET_BINARY_DIR"
 
 case "$(uname -s)" in
    Darwin)
@@ -167,32 +169,30 @@ case "$(uname -s)" in
      ;;
 esac
 
-#echo Running: curl --location $EKSCTL_URL \| tar xz -C $TARGET_BINARY_DIR
-#              curl --location $EKSCTL_URL  | tar xz -C $TARGET_BINARY_DIR
-run_no_output curl --location $EKSCTL_URL  | tar xz -C $TARGET_BINARY_DIR
-# TODO Test this
+echo Running: curl --location $EKSCTL_URL \| tar xz -C "$TARGET_BINARY_DIR"
+              curl --location $EKSCTL_URL  | tar xz -C "$TARGET_BINARY_DIR"
 
-echo Running: curl --location $KUBECTL_URL -o $TARGET_BINARY_DIR/kubectl
-              curl --location $KUBECTL_URL -o $TARGET_BINARY_DIR/kubectl
+echo Running: curl --location "$KUBECTL_URL" -o "$TARGET_BINARY_DIR/kubectl"
+              curl --location "$KUBECTL_URL" -o "$TARGET_BINARY_DIR/kubectl"
 
-run_with_output chmod +x $TARGET_BINARY_DIR/eksctl
-run_with_output chmod +x $TARGET_BINARY_DIR/kubectl
+run_with_output chmod +x "$TARGET_BINARY_DIR/eksctl"
+run_with_output chmod +x "$TARGET_BINARY_DIR/kubectl"
 
 EKSCTL=$TARGET_BINARY_DIR/eksctl
 KUBECTL=$TARGET_BINARY_DIR/kubectl
 
 # Verify that binaries works and return correct version
-EKSCTL_VERSION_ACTUAL=$(run_with_output $EKSCTL version -o json | jq -r '.Version')
+EKSCTL_VERSION_ACTUAL=$(run_with_output "$EKSCTL" version -o json | jq -r '.Version')
 require_version_match "$EKSCTL_VERSION" "v${EKSCTL_VERSION_ACTUAL}"
 
-KUBECTL_VERSION_ACTUAL=$(run_with_output $KUBECTL version --client=true --output='yaml' | yq e '.clientVersion.gitVersion')
+KUBECTL_VERSION_ACTUAL=$(run_with_output "$KUBECTL" version --client=true --output='yaml' | yq e '.clientVersion.gitVersion')
 require_version_match "$KUBECTL_VERSION" "$KUBECTL_VERSION_ACTUAL"
 
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"
 echo "Verify cluster name"
 echo "------------------------------------------------------------------------------------------------------------------------"
-run_with_output $EKSCTL get cluster "$CLUSTER_NAME"
+run_with_output "$EKSCTL" get cluster "$CLUSTER_NAME"
 
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"
@@ -286,7 +286,7 @@ do
   AZ="${AWS_REGION}${AZ_ID}"
 
   cat <<EOF >>$NODEGROUP_FILE
-  - name: "ng-generic-${EKS_VERSION_WITH_SLASH}-1${AZ_ID}"
+  - name: "ng-generic-${EKS_VERSION_WITH_DASH}-1${AZ_ID}"
     availabilityZones: ["$AZ"]
     instanceType: "m5.large"
     desiredCapacity: 0
@@ -300,6 +300,8 @@ do
     privateNetworking: true
 EOF
 done
+
+echo "Written to: $NODEGROUP_FILE"
 
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"
@@ -316,7 +318,7 @@ echo
 echo "------------------------------------------------------------------------------------------------------------------------"
 echo "Replacing node groups, step 3 of $REPLACE_NODE_GROUPS_STEPS: Dry run: Drain old nodes"
 echo "------------------------------------------------------------------------------------------------------------------------"
-run_with_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1a' --ignore-daemonsets --delete-emptydir-data --dry-run=client
+run_no_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1a' --ignore-daemonsets --delete-emptydir-data --dry-run=client
 run_with_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1b' --ignore-daemonsets --delete-emptydir-data --dry-run=client
 run_with_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1c' --ignore-daemonsets --delete-emptydir-data --dry-run=client
 
@@ -338,3 +340,10 @@ if [[ $DRY_RUN == "false" ]]; then
 else
   echo Not running: $EKSCTL delete nodegroup --cluster "$CLUSTER_NAME" --name ng-generic
 fi
+
+
+echo
+echo "------------------------------------------------------------------------------------------------------------------------"
+echo "Done"
+echo "------------------------------------------------------------------------------------------------------------------------"
+echo "Upgrading to EKS $EKS_TARGET_VERSION complete."
