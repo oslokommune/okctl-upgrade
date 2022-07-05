@@ -1,6 +1,8 @@
 EKSCTL_VERSION="v0.104.0"
 
+#
 # Functions
+#
 function run_with_output() {
   run_cmd true "$@"
 }
@@ -85,8 +87,9 @@ function get_kubectl_version() {
   fi
 }
 
-
+#
 # Args check
+#
 if [[ $* == "-h" || -z "$1" || -z "$2" || -z "$3" || "$#" -lt 3 ]]
 then
     ME=$(basename $0)
@@ -109,6 +112,9 @@ then
     exit 0
 fi
 
+#
+# Get and validate all input variables
+#
 CLUSTER_MANIFEST="$1"
 AWS_REGION="$2"
 DRY_RUN=true
@@ -133,7 +139,6 @@ if [[ ! "$EKS_TARGET_VERSION" =~ ^1\.[0-9]{2}$ ]]; then
   exit 1
 fi
 
-# EKS_VERSION_WITH_DASH=$(echo "$EKS_TARGET_VERSION" | sed 's/\./-/')
 # Convert 1.22 to 1-22
 EKS_VERSION_WITH_DASH=${EKS_TARGET_VERSION//\./-}
 TARGET_BINARY_DIR=/tmp/eks-upgrade/$EKS_VERSION_WITH_DASH
@@ -142,7 +147,9 @@ KUBECTL_VERSION=$(get_kubectl_version "$EKS_TARGET_VERSION")
 CLUSTER_NAME=$(yq e '.metadata.name' "$CLUSTER_MANIFEST")
 AWS_ACCOUNT=$(yq e '.metadata.accountID' "$CLUSTER_MANIFEST")
 
+#
 # Test dependencies
+#
 require_installed_cmd yq
 require_installed_cmd jq
 
@@ -218,6 +225,7 @@ echo -e "AWS region: \e[93m${AWS_REGION}\e[0m"
 echo -e "Dry run: \e[93m${DRY_RUN}\e[0m"
 
 echo
+# shellcheck disable=SC2162
 read -n1 -p "Do these variables look okay? (Y/n) " confirm
 if ! echo "$confirm" | grep '^[Yy]\?$'; then
   echo "Aborting."
@@ -230,17 +238,17 @@ echo
 echo "------------------------------------------------------------------------------------------------------------------------"
 echo "Dry run upgrade of EKS control plane to check for errors"
 echo "------------------------------------------------------------------------------------------------------------------------"
-run_with_output $EKSCTL upgrade cluster --name "$CLUSTER_NAME" --version "$EKS_TARGET_VERSION"
+run_with_output "$EKSCTL" upgrade cluster --name "$CLUSTER_NAME" --version "$EKS_TARGET_VERSION"
 
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"
 echo "Run upgrade of EKS control plane. Estimated time: 10-15 min."
 echo "------------------------------------------------------------------------------------------------------------------------"
 if [[ $DRY_RUN == "false" ]]; then
-  run_with_output $EKSCTL upgrade cluster --name "$CLUSTER_NAME" --version "$EKS_TARGET_VERSION" --approve
+  run_with_output "$EKSCTL" upgrade cluster --name "$CLUSTER_NAME" --version "$EKS_TARGET_VERSION" --approve
 else
   echo Not running:
-  echo $EKSCTL upgrade cluster --name "$CLUSTER_NAME" --version "$EKS_TARGET_VERSION" --approve
+  echo "$EKSCTL" upgrade cluster --name "$CLUSTER_NAME" --version "$EKS_TARGET_VERSION" --approve
 fi
 
 REPLACE_NODE_GROUPS_STEPS="4"
@@ -334,11 +342,11 @@ echo "Replacing node groups, step 4 of $REPLACE_NODE_GROUPS_STEPS: Dry run: Dele
 echo "------------------------------------------------------------------------------------------------------------------------"
 
 if [[ $DRY_RUN == "false" ]]; then
-  run_with_output $EKSCTL delete nodegroup --cluster "$CLUSTER_NAME" --name ng-generic-1-20-1a
-  run_with_output $EKSCTL delete nodegroup --cluster "$CLUSTER_NAME" --name ng-generic-1-20-1b
-  run_with_output $EKSCTL delete nodegroup --cluster "$CLUSTER_NAME" --name ng-generic-1-20-1c
+  run_with_output "$EKSCTL" delete nodegroup --cluster "$CLUSTER_NAME" --name ng-generic-1-20-1a
+  run_with_output "$EKSCTL" delete nodegroup --cluster "$CLUSTER_NAME" --name ng-generic-1-20-1b
+  run_with_output "$EKSCTL" delete nodegroup --cluster "$CLUSTER_NAME" --name ng-generic-1-20-1c
 else
-  echo Not running: $EKSCTL delete nodegroup --cluster "$CLUSTER_NAME" --name ng-generic
+  echo Not running: "$EKSCTL" delete nodegroup --cluster "$CLUSTER_NAME" --name ng-generic
 fi
 
 
