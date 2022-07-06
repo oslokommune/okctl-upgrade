@@ -15,10 +15,11 @@ function run_cmd() {
   local GET_OUTPUT=$1
   # shellcheck disable=SC2124
   local CMD="${@:2}"
+  local TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
 
   echo "" >&2
   echo "~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~" >&2
-  echo -e "Running command: \e[96m${CMD}\e[0m" >&2
+  echo -e "Running command [$TIMESTAMP]: \e[96m${CMD}\e[0m" >&2
   echo "~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~" >&2
 
   local RESULT=""
@@ -94,20 +95,19 @@ if [[ $* == "-h" || -z "$1" || -z "$2" || -z "$3" || "$#" -lt 3 ]]
 then
     ME=$(basename $0)
     echo -e "\e[1mUSAGE:\e[0m"
-    echo "$ME <cluster-manifest file> <aws-region> <EKS target version> [--dry-run={false|true}]"
+    echo "$ME <cluster-manifest file> <aws-region> <EKS target version> [dry-run={false|true}]"
     echo
     echo "cluster-manifest file      The Okctl cluster manifest"
     echo "aws-region                 AWS region"
     echo "EKS target version         Example: 1.21"
-    echo "--dry--run                 Default true. Set to false to actually run upgrade."
+    echo "dry-run                 Default true. Set to false to actually run upgrade."
     echo
     echo -e "\e[1mEXAMPLES:\e[0m"
-    echo
     echo "# Run with dry-run, i.e. do no changes, i.e. it's safe to run:"
     echo "$ME cluster-dev.yaml eu-west-1 1.21"
     echo
     echo "# Run with dry-run false, i.e. actually run the upgrade:"
-    echo "$ME cluster-dev.yaml eu-west-1 1.21 --dry-run=false"
+    echo "$ME cluster-dev.yaml eu-west-1 1.21 dry-run=false"
     echo
     exit 0
 fi
@@ -116,7 +116,7 @@ fi
 # Get and validate all input variables
 #
 CLUSTER_MANIFEST="$1"
-AWS_REGION="$2"
+export AWS_REGION="$2"
 DRY_RUN=true
 
 if [[ ! -f "$CLUSTER_MANIFEST" ]]; then
@@ -317,24 +317,43 @@ echo "Replacing node groups, step 2 of $REPLACE_NODE_GROUPS_STEPS: Create new no
 echo "------------------------------------------------------------------------------------------------------------------------"
 
 if [[ $DRY_RUN == "false" ]]; then
-  run_with_output $EKSCTL create nodegroup --config-file=$NODEGROUP_FILE
+  run_with_output "$EKSCTL" create nodegroup --config-file=$NODEGROUP_FILE
 else
-  run_with_output $EKSCTL create nodegroup --config-file=$NODEGROUP_FILE --dry-run
+  run_with_output "$EKSCTL" create nodegroup --config-file=$NODEGROUP_FILE --dry-run
 fi
 
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"
 echo "Replacing node groups, step 3 of $REPLACE_NODE_GROUPS_STEPS: Dry run: Drain old nodes"
 echo "------------------------------------------------------------------------------------------------------------------------"
-run_no_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1a' --ignore-daemonsets --delete-emptydir-data --dry-run=client
-run_with_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1b' --ignore-daemonsets --delete-emptydir-data --dry-run=client
-run_with_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1c' --ignore-daemonsets --delete-emptydir-data --dry-run=client
+
+# TODO: Only run eksctl drain on nodegroups that dont belong to target eks version
+# $EKSCTL get nodegroup --cluster "$CLUSTER_NAME" -o yaml | yq eval '.[].Name'
+
+NODE_1A=ng-generic-$EKS_VERSION_WITH_DASH-1a
+NODE_1B=ng-generic-$EKS_VERSION_WITH_DASH-1b
+NODE_1C=ng-generic-$EKS_VERSION_WITH_DASH-1c
 
 if [[ $DRY_RUN == "false" ]]; then
-  run_with_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1a' --ignore-daemonsets --delete-emptydir-data
-  run_with_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1b' --ignore-daemonsets --delete-emptydir-data
-  run_with_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1c' --ignore-daemonsets --delete-emptydir-data
+  run_with_output "$EKSCTL" drain nodegroup --cluster "$CLUSTER_NAME" --name NODE_1A
+  run_with_output "$EKSCTL" drain nodegroup --cluster "$CLUSTER_NAME" --name NODE_1B
+  run_with_output "$EKSCTL" drain nodegroup --cluster "$CLUSTER_NAME" --name NODE_1C
+else
+  run_with_output "$EKSCTL" drain nodegroup --cluster "$CLUSTER_NAME" --name NODE_1A --apply
+    run_with_output "$EKSCTL" drain nodegroup --cluster "$CLUSTER_NAME" --name NODE_1B --apply
+    run_with_output "$EKSCTL" drain nodegroup --cluster "$CLUSTER_NAME" --name NODE_1C --apply
 fi
+
+#run_no_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1a' --ignore-daemonsets --delete-emptydir-data --dry-run=client
+#run_with_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1b' --ignore-daemonsets --delete-emptydir-data --dry-run=client
+#run_with_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1c' --ignore-daemonsets --delete-emptydir-data --dry-run=client
+#
+#if [[ $DRY_RUN == "false" ]]; then
+#  run_with_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1a' --ignore-daemonsets --delete-emptydir-data
+#  run_with_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1b' --ignore-daemonsets --delete-emptydir-data
+#  run_with_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1c' --ignore-daemonsets --delete-emptydir-data
+#fi
+#
 
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"

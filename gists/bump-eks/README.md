@@ -101,16 +101,16 @@ It's possible to upgrade only one minor version at the time. So if you are on EK
 
 ```sh
 # Dry run, to see if everything is supposed to work.
-./upgrade.sh cluster-dev.yaml eu-west-1 1.21
+./upgrade.sh cluster-dev.yaml eu-west-1 1.21 | tee "log-$(date +"%Y-%m-%dx%H-%M-%S").txt"
 
 # Actually run the upgrade
-./upgrade.sh cluster-dev.yaml eu-west-1 1.21 --dry-run=false
+./upgrade.sh cluster-dev.yaml eu-west-1 1.21 dry-run=false | tee "log-$(date +"%Y-%m-%dx%H-%M-%S").txt"
 
 # Dry run, to see if everything is supposed to work.
-./upgrade.sh cluster-dev.yaml eu-west-1 1.22
+./upgrade.sh cluster-dev.yaml eu-west-1 1.22 | tee "log-$(date +"%Y-%m-%dx%H-%M-%S").txt"
 
 # Actually run the upgrade
-./upgrade.sh cluster-dev.yaml eu-west-1 1.22 --dry-run=false
+./upgrade.sh cluster-dev.yaml eu-west-1 1.22 dry-run=false | tee "log-$(date +"%Y-%m-%dx%H-%M-%S").txt"
 ```
 
 # Something wrong happened
