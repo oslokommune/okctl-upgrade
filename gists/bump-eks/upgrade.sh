@@ -238,19 +238,13 @@ echo
 # Instructions: https://eksctl.io/usage/cluster-upgrade/
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"
-echo "Dry run upgrade of EKS control plane to check for errors"
-echo "------------------------------------------------------------------------------------------------------------------------"
-run_with_output "$EKSCTL" upgrade cluster --name "$CLUSTER_NAME" --version "$EKS_TARGET_VERSION"
-
-echo
-echo "------------------------------------------------------------------------------------------------------------------------"
 echo "Run upgrade of EKS control plane. Estimated time: 10-15 min."
 echo "------------------------------------------------------------------------------------------------------------------------"
+
 if [[ $DRY_RUN == "false" ]]; then
   run_with_output "$EKSCTL" upgrade cluster --name "$CLUSTER_NAME" --version "$EKS_TARGET_VERSION" --approve
 else
-  echo Not running:
-  echo "$EKSCTL" upgrade cluster --name "$CLUSTER_NAME" --version "$EKS_TARGET_VERSION" --approve
+  run_with_output "$EKSCTL" upgrade cluster --name "$CLUSTER_NAME" --version "$EKS_TARGET_VERSION"
 fi
 
 REPLACE_NODE_GROUPS_STEPS="4"
