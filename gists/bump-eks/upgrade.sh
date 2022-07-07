@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 EKSCTL_VERSION="v0.104.0"
 
 #
@@ -121,11 +122,12 @@ DRY_RUN=true
 
 if [[ ! -f "$CLUSTER_MANIFEST" ]]; then
   echo "File does not exist: $CLUSTER_MANIFEST"
+  exit 1
 fi
 
 NODEGROUP_FILE="/tmp/nodegroup_config.yaml"
 if [[ -f $NODEGROUP_FILE ]]; then
-  echo "Delete or move $NODEGROUP_FILE before continuing."
+  rm /tmp/nodegroup_config.yaml
 fi
 
 if [[ $4 == "false" ]]; then
@@ -139,8 +141,7 @@ if [[ ! "$EKS_TARGET_VERSION" =~ ^1\.[0-9]{2}$ ]]; then
   exit 1
 fi
 
-# Convert 1.22 to 1-22
-EKS_VERSION_WITH_DASH=${EKS_TARGET_VERSION//\./-}
+EKS_VERSION_WITH_DASH=${EKS_TARGET_VERSION//\./-} # Convert 1.22 to 1-22
 TARGET_BINARY_DIR=/tmp/eks-upgrade/$EKS_VERSION_WITH_DASH
 KUBECTL_VERSION=$(get_kubectl_version "$EKS_TARGET_VERSION")
 
@@ -176,11 +177,11 @@ case "$(uname -s)" in
      ;;
 esac
 
-echo Running: curl --location $EKSCTL_URL \| tar xz -C "$TARGET_BINARY_DIR"
-              curl --location $EKSCTL_URL  | tar xz -C "$TARGET_BINARY_DIR"
+echo -e "Running: \e[96mcurl --location  $EKSCTL_URL | tar xz -C  $TARGET_BINARY_DIR\e[0m"
+                        curl --location "$EKSCTL_URL"  | tar xz -C "$TARGET_BINARY_DIR"
 
-echo Running: curl --location "$KUBECTL_URL" -o "$TARGET_BINARY_DIR/kubectl"
-              curl --location "$KUBECTL_URL" -o "$TARGET_BINARY_DIR/kubectl"
+echo -e "Running: \e[96mcurl --location  $KUBECTL_URL  -o  $TARGET_BINARY_DIR/kubectl\e[0m"
+                        curl --location "$KUBECTL_URL" -o "$TARGET_BINARY_DIR/kubectl"
 
 run_with_output chmod +x "$TARGET_BINARY_DIR/eksctl"
 run_with_output chmod +x "$TARGET_BINARY_DIR/kubectl"
@@ -325,7 +326,7 @@ fi
 
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"
-echo "Replacing node groups, step 3 of $REPLACE_NODE_GROUPS_STEPS: Dry run: Drain old nodes"
+echo "Replacing node groups, step 3 of $REPLACE_NODE_GROUPS_STEPS: Drain old nodes"
 echo "------------------------------------------------------------------------------------------------------------------------"
 
 # Nodesgroups we want to keep
@@ -338,7 +339,7 @@ EXISTING_NODEGROUPS=$($EKSCTL get nodegroup --cluster "$CLUSTER_NAME" -o yaml | 
 echo "Existing nodegroups:"
 echo "$EXISTING_NODEGROUPS"
 echo
-echo "We want to keep these node groups:"
+echo "We want to keep these node groups, if they exist:"
 echo "$NEW_NODE_1A"
 echo "$NEW_NODE_1B"
 echo "$NEW_NODE_1C"
@@ -368,7 +369,7 @@ done
 
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"
-echo "Replacing node groups, step 4 of $REPLACE_NODE_GROUPS_STEPS: Dry run: Delete old nodegroups"
+echo "Replacing node groups, step 4 of $REPLACE_NODE_GROUPS_STEPS: Delete old nodegroups"
 echo "------------------------------------------------------------------------------------------------------------------------"
 
 echo "Existing nodegroups:"
@@ -400,6 +401,42 @@ do
     echo "Not deleting node group, we want to keep it: $node_group"
   fi
 done
+
+UPDATE_ADDONS_STEPS=3
+echo
+echo "------------------------------------------------------------------------------------------------------------------------"
+echo "Upgrading addon 1 of $UPDATE_ADDONS_STEPS: kube-proxy"
+echo "------------------------------------------------------------------------------------------------------------------------"
+
+if [[ $DRY_RUN == "false" ]]; then
+  run_with_output "$EKSCTL" utils update-kube-proxy --cluster="$CLUSTER_NAME" --approve
+else
+  run_with_output "$EKSCTL" utils update-kube-proxy --cluster="$CLUSTER_NAME"
+fi
+
+
+echo
+echo "------------------------------------------------------------------------------------------------------------------------"
+echo "Upgrading addon 1 of $UPDATE_ADDONS_STEPS: aws-node"
+echo "------------------------------------------------------------------------------------------------------------------------"
+
+if [[ $DRY_RUN == "false" ]]; then
+  run_with_output "$EKSCTL" utils update-aws-node --cluster="$CLUSTER_NAME" --approve
+else
+  run_with_output "$EKSCTL" utils update-aws-node --cluster="$CLUSTER_NAME"
+fi
+
+
+echo
+echo "------------------------------------------------------------------------------------------------------------------------"
+echo "Upgrading addon 1 of $UPDATE_ADDONS_STEPS: coredns"
+echo "------------------------------------------------------------------------------------------------------------------------"
+
+if [[ $DRY_RUN == "false" ]]; then
+  run_with_output "$EKSCTL" utils update-coredns --cluster="$CLUSTER_NAME" --approve
+else
+  run_with_output "$EKSCTL" utils update-coredns --cluster="$CLUSTER_NAME"
+fi
 
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"

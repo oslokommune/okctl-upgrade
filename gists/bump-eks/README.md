@@ -2,6 +2,16 @@
 
 This document describes how to use the [upgrade script](upgrade.sh) in this repository in order to upgrade your EKS cluster.
 
+The upgrade script basically just does what is described in step 1-3 in the official guide, https://eksctl.io/usage/cluster-upgrade/, which is:
+
+
+> 1. upgrade control plane version with `eksctl upgrade cluster`
+> 2. replace each of the nodegroups by creating a new one and deleting the old one
+> 3. update default add-ons:
+>     - `kube-proxy`
+>     - `aws-node`
+>     - `coredns`
+
 ## Prerequisites
 
 **Make sure** you have already followed this guide previsouly to get to EKS 1.20:
@@ -68,6 +78,18 @@ brew install yq
 
 See https://github.com/mikefarah/yq.
 
+## watch
+
+### Linux
+
+No need to install, this ususally comes preinstalled in most distributions.
+
+### macOS
+
+```
+brew install watch
+```
+
 # Step 3: Prepare applications
 
 ## Avoid downtime
@@ -113,7 +135,45 @@ For every file in the result, edit it and replace the `apiVersion` so it becomes
 apiVersion: networking.k8s.io/v1
 ```
 
-# Step 4: Run the upgrade
+# Step 4: Monitor everything while upgrading
+
+It's nice to see that stuff changes while upgrading, so while we run the upgrade script in the next step, we want to monitor pods and nodes. We'll monitor these things in a separate terminal.
+
+* Open a new terminal window. Log in to your kubernetes cluster. The default Okctl way is to run `okctl venv` with your usual arguments.
+
+```sh
+okctl venv ... 
+```
+
+Then start monitoring pods:
+
+```sh
+watch -n 1 kubectl get pod --all-namespaces -o wide
+```
+
+* Open a new terminal tab. Log in to your kubernetes cluster like above.
+
+Then start monitoring nodes:
+
+```sh
+watch -n 4 kubectl get node -o wide
+```
+
+* Open a new terminal tab. Log in to your kubernetes cluster like above.
+
+In the following command, replace my-cluster-dev.yaml with your Okctl cluster manifest.
+
+```sh
+CLUSTER_NAME=$(yq e '.metadata.name' "my-cluster-dev.yaml")
+```
+
+Then start monitoring node groups:
+
+```sh
+watch -n 15 eksctl get nodegroup --cluster $CLUSTER_NAME
+```
+
+# Step 5: Run the upgrade
 
 ## Log in to environment
 
@@ -134,20 +194,48 @@ curl --silent --location "https://raw.githubusercontent.com/oslokommune/okctl-up
 
 ## Run the upgrade
 
-It's possible to upgrade only one minor version at the time. So if you are on EKS 1.20 and want to upgrade to EKS 1.22, you must run:
+### Usage
 
 ```sh
-# Dry run, to see if everything is supposed to work.
-./upgrade.sh cluster-dev.yaml eu-west-1 1.21 | tee "log-$(date +"%Y-%m-%dx%H-%M-%S").txt"
+USAGE:
+upgrade.sh <cluster-manifest file> <aws-region> <EKS target version> [dry-run={false|true}] | tee logfile.txt
+
+cluster-manifest file      The Okctl cluster manifest
+aws-region                 AWS region
+EKS target version         Example: 1.21
+dry-run                 Default true. Set to false to actually run upgrade.
+```
+
+### Tips
+
+* You can upgrade only one minor version at the time. So if you are on EKS 1.20 and want to upgrade to EKS 1.22, you must first upgrade to 1.21, then to 1.22.
+
+* :info: The `tee` thing in the following commands is there to create a nice upgrade log. You do not have to, but we recommend storing this (in git or somewhere else), because
+  * It gives a pretty nice and accurate way of telling what you have done with your cluster, which can be useful for future reference.
+  * It helps immensely for debugging in case something wrong happens.
+
+### Example, upgrading EKS 1.20 to 1.22
+
+```sh
+# Dry run the upgrade, hoping to catch any errors before actually upgrading
+./upgrade.sh cluster-dev.yaml eu-west-1 1.21 | tee "eks-upgrade-log-$(date +"%Y-%m-%dx%H-%M-%S").log"
 
 # Actually run the upgrade
-./upgrade.sh cluster-dev.yaml eu-west-1 1.21 dry-run=false | tee "log-$(date +"%Y-%m-%dx%H-%M-%S").txt"
+./upgrade.sh cluster-dev.yaml eu-west-1 1.21 dry-run=false | tee "eks-upgrade-log-$(date +"%Y-%m-%dx%H-%M-%S").log"
 
-# Dry run, to see if everything is supposed to work.
-./upgrade.sh cluster-dev.yaml eu-west-1 1.22 | tee "log-$(date +"%Y-%m-%dx%H-%M-%S").txt"
+# Store the logs
+git add *.log
+git commit -m "Upgraded to EKS 1.22"
+
+# Dry run the upgrade, hoping to catch any errors before actually upgrading
+./upgrade.sh cluster-dev.yaml eu-west-1 1.22 | tee "eks-upgrade-log-$(date +"%Y-%m-%dx%H-%M-%S").log"
 
 # Actually run the upgrade
-./upgrade.sh cluster-dev.yaml eu-west-1 1.22 dry-run=false | tee "log-$(date +"%Y-%m-%dx%H-%M-%S").txt"
+./upgrade.sh cluster-dev.yaml eu-west-1 1.22 dry-run=false | tee "eks-upgrade-log-$(date +"%Y-%m-%dx%H-%M-%S").log"
+
+# Store the log
+git add *.log
+git commit -m "Upgraded to EKS 1.22"
 ```
 
 # Something wrong happened
