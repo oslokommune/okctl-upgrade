@@ -135,14 +135,25 @@ For every file in the result, edit it and replace the `apiVersion` so it becomes
 apiVersion: networking.k8s.io/v1
 ```
 
-# Step 4: Monitor everything while upgrading
+# Step 4: Log in to the environment
+
+Set `AWS_PROFILE` to the correct AWS profile from `~/.aws/config`. If you have not set this up, have a look at [Authenticating to AWS](https://www.okctl.io/authenticating-to-aws/#aws-single-sign-on-sso).
+
+```sh
+export AWS_PROFILE=my-dev-account
+aws sso login
+```
+
+# Step 5: Monitor everything while upgrading
 
 It's nice to see that stuff changes while upgrading, so while we run the upgrade script in the next step, we want to monitor pods and nodes. We'll monitor these things in a separate terminal.
 
-* Open a new terminal window. Log in to your kubernetes cluster. The default Okctl way is to run `okctl venv` with your usual arguments.
+* Open a new terminal window. Log in to AWS and your kubernetes cluster. The default Okctl way is to run `okctl venv` with your usual arguments.
 
 ```sh
-okctl venv ... 
+export AWS_PROFILE=my-dev-account
+# Change my-cluster-dev.yaml to the correct file for your environment
+okctl venv -a aws-profile -c my-cluster-dev.yaml
 ```
 
 Then start monitoring pods:
@@ -173,16 +184,7 @@ Then start monitoring node groups:
 watch -n 15 eksctl get nodegroup --cluster $CLUSTER_NAME
 ```
 
-# Step 5: Run the upgrade
-
-## Log in to environment
-
-Log into the correct AWS environment. The default way to do this is:
-
-```sh
-export AWS_PROFILE=my-profile
-aws sso login
-```
+# Step 6: Run the upgrade
 
 ## Download upgrade script
 
@@ -203,39 +205,40 @@ upgrade.sh <cluster-manifest file> <aws-region> <EKS target version> [dry-run={f
 cluster-manifest file      The Okctl cluster manifest
 aws-region                 AWS region
 EKS target version         Example: 1.21
-dry-run                 Default true. Set to false to actually run upgrade.
+dry-run                    Default true. Set to false to actually run upgrade.
 ```
-
-### Tips
 
 * You can upgrade only one minor version at the time. So if you are on EKS 1.20 and want to upgrade to EKS 1.22, you must first upgrade to 1.21, then to 1.22.
 
-* :info: The `tee` thing in the following commands is there to create a nice upgrade log. You do not have to, but we recommend storing this (in git or somewhere else), because
+* :information_source: The `tee` thing in the following commands is there to create a nice upgrade log. You do not have to, but we recommend storing this (in git or somewhere else), because
   * It gives a pretty nice and accurate way of telling what you have done with your cluster, which can be useful for future reference.
   * It helps immensely for debugging in case something wrong happens.
 
 ### Example, upgrading EKS 1.20 to 1.22
 
 ```sh
+export AWS_PROFILE=my-dev-account
+mkdir -p logs
+
 # Dry run the upgrade, hoping to catch any errors before actually upgrading
-./upgrade.sh cluster-dev.yaml eu-west-1 1.21 | tee "eks-upgrade-log-$(date +"%Y-%m-%dx%H-%M-%S").log"
+./upgrade.sh cluster-dev.yaml eu-west-1 1.21 | tee "logs/eks-upgrade-1-21-$(date +"%Y-%m-%dx%H-%M-%S").log"
 
 # Actually run the upgrade
-./upgrade.sh cluster-dev.yaml eu-west-1 1.21 dry-run=false | tee "eks-upgrade-log-$(date +"%Y-%m-%dx%H-%M-%S").log"
+./upgrade.sh cluster-dev.yaml eu-west-1 1.21 dry-run=false | tee "logs/eks-upgrade-1-21-$(date +"%Y-%m-%dx%H-%M-%S").log"
 
 # Store the logs
-git add *.log
-git commit -m "Upgraded to EKS 1.22"
+git add logs
+git commit -m "Add log for upgrade to EKS 1.22"
 
 # Dry run the upgrade, hoping to catch any errors before actually upgrading
-./upgrade.sh cluster-dev.yaml eu-west-1 1.22 | tee "eks-upgrade-log-$(date +"%Y-%m-%dx%H-%M-%S").log"
+./upgrade.sh cluster-dev.yaml eu-west-1 1.22 | tee "logs/eks-upgrade-1-22-$(date +"%Y-%m-%dx%H-%M-%S").log"
 
 # Actually run the upgrade
-./upgrade.sh cluster-dev.yaml eu-west-1 1.22 dry-run=false | tee "eks-upgrade-log-$(date +"%Y-%m-%dx%H-%M-%S").log"
+./upgrade.sh cluster-dev.yaml eu-west-1 1.22 dry-run=false | tee "logs/eks-upgrade-1-22-$(date +"%Y-%m-%dx%H-%M-%S").log"
 
 # Store the log
-git add *.log
-git commit -m "Upgraded to EKS 1.22"
+git add logs
+git commit -m "Add log for upgrade to EKS 1.22"
 ```
 
 # Something wrong happened
@@ -253,9 +256,9 @@ In the following command, replace `/tmp/eks-upgrade/1-21` with `/tmp/eks-upgrade
 
 This should output exactly which pods that cannot be evicted due to its `PodDisruptionBudget` (or for other reasons?).
 
-## Apps have downtime when draining nodes
+## My applications have downtime when draining nodes
 
-* Your app's Deployment must have `replicas: 2`.
+* Your application's Deployment must have `replicas: 2`.
 * You need a working `PodDisruptionBudget`.
 
 How to setup these correctly is described in https://github.com/oslokommune/okctl-upgrade/blob/main/gists/bump-eks-to-1-20/README.md.
