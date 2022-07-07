@@ -228,6 +228,7 @@ echo
 # shellcheck disable=SC2162
 read -n1 -p "Do these variables look okay? (Y/n) " confirm
 if ! echo "$confirm" | grep '^[Yy]\?$'; then
+  echo
   echo "Aborting."
   exit 1
 fi
@@ -327,47 +328,78 @@ echo "--------------------------------------------------------------------------
 echo "Replacing node groups, step 3 of $REPLACE_NODE_GROUPS_STEPS: Dry run: Drain old nodes"
 echo "------------------------------------------------------------------------------------------------------------------------"
 
-# TODO: Only run eksctl drain on nodegroups that dont belong to target eks version
-# $EKSCTL get nodegroup --cluster "$CLUSTER_NAME" -o yaml | yq eval '.[].Name'
+# Nodesgroups we want to keep
+NEW_NODE_1A=ng-generic-$EKS_VERSION_WITH_DASH-1a
+NEW_NODE_1B=ng-generic-$EKS_VERSION_WITH_DASH-1b
+NEW_NODE_1C=ng-generic-$EKS_VERSION_WITH_DASH-1c
 
-NODE_1A=ng-generic-$EKS_VERSION_WITH_DASH-1a
-NODE_1B=ng-generic-$EKS_VERSION_WITH_DASH-1b
-NODE_1C=ng-generic-$EKS_VERSION_WITH_DASH-1c
+EXISTING_NODEGROUPS=$($EKSCTL get nodegroup --cluster "$CLUSTER_NAME" -o yaml | yq eval '.[].Name')
 
-if [[ $DRY_RUN == "false" ]]; then
-  run_with_output "$EKSCTL" drain nodegroup --cluster "$CLUSTER_NAME" --name NODE_1A
-  run_with_output "$EKSCTL" drain nodegroup --cluster "$CLUSTER_NAME" --name NODE_1B
-  run_with_output "$EKSCTL" drain nodegroup --cluster "$CLUSTER_NAME" --name NODE_1C
-else
-  run_with_output "$EKSCTL" drain nodegroup --cluster "$CLUSTER_NAME" --name NODE_1A --apply
-    run_with_output "$EKSCTL" drain nodegroup --cluster "$CLUSTER_NAME" --name NODE_1B --apply
-    run_with_output "$EKSCTL" drain nodegroup --cluster "$CLUSTER_NAME" --name NODE_1C --apply
-fi
+echo "Existing nodegroups:"
+echo "$EXISTING_NODEGROUPS"
+echo
+echo "We want to keep these node groups:"
+echo "$NEW_NODE_1A"
+echo "$NEW_NODE_1B"
+echo "$NEW_NODE_1C"
+echo
+echo "Draining all other node groups now:"
 
-#run_no_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1a' --ignore-daemonsets --delete-emptydir-data --dry-run=client
-#run_with_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1b' --ignore-daemonsets --delete-emptydir-data --dry-run=client
-#run_with_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1c' --ignore-daemonsets --delete-emptydir-data --dry-run=client
-#
-#if [[ $DRY_RUN == "false" ]]; then
-#  run_with_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1a' --ignore-daemonsets --delete-emptydir-data
-#  run_with_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1b' --ignore-daemonsets --delete-emptydir-data
-#  run_with_output "$KUBECTL" drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1c' --ignore-daemonsets --delete-emptydir-data
-#fi
-#
+# Drain all nodegroups that are not one of the expected above.
+for node_group in $EXISTING_NODEGROUPS
+do
+  if [[ \
+        "$node_group" != "$NEW_NODE_1A" && \
+        "$node_group" != "$NEW_NODE_1B" && \
+        "$node_group" != "$NEW_NODE_1C" \
+    ]]; then
+
+      echo "Draining node group: $node_group"
+
+      if [[ $DRY_RUN == "false" ]]; then
+        run_with_output "$EKSCTL" drain nodegroup --cluster "$CLUSTER_NAME" --name "$node_group" --apply
+      else
+        run_with_output "$EKSCTL" drain nodegroup --cluster "$CLUSTER_NAME" --name "$node_group"
+      fi
+  else
+    echo "Not draining node group, we want to keep it: $node_group"
+  fi
+done
 
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"
 echo "Replacing node groups, step 4 of $REPLACE_NODE_GROUPS_STEPS: Dry run: Delete old nodegroups"
 echo "------------------------------------------------------------------------------------------------------------------------"
 
-if [[ $DRY_RUN == "false" ]]; then
-  run_with_output "$EKSCTL" delete nodegroup --cluster "$CLUSTER_NAME" --name ng-generic-1-20-1a
-  run_with_output "$EKSCTL" delete nodegroup --cluster "$CLUSTER_NAME" --name ng-generic-1-20-1b
-  run_with_output "$EKSCTL" delete nodegroup --cluster "$CLUSTER_NAME" --name ng-generic-1-20-1c
-else
-  echo Not running: "$EKSCTL" delete nodegroup --cluster "$CLUSTER_NAME" --name ng-generic
-fi
+echo "Existing nodegroups:"
+echo "$EXISTING_NODEGROUPS"
+echo
+echo "We want to keep these node groups:"
+echo "$NEW_NODE_1A"
+echo "$NEW_NODE_1B"
+echo "$NEW_NODE_1C"
+echo
+echo "Deleting all other node groups now:"
 
+for node_group in $EXISTING_NODEGROUPS
+do
+  if [[ \
+        "$node_group" != "$NEW_NODE_1A" && \
+        "$node_group" != "$NEW_NODE_1B" && \
+        "$node_group" != "$NEW_NODE_1C" \
+    ]]; then
+
+      echo "Deleting node group: $node_group"
+
+      if [[ $DRY_RUN == "false" ]]; then
+        run_with_output "$EKSCTL" delete nodegroup --cluster "$CLUSTER_NAME" --name "$node_group" --apply
+      else
+        run_with_output "$EKSCTL" delete nodegroup --cluster "$CLUSTER_NAME" --name "$node_group"
+      fi
+  else
+    echo "Not deleting node group, we want to keep it: $node_group"
+  fi
+done
 
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"

@@ -1,19 +1,36 @@
-This guide describes how to upgrade EKS in an Okctl environment. The script supports multiple EKS versions.
+# EKS upgrade
 
-**Make sure** you have already upgrade all components described in 
-https://github.com/oslokommune/okctl-upgrade/blob/main/gists/bump-eks-to-1-20/README.md.
+This document describes how to use the [upgrade script](upgrade.sh) in this repository in order to upgrade your EKS cluster.
 
-# Upgrade Okctl environments
+## Prerequisites
+
+**Make sure** you have already followed this guide previsouly to get to EKS 1.20:
+https://github.com/oslokommune/okctl-upgrade/blob/main/gists/bump-eks-to-1-20/README.md. The exception to this if you have used Okctl to create a 1.20 cluster, as then it does not need upgrading.
+
+## Tips
+
+* If the upgrade script breaks, or you want to customize it in any way, it's not that hard to just edit the script to your needs.
+* All steps in the scripts are written to be idempotent. This means if the script breaks, or if you edit it and want to re-run it, you can, and it should still work.
+
+# Step 1: Upgrade Okctl environments
 
 Download a version of Okctl runs on the EKS version you need, and run `okctl upgrade`. The [changelog of Okctl](https://github.com/oslokommune/okctl/releases) is best suited to find which version works with which verison of EKS.
 
 This is to ensure that `okctl apply cluster` and other commands support the version of EKS you are running on.
 
-# Download or update tools
+(ToDo: Update this guide with versions so users don't have to read the changelog.)
 
-Download by using the commands, so we get the correct version expected by this upgrade.
+# Step 2: Download or update tools
+
+The upgrade script expects the following tools to exist on your machine, so make sure to install these.
+
+## aws CLI
+
+Follow instructions in https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
 ## jq
+
+jq is a tool for parsing JSON.
 
 ### Linux / apt
 
@@ -33,6 +50,8 @@ See: https://stedolan.github.io/jq/download/.
 
 ## yq
 
+yq is a tool for parsing YAML.
+
 ### Linux / snap
 
 ```sh
@@ -49,7 +68,7 @@ brew install yq
 
 See https://github.com/mikefarah/yq.
 
-# Prepare applications
+# Step 3: Prepare applications
 
 ## Avoid downtime
 
@@ -59,15 +78,33 @@ To avoid downtime, **make sure** you have completed the steps described in this 
 
 **Note!** If you do not follow the steps below, your applications **probably will stop working** after upgrading to Kubernetes 1.22.
 
-In Kubernetes 1.22, there are some resources that stop working. The following guide describe these in detail: https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html#update-1.22. For applications made with `okctl apply application`, you don't need to read that guide, but you can just follow the steps below.
+Kubernetes 1.22 stops supporting some resources. The following guide describe these in detail: https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html#update-1.22. For applications made with `okctl apply application`, you don't need to read that guide, just follow the steps below.
 
-### Ingress
+### Update Ingress resources
 
-Find occurrences of old Ingresses by running
+First `cd` into the directory where you store your Kubernetes manifests/YAMLs. The default way in Okctl is to put these in your IAC repository.
+
+```yaml
+cd your-okctl-iac-repository
+```
+
+Find occurrences of old Ingress resources by running
 
 ```
-grep -A 1 -B 50 -nRsH "apiVersion: networking.k8s.io/v1beta1"
-grep -A 1 -B 50 -nRsH "apiVersion: extensions/v1beta1"
+grep -nRsH "apiVersion: networking.k8s.io/v1beta1"
+grep -nRsH "apiVersion: extensions/v1beta1"
+```
+
+Example output:
+
+```
+$ grep -nRsH "apiVersion: networking.k8s.io/v1beta1"
+--
+infrastructure/applications/okctl-reference-app/base/ingress.yaml:1:apiVersion: networking.k8s.io/v1beta1
+infrastructure/applications/okctl-reference-app/base/ingress.yaml-2-kind: Ingress
+--
+infrastructure/applications/hello/base/ingress.yaml:1:apiVersion: networking.k8s.io/v1beta1
+infrastructure/applications/hello/base/ingress.yaml-2-kind: Ingress
 ```
 
 For every file in the result, edit it and replace the `apiVersion` so it becomes like this:
@@ -76,19 +113,19 @@ For every file in the result, edit it and replace the `apiVersion` so it becomes
 apiVersion: networking.k8s.io/v1
 ```
 
-# Run the upgrade
+# Step 4: Run the upgrade
 
 ## Log in to environment
 
-Log into your kubernetes environment. The default way to do this is:
+Log into the correct AWS environment. The default way to do this is:
 
 ```sh
 export AWS_PROFILE=my-profile
 aws sso login
-okctl venv -c cluster-dev.yaml
 ```
 
 ## Download upgrade script
+
 Download latest version upgrade script (it may be updated at any time):
 
 ```sh
@@ -123,15 +160,17 @@ command below, which we don't want to run at the same time.
 In the following command, replace `/tmp/eks-upgrade/1-21` with `/tmp/eks-upgrade/1-22` or whatever version you're running on. Run:
 
 ```shell
-/tmp/eks-upgrade/1-21 drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic' --ignore-daemonsets --delete-emptydir-data
+/tmp/eks-upgrade/1-21/kubectl drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic' --ignore-daemonsets --delete-emptydir-data
 ```
 
-This should output exactly which pods that cannot be evicted due to its `PodDisruptionBudget`.
+This should output exactly which pods that cannot be evicted due to its `PodDisruptionBudget` (or for other reasons?).
 
 ## Apps have downtime when draining nodes
 
 * Your app's Deployment must have `replicas: 2`.
 * You need a working `PodDisruptionBudget`.
+
+How to setup these correctly is described in https://github.com/oslokommune/okctl-upgrade/blob/main/gists/bump-eks-to-1-20/README.md.
 
 # Resources
 
