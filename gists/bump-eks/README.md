@@ -12,15 +12,16 @@ The upgrade script basically just does what is described in step 1-3 in the offi
 >     - `aws-node`
 >     - `coredns`
 
+## Tips / Read this!
+
+* All steps in the scripts are written to be idempotent. This means if the script breaks, or if you edit it and want to re-run it, you can, and it should still work.
+  * It also means you can abort the script at any time with CTRL+C, and re-run it again. (But don't do it for no reason, we cannot ever be really sure.)
+* If the upgrade script breaks, or you want to customize it in any way, it's possible to edit the script to suit your needs.
+
 ## Prerequisites
 
 **Make sure** you have already followed this guide previsouly to get to EKS 1.20:
 https://github.com/oslokommune/okctl-upgrade/blob/main/gists/bump-eks-to-1-20/README.md. The exception to this if you have used Okctl to create a 1.20 cluster, as then it does not need upgrading.
-
-## Tips
-
-* If the upgrade script breaks, or you want to customize it in any way, it's not that hard to just edit the script to your needs.
-* All steps in the scripts are written to be idempotent. This means if the script breaks, or if you edit it and want to re-run it, you can, and it should still work.
 
 # Step 1: Download or update tools
 
@@ -93,7 +94,13 @@ aws sso login
 
 # Step 3: Configure applications for no downtime
 
+
+
 To avoid downtime, **make sure** you have completed the steps described in this guide: https://github.com/oslokommune/okctl-upgrade/tree/main/gists/bump-eks-to-1-20#prepare-applications
+
+
+
+
 
 # Step 4: Adapt to EKS version specific requirements
 
@@ -274,10 +281,13 @@ git commit -m "Add log for upgrade to EKS 1.22"
 Abort/CTRL+C your execution of `eksctl delete nodegroup` if it's running, because we will be running the
 command below, which we don't want to run at the same time.
 
-In the following command, replace `/tmp/eks-upgrade/1-21` with `/tmp/eks-upgrade/1-22` or whatever version you're running on. Run:
+In the following command, replace
+
+* `/tmp/eks-upgrade/1-21` with `/tmp/eks-upgrade/1-22` or whatever version you're running on. Run:
+* `ng-generic-1-10-1c` with whichever node is failing to drain. You can see which in the output of the upgrade script.
 
 ```shell
-/tmp/eks-upgrade/1-21/kubectl drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic' --ignore-daemonsets --delete-emptydir-data
+/tmp/eks-upgrade/1-21/kubectl drain -l 'alpha.eksctl.io/nodegroup-name=ng-generic-1-20-1c' --ignore-daemonsets --delete-emptydir-data
 ```
 
 This should output exactly which pods that cannot be evicted due to its `PodDisruptionBudget` (or for other reasons?).

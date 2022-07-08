@@ -130,7 +130,7 @@ if [[ -f $NODEGROUP_FILE ]]; then
   rm /tmp/nodegroup_config.yaml
 fi
 
-if [[ $4 == "false" ]]; then
+if [[ $4 == "dry-run=false" ]]; then
   DRY_RUN=false
 fi
 
@@ -177,11 +177,23 @@ case "$(uname -s)" in
      ;;
 esac
 
+# run_with_output doesn't handle big outputs so well, so running command directly instead
 echo -e "Running: \e[96mcurl --location  $EKSCTL_URL | tar xz -C  $TARGET_BINARY_DIR\e[0m"
                         curl --location "$EKSCTL_URL"  | tar xz -C "$TARGET_BINARY_DIR"
+ERROR_CODE=$?
+if [[ ! $ERROR_CODE == 0 ]]; then
+  echo eksctl curl failed
+  exit $ERROR_CODE
+fi
+
 
 echo -e "Running: \e[96mcurl --location  $KUBECTL_URL  -o  $TARGET_BINARY_DIR/kubectl\e[0m"
                         curl --location "$KUBECTL_URL" -o "$TARGET_BINARY_DIR/kubectl"
+ERROR_CODE=$?
+if [[ ! $ERROR_CODE == 0 ]]; then
+  echo kubectl curl failed
+  exit $ERROR_CODE
+fi
 
 run_with_output chmod +x "$TARGET_BINARY_DIR/eksctl"
 run_with_output chmod +x "$TARGET_BINARY_DIR/kubectl"
@@ -240,6 +252,7 @@ echo
 echo "------------------------------------------------------------------------------------------------------------------------"
 echo "Run upgrade of EKS control plane. Estimated time: 10-15 min."
 echo "------------------------------------------------------------------------------------------------------------------------"
+echo "💡 Tip: You can go to EKS in AWS console to see the status is set to 'Updating'."
 
 if [[ $DRY_RUN == "false" ]]; then
   run_with_output "$EKSCTL" upgrade cluster --name "$CLUSTER_NAME" --version "$EKS_TARGET_VERSION" --approve
@@ -314,8 +327,20 @@ echo "--------------------------------------------------------------------------
 
 if [[ $DRY_RUN == "false" ]]; then
   run_with_output "$EKSCTL" create nodegroup --config-file=$NODEGROUP_FILE
+  run_with_output "$KUBECTL" set env daemonset aws-node -n kube-system ENABLE_POD_ENI=true
+  run_with_output \
+    "$KUBECTL" patch daemonset aws-node \
+      -n kube-system \
+      -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
 else
   run_with_output "$EKSCTL" create nodegroup --config-file=$NODEGROUP_FILE --dry-run
+  echo "Would run: $KUBECTL set env daemonset aws-node -n kube-system ENABLE_POD_ENI=true"
+
+  PATCH='{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
+  echo "Would run:"
+  echo "  $KUBECTL patch daemonset aws-node \\"
+  echo "   -n kube-system \\"
+  echo "   -p $PATCH"
 fi
 
 echo
@@ -333,7 +358,7 @@ EXISTING_NODEGROUPS=$($EKSCTL get nodegroup --cluster "$CLUSTER_NAME" -o yaml | 
 echo "Existing nodegroups:"
 echo "$EXISTING_NODEGROUPS"
 echo
-echo "We want to keep these node groups, if they exist:"
+echo "We want to drain all node groups except these:"
 echo "$NEW_NODE_1A"
 echo "$NEW_NODE_1B"
 echo "$NEW_NODE_1C"
@@ -371,7 +396,7 @@ echo "--------------------------------------------------------------------------
 echo "Existing nodegroups:"
 echo "$EXISTING_NODEGROUPS"
 echo
-echo "We want to keep these node groups:"
+echo "We want to delete all node groups except these:"
 echo "$NEW_NODE_1A"
 echo "$NEW_NODE_1B"
 echo "$NEW_NODE_1C"
