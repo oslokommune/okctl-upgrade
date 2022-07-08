@@ -101,6 +101,8 @@ To avoid downtime, **make sure** you have completed the steps described in this 
 
 Make sure you have upgraded to Okctl version TODO or later.
 
+TODO: Okctl doesn't support EKS 1.21. We will update this guide when it is.
+
 ## EKS 1.22
 
 If you're upgradring to EKS 1.22, you must follow the below steps. If you do not, your application **probably will stop working**.
@@ -141,6 +143,8 @@ apiVersion: networking.k8s.io/v1
 ```
 
 ### Make sure Okctl version is TODO or later
+
+TODO: Okctl doesn't support EKS 1.22. We will update this guide when it is.
 
 This is because we need to bump the AWS load balancer controller to 2.4.1 or later. Okctl upgrade handles this for us.
 
