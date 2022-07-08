@@ -204,7 +204,7 @@ watch -n 15 eksctl get nodegroup --cluster $(yq e '.metadata.name' "my-cluster-d
 ```
 
 What to look for when running the upgrade:
-* See that new node groups is created, and the old ones are removed
+* See that new node groups are created, and the old ones are removed
 
 # Step 6: Run the upgrade
 
