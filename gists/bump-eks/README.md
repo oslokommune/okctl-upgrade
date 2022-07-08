@@ -22,15 +22,7 @@ https://github.com/oslokommune/okctl-upgrade/blob/main/gists/bump-eks-to-1-20/RE
 * If the upgrade script breaks, or you want to customize it in any way, it's not that hard to just edit the script to your needs.
 * All steps in the scripts are written to be idempotent. This means if the script breaks, or if you edit it and want to re-run it, you can, and it should still work.
 
-# Step 1: Upgrade Okctl environments
-
-Download a version of Okctl runs on the EKS version you need, and run `okctl upgrade`. The [changelog of Okctl](https://github.com/oslokommune/okctl/releases) is best suited to find which version works with which verison of EKS.
-
-This is to ensure that `okctl apply cluster` and other commands support the version of EKS you are running on.
-
-(ToDo: Update this guide with versions so users don't have to read the changelog.)
-
-# Step 2: Download or update tools
+# Step 1: Download or update tools
 
 The upgrade script expects the following tools to exist on your machine, so make sure to install these.
 
@@ -90,19 +82,32 @@ No need to install, this ususally comes preinstalled in most distributions.
 brew install watch
 ```
 
-# Step 3: Prepare applications
+# Step 2: Log in to the environment
 
-## Avoid downtime
+Set `AWS_PROFILE` to the correct AWS profile from `~/.aws/config`. If you have not set this up, have a look at [Authenticating to AWS](https://www.okctl.io/authenticating-to-aws/#aws-single-sign-on-sso).
+
+```sh
+export AWS_PROFILE=my-dev-account
+aws sso login
+```
+
+# Step 3: Configure applications for no downtime
 
 To avoid downtime, **make sure** you have completed the steps described in this guide: https://github.com/oslokommune/okctl-upgrade/tree/main/gists/bump-eks-to-1-20#prepare-applications
 
-## If upgrading to EKS 1.22 or later: Update manifests
+# Step 4: Adapt to EKS version specific requirements
 
-**Note!** If you do not follow the steps below, your applications **probably will stop working** after upgrading to Kubernetes 1.22.
+## EKS 1.21
 
-Kubernetes 1.22 stops supporting some resources. The following guide describe these in detail: https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html#update-1.22. For applications made with `okctl apply application`, you don't need to read that guide, just follow the steps below.
+Make sure you have upgraded to Okctl version TODO or later.
 
-### Update Ingress resources
+## EKS 1.22
+
+If you're upgradring to EKS 1.22, you must follow the below steps. If you do not, your application **probably will stop working**.
+
+AWS describes the necessary changes we need to take into account in detail: https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html#update-1.22. However, we have attempted to extract everything that is necessary, so you shouldn't need to read that guide.
+
+### Update Ingress manifests
 
 First `cd` into the directory where you store your Kubernetes manifests/YAMLs. The default way in Okctl is to put these in your IAC repository.
 
@@ -135,20 +140,28 @@ For every file in the result, edit it and replace the `apiVersion` so it becomes
 apiVersion: networking.k8s.io/v1
 ```
 
-# Step 4: Log in to the environment
+### Make sure Okctl version is TODO or later
 
-Set `AWS_PROFILE` to the correct AWS profile from `~/.aws/config`. If you have not set this up, have a look at [Authenticating to AWS](https://www.okctl.io/authenticating-to-aws/#aws-single-sign-on-sso).
+This is because we need to bump the AWS load balancer controller to 2.4.1 or later. Okctl upgrade handles this for us.
 
-```sh
-export AWS_PROFILE=my-dev-account
-aws sso login
+From update-1.22 documentation:
+
+> - If you currently have the AWS Load Balancer Controller deployed to your cluster, you must update it to version `2.4.1` before updating your cluster to Kubernetes version `1.22`.
+
+```
+okctl venv -a aws-profile -c my-cluster.yaml
+
+# TODO
+kubectl -n kube-system get pod -o=jsonpath='{$.spec.template.spec.containers[:0].image}'
 ```
 
 # Step 5: Monitor everything while upgrading
 
 It's nice to see that stuff changes while upgrading, so while we run the upgrade script in the next step, we want to monitor pods and nodes. We'll monitor these things in a separate terminal.
 
-* Open a new terminal window. Log in to AWS and your kubernetes cluster. The default Okctl way is to run `okctl venv` with your usual arguments.
+## Pods
+
+Open a new terminal window. Log in to AWS and your kubernetes cluster. The default Okctl way is to run `okctl venv` with your usual arguments.
 
 ```sh
 export AWS_PROFILE=my-dev-account
@@ -162,7 +175,13 @@ Then start monitoring pods:
 watch -n 1 kubectl get pod --all-namespaces -o wide
 ```
 
-* Open a new terminal tab. Log in to your kubernetes cluster like above.
+What to look for when running the upgrade
+* Are at least on of your applications' pods in 1/1 Running state at all times? If not, you probably haven't configured the `PodDisruptionBudget` correctly (see the step to configure applications above).
+* During the upgrade, pods will be removed from old nodes and started on new nodes. Which nodes are new nodes? See the `kubectl get node`node age in the next section below.
+
+## Nodes
+
+Open a new terminal tab. Log in to your kubernetes cluster like above.
 
 Then start monitoring nodes:
 
@@ -170,19 +189,22 @@ Then start monitoring nodes:
 watch -n 4 kubectl get node -o wide
 ```
 
-* Open a new terminal tab. Log in to your kubernetes cluster like above.
+What to look for when running the upgrade:
+* See that new nodes is launched (see the age column), and that old nodes are removed.
+* See that they get the correct Kubernetes version
 
-In the following command, replace my-cluster-dev.yaml with your Okctl cluster manifest.
+## Node groups
+
+Open a new terminal tab. Log in to your kubernetes cluster like above.
+
+In the following command, replace `my-cluster-dev.yaml` with your Okctl cluster manifest. Then start monitoring node groups:
 
 ```sh
-CLUSTER_NAME=$(yq e '.metadata.name' "my-cluster-dev.yaml")
+watch -n 15 eksctl get nodegroup --cluster $(yq e '.metadata.name' "my-cluster-dev.yaml")
 ```
 
-Then start monitoring node groups:
-
-```sh
-watch -n 15 eksctl get nodegroup --cluster $CLUSTER_NAME
-```
+What to look for when running the upgrade:
+* See that new node groups is created, and the old ones are removed
 
 # Step 6: Run the upgrade
 

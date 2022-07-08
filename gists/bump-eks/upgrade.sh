@@ -339,10 +339,12 @@ echo "$NEW_NODE_1B"
 echo "$NEW_NODE_1C"
 echo
 echo "Draining all other node groups now:"
+echo
 
 # Drain all nodegroups that are not one of the expected above.
 for node_group in $EXISTING_NODEGROUPS
 do
+  # If node_group is not one of the ones we want to keep, we can drain it
   if [[ \
         "$node_group" != "$NEW_NODE_1A" && \
         "$node_group" != "$NEW_NODE_1B" && \
@@ -352,9 +354,9 @@ do
       echo "Draining node group: $node_group"
 
       if [[ $DRY_RUN == "false" ]]; then
-        run_with_output "$EKSCTL" drain nodegroup --cluster "$CLUSTER_NAME" --name "$node_group" --apply
-      else
         run_with_output "$EKSCTL" drain nodegroup --cluster "$CLUSTER_NAME" --name "$node_group"
+      else
+        echo "Would run: $EKSCTL drain nodegroup --cluster $CLUSTER_NAME --name $node_group"
       fi
   else
     echo "Not draining node group, we want to keep it: $node_group"
@@ -378,6 +380,7 @@ echo "Deleting all other node groups now:"
 
 for node_group in $EXISTING_NODEGROUPS
 do
+  # If node_group is not one of the ones we want to keep, we can delete it
   if [[ \
         "$node_group" != "$NEW_NODE_1A" && \
         "$node_group" != "$NEW_NODE_1B" && \
@@ -387,9 +390,9 @@ do
       echo "Deleting node group: $node_group"
 
       if [[ $DRY_RUN == "false" ]]; then
-        run_with_output "$EKSCTL" delete nodegroup --cluster "$CLUSTER_NAME" --name "$node_group" --apply
-      else
         run_with_output "$EKSCTL" delete nodegroup --cluster "$CLUSTER_NAME" --name "$node_group"
+      else
+        echo "Would run: $EKSCTL delete nodegroup --cluster $CLUSTER_NAME --name $node_group"
       fi
   else
     echo "Not deleting node group, we want to keep it: $node_group"
