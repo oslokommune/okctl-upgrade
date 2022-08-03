@@ -10,14 +10,15 @@ import (
 )
 
 const (
-	ArgocdConfigDir             = "argocd"
-	argocdConfigNamespacesDir   = "namespaces"
-	argocdConfigApplicationsDir = "applications"
-	ApplicationsDir             = "applications"
-	ApplicationBaseDir          = "base"
-	ApplicationOverlaysDir      = "overlays"
-	DefaultFolderPermissions    = 0o700
-	DefaultReadmeFilename       = "README.md"
+	ArgocdConfigDir              = "argocd"
+	argocdConfigNamespacesDir    = "namespaces"
+	argocdConfigApplicationsDir  = "applications"
+	ApplicationsDir              = "applications"
+	ApplicationBaseDir           = "base"
+	ApplicationOverlaysDir       = "overlays"
+	DefaultFolderPermissions     = 0o700
+	DefaultReadmeFilename        = "README.md"
+	DefaultKustomizationFilename = "kustomization.yaml"
 )
 
 func RelativeArgoCDConfigDir(cluster v1alpha1.Cluster) string {

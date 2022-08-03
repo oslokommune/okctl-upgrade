@@ -16,3 +16,7 @@ type MigrateExistingApplicationNamespacesToClusterOpts struct {
 	Cluster                v1alpha1.Cluster
 	AbsoluteRepositoryRoot string
 }
+
+type kustomization struct {
+	Resources []string `json:"resources"`
+}

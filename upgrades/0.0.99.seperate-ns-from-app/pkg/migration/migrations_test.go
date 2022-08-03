@@ -9,6 +9,8 @@ import (
 	"testing"
 	"text/template"
 
+	"sigs.k8s.io/yaml"
+
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.99.seperate-ns-from-app/pkg/paths"
 
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.99.seperate-ns-from-app/pkg/lib/manifest/apis/okctl.io/v1alpha1"
@@ -171,6 +173,14 @@ func TestMigrateApplication(t *testing.T) {
 	}
 }
 
+const kustomizeTemplate = `
+resources:
+- deployment.yaml
+- service.yaml
+- namespace.yaml
+- ingress.yaml
+`
+
 // One app "exists" when the /infrastructure/applications/<app name> directory exists
 func createApp(t *testing.T, fs *afero.Afero, appName string) {
 	absOutputDir := path.Join("/", "infrastructure")
@@ -178,6 +188,9 @@ func createApp(t *testing.T, fs *afero.Afero, appName string) {
 	absBaseDir := path.Join(absAppDir, "base")
 
 	err := fs.MkdirAll(absBaseDir, paths.DefaultFolderPermissions)
+	assert.NoError(t, err)
+
+	err = fs.WriteReader(path.Join(absBaseDir, "kustomization.yaml"), strings.NewReader(kustomizeTemplate))
 	assert.NoError(t, err)
 }
 
@@ -400,6 +413,63 @@ func TestGetApplicationsInCluster(t *testing.T) {
 			for _, app := range tc.expectedAppsFound {
 				assert.True(t, contains(apps, app))
 			}
+		})
+	}
+}
+
+func TestEnsureKustomizeIsUpdatedWhenRemovingNamespace(t *testing.T) {
+	testCases := []struct {
+		name string
+	}{
+		{
+			name: "Should not find a namespace entry in kustomization.yaml file",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			fs := &afero.Afero{Fs: afero.NewMemMapFs()}
+
+			const clusterOne = "mock-cluster"
+			createCluster(t, fs, clusterOne)
+
+			const appOne = "mock-app-one"
+			createApp(t, fs, appOne)
+			addAppToCluster(t, fs, appOne, clusterOne)
+
+			const namespaceOne = "mock-namespace-one"
+			addOldAppNamespace(t, fs, appOne, namespaceOne)
+			addNewAppNamespace(t, fs, clusterOne, namespaceOne)
+
+			err := MigrateExistingApplicationNamespacesToCluster(MigrateExistingApplicationNamespacesToClusterOpts{
+				Log:                    &mockDebugLogger{},
+				DryRun:                 false,
+				Fs:                     fs,
+				Cluster:                mockCluster(clusterOne),
+				AbsoluteRepositoryRoot: "/",
+			})
+			assert.NoError(t, err)
+
+			rawKustomization, err := fs.ReadFile(path.Join(
+				"/",
+				"infrastructure",
+				"applications",
+				appOne,
+				"base",
+				"kustomization.yaml",
+			))
+			assert.NoError(t, err)
+
+			var baseKustomization kustomization
+
+			err = yaml.Unmarshal(rawKustomization, &baseKustomization)
+			assert.NoError(t, err)
+
+			assert.False(t, contains(baseKustomization.Resources, "namespace.yaml"))
 		})
 	}
 }

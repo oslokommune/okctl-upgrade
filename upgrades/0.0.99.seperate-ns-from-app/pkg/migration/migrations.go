@@ -94,6 +94,15 @@ func removeRedundantNamespacesFromBase(logger debugLogger, dryRun bool, fs *afer
 			if err != nil {
 				return fmt.Errorf("removing base namespace: %w", err)
 			}
+
+			err = deleteNamespaceEntryFromKustomizationResources(fs, path.Join(
+				absoluteApplicationDir,
+				paths.ApplicationBaseDir,
+				paths.DefaultKustomizationFilename,
+			))
+			if err != nil {
+				return fmt.Errorf("deleting namespace entry from kustomization: %w", err)
+			}
 		}
 	}
 
