@@ -40,3 +40,12 @@ lint: $(GOLANGCILINT)
 	$(GOLANGCILINT) run
 
 check: fmt lint test
+
+clean-upgrade:
+	find manual-tests -name 'upgrade' | xargs rm
+distribute-upgrade:
+	go build -o upgrade main.go
+	cp ./upgrade manual-tests/automatiskeprosesser-aws-infra/upgrade
+	cp ./upgrade manual-tests/helsedata-okctlcfg/upgrade
+	cp ./upgrade manual-tests/origo-booking-iac/upgrade
+	cp ./upgrade manual-tests/veiviser-infra/upgrade
