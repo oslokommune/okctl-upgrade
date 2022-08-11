@@ -101,7 +101,7 @@ then
     echo "cluster-manifest file      The Okctl cluster manifest"
     echo "aws-region                 AWS region"
     echo "EKS target version         Example: 1.21"
-    echo "dry-run                 Default true. Set to false to actually run upgrade."
+    echo "dry-run                     Default true. Set to false to actually run upgrade."
     echo
     echo -e "\e[1mEXAMPLES:\e[0m"
     echo "# Run with dry-run, i.e. do no changes, i.e. it's safe to run:"
@@ -153,6 +153,34 @@ AWS_ACCOUNT=$(yq e '.metadata.accountID' "$CLUSTER_MANIFEST")
 #
 require_installed_cmd yq
 require_installed_cmd jq
+require_installed_cmd aws
+
+echo
+echo "------------------------------------------------------------------------------------------------------------------------"
+echo "Verify AWS account"
+echo "------------------------------------------------------------------------------------------------------------------------"
+LOGGED_IN_AWS_ACCOUNT=$(run_with_output aws sts get-caller-identity | jq -r '.Account')
+if [[ -z $LOGGED_IN_AWS_ACCOUNT || "$LOGGED_IN_AWS_ACCOUNT" == "" ]]; then
+    echo
+    echo "Error: You are not logged in."
+    echo
+    echo "Solution:"
+    echo "- You need to log in. Details: https://www.okctl.io/authenticating-to-aws/#aws-single-sign-on-sso"
+    exit 1
+fi
+
+if [[ "$LOGGED_IN_AWS_ACCOUNT" != "$AWS_ACCOUNT" ]]; then
+  echo
+  echo "Error: Logged in AWS account '$LOGGED_IN_AWS_ACCOUNT' does not match AWS account in $CLUSTER_MANIFEST '$AWS_ACCOUNT'."
+  echo
+  echo "Cause:"
+  echo "- You must be logged in to the same AWS account as specifyed in $CLUSTER_MANIFEST."
+  echo
+  echo "Solution:"
+  echo "- Run 'aws sso login' and set correct AWS_PROFILE."
+  echo "  For details, see: https://www.okctl.io/authenticating-to-aws/#aws-single-sign-on-sso"
+  exit 1
+fi
 
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"
@@ -213,17 +241,6 @@ echo "--------------------------------------------------------------------------
 echo "Verify cluster name"
 echo "------------------------------------------------------------------------------------------------------------------------"
 run_with_output "$EKSCTL" get cluster "$CLUSTER_NAME"
-
-echo
-echo "------------------------------------------------------------------------------------------------------------------------"
-echo "Verify AWS account"
-echo "------------------------------------------------------------------------------------------------------------------------"
-LOGGED_IN_AWS_ACCOUNT=$(run_with_output aws sts get-caller-identity | jq -r '.Account')
-if [[ "$LOGGED_IN_AWS_ACCOUNT" != "$AWS_ACCOUNT" ]]; then
-  echo "Logged in AWS account '$LOGGED_IN_AWS_ACCOUNT' does not match AWS account in $CLUSTER_MANIFEST '$AWS_ACCOUNT'."
-  echo "You must be logged in to the same AWS account as specifyed in $CLUSTER_MANIFEST."
-  exit 1
-fi
 
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"
