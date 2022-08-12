@@ -41,6 +41,8 @@ lint: $(GOLANGCILINT)
 
 check: fmt lint test
 
+# The following targets only works with some manual operations, i.e: creating a folder called "manual-tests", then clone
+# the relevant IAC repositories into the newly created folder. 
 clean-upgrade:
 	find manual-tests -name 'upgrade' | xargs rm
 distribute-upgrade:
