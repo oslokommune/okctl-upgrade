@@ -4,7 +4,6 @@ This document describes how to use the [upgrade script](upgrade.sh) in this repo
 
 The upgrade script basically just does what is described in step 1-3 in the official guide, https://eksctl.io/usage/cluster-upgrade/, which is:
 
-
 > 1. upgrade control plane version with `eksctl upgrade cluster`
 > 2. replace each of the nodegroups by creating a new one and deleting the old one
 > 3. update default add-ons:
@@ -88,7 +87,7 @@ brew install watch
 Set `AWS_PROFILE` to the correct AWS profile from `~/.aws/config`. If you have not set this up, have a look at [Authenticating to AWS](https://www.okctl.io/authenticating-to-aws/#aws-single-sign-on-sso).
 
 ```sh
-export AWS_PROFILE=my-dev-account
+export AWS_PROFILE=some-account
 aws sso login
 ```
 
@@ -175,7 +174,7 @@ It's nice to see that stuff changes while upgrading, so while we run the upgrade
 Open a new terminal window. Log in to AWS and your kubernetes cluster. The default Okctl way is to run `okctl venv` with your usual arguments.
 
 ```sh
-export AWS_PROFILE=my-dev-account
+export AWS_PROFILE=some-account
 # Change my-cluster-dev.yaml to the correct file for your environment
 okctl venv -a aws-profile -c my-cluster-dev.yaml
 ```
@@ -250,7 +249,7 @@ dry-run                    Default true. Set to false to actually run upgrade.
 ### Example, upgrading EKS 1.20 to 1.22
 
 ```sh
-export AWS_PROFILE=my-dev-account
+export AWS_PROFILE=some-account
 mkdir -p logs
 
 # Dry run the upgrade, hoping to catch any errors before actually upgrading
