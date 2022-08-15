@@ -105,9 +105,8 @@ To avoid downtime, **make sure** you have completed the steps described in this 
 
 ## EKS 1.21
 
-Make sure you have upgraded to Okctl version TODO or later.
-
-TODO: Okctl doesn't support EKS 1.21. We will update this guide when it is.
+TODO: Okctl doesn't support EKS 1.21 yet. We will update this guide when it is. (Note to ourselves:
+"Replace this text line with: Make sure you have upgraded to Okctl version x.x.x or later.") 
 
 ## EKS 1.22
 
