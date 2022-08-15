@@ -93,13 +93,7 @@ aws sso login
 
 # Step 3: Configure applications for no downtime
 
-
-
 To avoid downtime, **make sure** you have completed the steps described in this guide: https://github.com/oslokommune/okctl-upgrade/tree/main/gists/bump-eks-to-1-20#prepare-applications
-
-
-
-
 
 # Step 4: Adapt to EKS version specific requirements
 
@@ -191,12 +185,13 @@ Some useful links regarding this change:
 * [Example](https://docs.konghq.com/kubernetes-ingress-controller/latest/concepts/ingress-versions/)
 * [Kubernetes Ingress documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/#the-ingress-resource)
 
+### Make sure Okctl version is x.x.x or later (ToDo: update this when Okctl supports 1.22)
 
-### Make sure Okctl version is TODO or later
+TODO: Okctl doesn't support EKS 1.22 yet. We will update this guide when it is. (Note to ourselves:
+"Replace this text line with: Make sure you have upgraded to Okctl version x.x.x or later.")
 
-TODO: Okctl doesn't support EKS 1.22. We will update this guide when it is.
-
-This is because we need to bump the AWS load balancer controller to 2.4.1 or later. Okctl upgrade handles this for us.
+This is because we need to bump the AWS load balancer controller to 2.4.1 or later. `okctl upgrade` handles
+this for us.
 
 From update-1.22 documentation:
 
