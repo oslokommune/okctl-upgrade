@@ -97,8 +97,16 @@ To avoid downtime, **make sure** you have completed the steps described in this 
 
 # Step 4: Adapt to EKS version specific requirements
 
-Some EKS versions change stuff how applications must be written, or perhaps an EKS plugin must be upgraded.
-This section describes such changes.
+Some EKS versions deprecate old resources types (i.e. how your Kubernetes resources must look like). Or
+perhaps an EKS plugin must be upgraded.
+
+This section describes what you must do to be able to upgrade to specific EKS versions.
+
+The source for these suggestions are:
+* https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html
+* https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html
+* https://docs.aws.amazon.com/eks/latest/userguide/platform-versions.html
+* https://kubernetes.io/docs/reference/using-api/deprecation-guide/
 
 ## EKS 1.21
 
