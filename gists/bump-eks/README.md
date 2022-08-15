@@ -97,6 +97,9 @@ To avoid downtime, **make sure** you have completed the steps described in this 
 
 # Step 4: Adapt to EKS version specific requirements
 
+Some EKS versions change stuff how applications must be written, or perhaps an EKS plugin must be upgraded.
+This section describes such changes.
+
 ## EKS 1.21
 
 Okctl doesn't support EKS 1.21 yet. We will update this guide when it is. (Note to ourselves:
