@@ -112,7 +112,7 @@ TODO: Okctl doesn't support EKS 1.21. We will update this guide when it is.
 
 ## EKS 1.22
 
-If you're upgradring to EKS 1.22, you must follow the below steps. If you do not, your application **probably will stop working**.
+If you're upgrading to EKS 1.22, you must follow the below steps. If you do not, your application **probably will stop working**.
 
 AWS describes the necessary changes we need to take into account in detail: https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html#update-1.22. However, we have attempted to extract everything that is necessary, so you shouldn't need to read that guide.
 
