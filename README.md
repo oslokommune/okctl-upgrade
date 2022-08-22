@@ -168,7 +168,7 @@ GitHub actions takes care of the rest.
 
 If you after releasing an upgrade discover problems with the upgrade, you can:
 
-* delete release and the tag corresponding tag in GitHub
+* delete the tag corresponding tag in GitHub
     To delete the tag, run the following commands:
 
     ```shell
@@ -178,6 +178,7 @@ If you after releasing an upgrade discover problems with the upgrade, you can:
 	git push --delete origin $TAG
     ```
 
+* delete the now unpublished release in this repository
 * update the upgrade code, and create a new release as described by the steps above.
 
 Note: Update existing released upgrades with care, as some users may have already executed them.
