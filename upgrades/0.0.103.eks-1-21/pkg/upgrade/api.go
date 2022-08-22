@@ -21,8 +21,8 @@ func Start(logger logging.Logger, kubectl kubectl.Client) error {
 	}
 
 	if currentEKSMinorVersion >= minimumEKSMinorVersion {
-		logger.Debugf("Not doing anything, as this upgrade targets EKS version %d and below, and"+
-			" current EKS minor version is already '%d'.\n",
+		logger.Debugf("Not doing anything, as this upgrade targets EKS minor version %d and below,"+
+			" and current EKS minor version is already %d.\n",
 			minimumEKSMinorVersion-1, currentEKSMinorVersion)
 		//return commonerrors.ErrNothingToDo
 	}
