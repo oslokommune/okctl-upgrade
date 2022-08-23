@@ -547,7 +547,7 @@ We'll drain and delete the old node group in one go.
 Use
 
 ```shell
-eksctl get nodegroup --cluster $CLUSTER_NAME`
+eksctl get nodegroup --cluster $CLUSTER_NAME
 ```
 
 to verify names of the old node group. It should be `ng-generic`.
