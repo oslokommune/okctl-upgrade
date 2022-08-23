@@ -110,11 +110,7 @@ The source for these suggestions are:
 
 ## EKS 1.21
 
-Okctl doesn't support EKS 1.21 yet. We will update this guide when it is. (Note to ourselves:
-"Replace this text line with: Make sure you have upgraded to Okctl version x.x.x or later.")
-
-You can still upgrade to EKS 1.21, but you cannot create a cluster from scratch with version 1.21. You
-will have to create it with version 1.20 and upgade to 1.21.
+You need Okctl version 0.0.102 to run EKS 1.21.
 
 ## EKS 1.22
 
