@@ -162,7 +162,7 @@ echo "--------------------------------------------------------------------------
 LOGGED_IN_AWS_ACCOUNT=$(run_with_output aws sts get-caller-identity | jq -r '.Account')
 if [[ -z $LOGGED_IN_AWS_ACCOUNT || "$LOGGED_IN_AWS_ACCOUNT" == "" ]]; then
     echo
-    echo "Error: You are not logged in."
+    echo "Error: You are probably not logged in."
     echo
     echo "Solution:"
     echo "- You need to log in. Details: https://www.okctl.io/authenticating-to-aws/#aws-single-sign-on-sso"
@@ -345,14 +345,23 @@ echo "--------------------------------------------------------------------------
 if [[ $DRY_RUN == "false" ]]; then
   run_with_output "$EKSCTL" create nodegroup --config-file=$NODEGROUP_FILE
   run_with_output "$KUBECTL" set env daemonset aws-node -n kube-system ENABLE_POD_ENI=true
-  run_with_output \
-    "$KUBECTL" patch daemonset aws-node \
-      -n kube-system \
-      -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
 else
   run_with_output "$EKSCTL" create nodegroup --config-file=$NODEGROUP_FILE --dry-run
   echo "Would run: $KUBECTL set env daemonset aws-node -n kube-system ENABLE_POD_ENI=true"
+fi
 
+if [[ $DRY_RUN == "false" ]]; then
+  # It's hard to pass this command to run_with_output with correct quoting, so we're running the command directly below.
+  echo -e "Running (open this script to get actual command, this command is missing proper quotes): \e[96m"
+  echo     "$KUBECTL" patch daemonset aws-node \
+         -n kube-system \
+         -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
+  echo -e "\e[0m"
+
+  "$KUBECTL" patch daemonset aws-node \
+    -n kube-system \
+    -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
+else
   PATCH='{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
   echo "Would run:"
   echo "  $KUBECTL patch daemonset aws-node \\"
