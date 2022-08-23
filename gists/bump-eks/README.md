@@ -274,7 +274,7 @@ What to look for when running the upgrade:
 Download latest version upgrade script (it may be updated at any time):
 
 ```sh
-curl --silent --location "https://raw.githubusercontent.com/oslokommune/okctl-upgrade/main/gists/bump-eks/upgrade.sh"
+curl --silent --location "https://raw.githubusercontent.com/oslokommune/okctl-upgrade/main/gists/bump-eks/upgrade.sh" -o upgrade.sh
 ```
 
 ## Run the upgrade
