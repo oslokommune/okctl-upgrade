@@ -351,7 +351,7 @@ eksctl update addon \
   --cluster $CLUSTER_NAME \
   --name vpc-cni \
   --version 1.7.10-eksbuild.1 \
-  --service-account-role-arn $ROLE_ARN
+  --service-account-role-arn $ROLE_ARN \
   --force
 ```
 
