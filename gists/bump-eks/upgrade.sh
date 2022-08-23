@@ -350,24 +350,28 @@ else
   echo "Would run: $KUBECTL set env daemonset aws-node -n kube-system ENABLE_POD_ENI=true"
 fi
 
-if [[ $DRY_RUN == "false" ]]; then
-  # It's hard to pass this command to run_with_output with correct quoting, so we're running the command directly below.
-  echo -e "Running (open this script to get actual command, this command is missing proper quotes): \e[96m"
-  echo     "$KUBECTL" patch daemonset aws-node \
-         -n kube-system \
-         -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
-  echo -e "\e[0m"
+function disable_demux() {
+  if [[ $DRY_RUN == "false" ]]; then
+    # It's hard to pass this command to run_with_output with correct quoting, so we're running the command directly below.
+    echo -e "Running (open this script to get actual command, this command is missing proper quotes): \e[96m"
+    echo     "$KUBECTL" patch daemonset aws-node \
+           -n kube-system \
+           -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
+    echo -e "\e[0m"
 
-  "$KUBECTL" patch daemonset aws-node \
-    -n kube-system \
-    -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
-else
-  PATCH='{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
-  echo "Would run:"
-  echo "  $KUBECTL patch daemonset aws-node \\"
-  echo "   -n kube-system \\"
-  echo "   -p $PATCH"
-fi
+    "$KUBECTL" patch daemonset aws-node \
+      -n kube-system \
+      -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
+  else
+    PATCH='{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
+    echo "Would run:"
+    echo "  $KUBECTL patch daemonset aws-node \\"
+    echo "   -n kube-system \\"
+    echo "   -p $PATCH"
+  fi
+}
+
+disable_demux
 
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"
@@ -488,6 +492,13 @@ fi
 
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"
+echo "Setting DISABLE_TCP_EARLY_DEMUX=true (again, it has to be run twice sometimes)"
+echo "------------------------------------------------------------------------------------------------------------------------"
+disable_demux
+
+echo
+echo "------------------------------------------------------------------------------------------------------------------------"
 echo "Done"
 echo "------------------------------------------------------------------------------------------------------------------------"
 echo "Upgrading to EKS $EKS_TARGET_VERSION complete."
+
