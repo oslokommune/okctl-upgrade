@@ -329,6 +329,33 @@ git commit -m "Add log for upgrade to EKS 1.22"
 
 ## eksctl delete nodegroup cannot evict pods
 
+### If loki-0 is stuck in Terminating, force delete it
+
+First, let's check if the `loki-0` pod is stuck in `Terminating` state. Run
+
+```shell
+kubectl -n monitoring get pod loki-0
+```
+
+If by running this command multiple times outputs a line like this:
+
+```
+...
+monitoring    loki-0                                                          1/1     Terminating
+...
+```
+
+it means loki-0 is stuck in Terminating. Fix this issue by force deleting it, like this:
+
+```shell
+kubectl -n kube-system delete pod loki-0 --force=true
+```
+
+### Find out which pods are unevictable
+
+If deleting the loki-0 pod didn't work, you can do the below steps to find out which pods are not
+evictable.
+
 Abort/CTRL+C your execution of `eksctl delete nodegroup` if it's running, because we will be running the
 command below, which we don't want to run at the same time.
 
@@ -342,6 +369,39 @@ In the following command, replace
 ```
 
 This should output exactly which pods that cannot be evicted due to its `PodDisruptionBudget` (or for other reasons?).
+
+## After upgrading, my pods are stuck in pending state
+
+Try running **BOTH** commands below (`kubectl patch ...` and `kubectl set env ...`).
+
+### Command 1
+
+```shell
+kubectl patch daemonset aws-node -n kube-system \
+-p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
+```
+
+You should get this output:
+
+```shell
+daemonset.apps/aws-node patched (no change)
+```
+
+If you do not, run the above command **again**, until you get the `no change` output.
+
+### Command 2
+
+```shell
+kubectl set env daemonset aws-node -n kube-system ENABLE_POD_ENI=true
+```
+
+If you get the output
+
+```shell
+daemonset.apps/aws-node env updated
+```
+
+then the `aws-node` updated, which might fix your issue.
 
 ## My applications have downtime when draining nodes
 

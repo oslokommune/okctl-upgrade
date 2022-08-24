@@ -360,6 +360,9 @@ enable_pod_eni
 
 function disable_demux() {
   if [[ $DRY_RUN == "false" ]]; then
+    # If reading this script to get the command, you can copy paste:
+    # kubectl patch daemonset aws-node -n kube-system -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
+
     # It's hard to pass this command to run_with_output with correct quoting, so we're running the command directly below.
     echo -e "Running (open this script to get actual command, this command is missing proper quotes): \e[96m"
     echo     "$KUBECTL" patch daemonset aws-node \
@@ -502,12 +505,24 @@ echo
 echo "------------------------------------------------------------------------------------------------------------------------"
 echo "Setting DISABLE_TCP_EARLY_DEMUX=true (again, it has to be run twice sometimes)"
 echo "------------------------------------------------------------------------------------------------------------------------"
+
+function wait_for_pod_aws_node() {
+  if [[ $DRY_RUN == "false" ]]; then
+    # run_with_output doesn't work because of waiting or something
+    run_no_output "$KUBECTL" -n kube-system wait pod --for=condition=ready -l app.kubernetes.io/name=aws-node --timeout=300s
+  else
+    echo "Would run: $KUBECTL -n kube-system wait pod --for=condition=ready -l app.kubernetes.io/name=aws-node --timeout=300s"
+  fi
+}
+
+wait_for_pod_aws_node
 disable_demux
 
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"
 echo "Setting ENABLE_POD_ENI=true (again, it has to be run twice sometimes)"
 echo "------------------------------------------------------------------------------------------------------------------------"
+wait_for_pod_aws_node
 enable_pod_eni
 
 echo
@@ -515,3 +530,6 @@ echo "--------------------------------------------------------------------------
 echo "Done"
 echo "------------------------------------------------------------------------------------------------------------------------"
 echo "Upgrading to EKS $EKS_TARGET_VERSION complete."
+echo
+echo "💡 Is something wrong? Make sure you read this:"
+echo "https://github.com/oslokommune/okctl-upgrade/tree/main/gists/bump-eks#something-wrong-happened"
