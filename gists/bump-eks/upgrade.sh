@@ -344,11 +344,19 @@ echo "--------------------------------------------------------------------------
 
 if [[ $DRY_RUN == "false" ]]; then
   run_with_output "$EKSCTL" create nodegroup --config-file=$NODEGROUP_FILE
-  run_with_output "$KUBECTL" set env daemonset aws-node -n kube-system ENABLE_POD_ENI=true
 else
   run_with_output "$EKSCTL" create nodegroup --config-file=$NODEGROUP_FILE --dry-run
-  echo "Would run: $KUBECTL set env daemonset aws-node -n kube-system ENABLE_POD_ENI=true"
 fi
+
+function enable_pod_eni() {
+  if [[ $DRY_RUN == "false" ]]; then
+    run_with_output "$KUBECTL" set env daemonset aws-node -n kube-system ENABLE_POD_ENI=true
+  else
+    echo "Would run: $KUBECTL set env daemonset aws-node -n kube-system ENABLE_POD_ENI=true"
+  fi
+}
+
+enable_pod_eni
 
 function disable_demux() {
   if [[ $DRY_RUN == "false" ]]; then
@@ -498,7 +506,12 @@ disable_demux
 
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"
+echo "Setting ENABLE_POD_ENI=true (again, it has to be run twice sometimes)"
+echo "------------------------------------------------------------------------------------------------------------------------"
+enable_pod_eni
+
+echo
+echo "------------------------------------------------------------------------------------------------------------------------"
 echo "Done"
 echo "------------------------------------------------------------------------------------------------------------------------"
 echo "Upgrading to EKS $EKS_TARGET_VERSION complete."
-
