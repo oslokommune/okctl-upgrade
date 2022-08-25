@@ -30,6 +30,23 @@ The upgrade script expects the following tools to exist on your machine, so make
 
 Follow instructions in https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
+## eksctl
+
+### Linux
+
+```shell
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+sudo mv /tmp/eksctl /usr/local/bin
+```
+
+### macOS
+
+```shell
+brew tap weaveworks/tap
+brew install weaveworks/tap/eksctl
+```
+
+
 ## jq
 
 jq is a tool for parsing JSON.
