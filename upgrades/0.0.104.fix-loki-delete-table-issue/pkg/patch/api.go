@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"path"
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	jsp "github.com/oslokommune/okctl-upgrade/upgrades/0.0.96.remote-state-versioning/pkg/lib/jsonpatch"
@@ -11,7 +12,21 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func AddBucketVersioning(template io.Reader) (io.Reader, error) {
+var statementActionPath = path.Join(
+	"/",
+	"Resources",
+	"LokiDynamoDBServiceAccountPolicy",
+	"Properties",
+	"PolicyDocument",
+	"Statement",
+	"0",
+	"Action",
+	"-",
+)
+
+const dynamoDBDeleteTablePermission = "dynamodb:DeleteTable"
+
+func AddDeleteTablePermission(template io.Reader) (io.Reader, error) {
 	rawTemplate, err := io.ReadAll(template)
 	if err != nil {
 		return nil, fmt.Errorf("buffering: %w", err)
@@ -25,8 +40,8 @@ func AddBucketVersioning(template io.Reader) (io.Reader, error) {
 	patch := jsp.New().Add(
 		jsp.Operation{
 			Type:  jsp.OperationTypeAdd,
-			Path:  "/Resources/S3Bucket/Properties/VersioningConfiguration",
-			Value: map[string]string{"Status": "Enabled"},
+			Path:  statementActionPath,
+			Value: dynamoDBDeleteTablePermission,
 		},
 	)
 
