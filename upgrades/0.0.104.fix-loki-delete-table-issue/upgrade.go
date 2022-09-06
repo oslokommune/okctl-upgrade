@@ -1,8 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"io"
+	"strings"
 
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.104.fix-loki-delete-table-issue/pkg/cfn"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.104.fix-loki-delete-table-issue/pkg/lib/logger"
@@ -26,6 +30,17 @@ func doUpgrade(ctx context.Context, log logger.Logger, fs *afero.Afero, dryRun b
 	template, err := cfn.FetchStackTemplate(ctx, stackName)
 	if err != nil {
 		return fmt.Errorf("fetching stack template: %w", err)
+	}
+
+	template, err = ensureNoPermission(template, dynamoDBDeleteTablePermission)
+	if err != nil {
+		if errors.Is(err, errHasPermission) {
+			log.Debug("Found relevant permission, ignoring upgrade")
+
+			return nil
+		}
+
+		return fmt.Errorf("checking for existing permission: %w", err)
 	}
 
 	log.Debug("Adding dynamodb:DeleteTable permission")
@@ -52,3 +67,20 @@ func doUpgrade(ctx context.Context, log logger.Logger, fs *afero.Afero, dryRun b
 func lokiDynamoDBPolicyStackName(clusterName string) string {
 	return fmt.Sprintf("okctl-dynamodbpolicy-%s-loki", clusterName)
 }
+
+func ensureNoPermission(template io.Reader, permission string) (io.Reader, error) {
+	raw, err := io.ReadAll(template)
+	if err != nil {
+		return nil, fmt.Errorf("buffering: %w", err)
+	}
+
+	if strings.Contains(string(raw), permission) {
+		return nil, errHasPermission
+	}
+
+	return bytes.NewReader(raw), nil
+}
+
+var errHasPermission = errors.New("has permission")
+
+const dynamoDBDeleteTablePermission = "dynamodb:DeleteTable"
