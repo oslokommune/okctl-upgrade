@@ -9,6 +9,7 @@ import (
 
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.104.fix-loki-delete-table-issue/pkg/lib/cmdflags"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.104.fix-loki-delete-table-issue/pkg/lib/commonerrors"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.104.fix-loki-delete-table-issue/pkg/lib/logger"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
@@ -36,6 +37,7 @@ func buildRootCommand() *cobra.Command {
 		ctx      context.Context = context.Background()
 		fs       *afero.Afero    = &afero.Afero{Fs: afero.NewOsFs()}
 		filename                 = filepath.Base(os.Args[0])
+		log      logger.Logger
 	)
 
 	cmd := &cobra.Command{
@@ -46,10 +48,18 @@ func buildRootCommand() *cobra.Command {
 		SilenceErrors: true, // true as we print errors in the main() function
 		SilenceUsage:  true, // true because we don't want to show usage if an errors occurs
 		PreRunE: func(_ *cobra.Command, args []string) error {
+			level := logger.Info
+
+			if flags.Debug {
+				level = logger.Debug
+			}
+
+			log = logger.New(level)
+
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			return doUpgrade(ctx, fs)
+			return doUpgrade(ctx, log, fs)
 		},
 	}
 
