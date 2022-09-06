@@ -1,8 +1,10 @@
 module github.com/oslokommune/okctl-upgrade/upgrades/0.0.104.fix-loki-delete-table-issue
 
-go 1.16
+go 1.18
+
+require github.com/spf13/cobra v1.2.1
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.3.2
-	github.com/spf13/cobra v1.2.1
+	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
 )
