@@ -3,11 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.104.fix-loki-delete-table-issue/pkg/lib/cmdflags"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.104.fix-loki-delete-table-issue/pkg/lib/commonerrors"
 	"github.com/spf13/cobra"
-	"os"
-	"path/filepath"
 )
 
 func main() {
@@ -42,7 +43,7 @@ func buildRootCommand() *cobra.Command {
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-		    return nil
+			return nil
 		},
 	}
 
