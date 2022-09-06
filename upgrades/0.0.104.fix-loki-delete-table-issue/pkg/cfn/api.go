@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
+	"github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 )
 
 func FetchStackTemplate(ctx context.Context, name string) (io.Reader, error) {
@@ -46,6 +47,7 @@ func UpdateStackTemplate(ctx context.Context, name string, template io.Reader) e
 	_, err = client.UpdateStack(ctx, &cloudformation.UpdateStackInput{
 		StackName:    aws.String(name),
 		TemplateBody: aws.String(string(rawTemplate)),
+		Capabilities: []types.Capability{capabilityNamedIAM},
 	})
 	if err != nil {
 		return fmt.Errorf("updating stack: %w", err)
@@ -65,4 +67,7 @@ func UpdateStackTemplate(ctx context.Context, name string, template io.Reader) e
 	return nil
 }
 
-const defaultStackTimeoutMinutes = 5
+const (
+	defaultStackTimeoutMinutes = 5
+	capabilityNamedIAM         = "CAPABILITY_NAMED_IAM"
+)
