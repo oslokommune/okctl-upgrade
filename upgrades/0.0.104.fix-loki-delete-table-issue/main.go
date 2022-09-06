@@ -59,7 +59,7 @@ func buildRootCommand() *cobra.Command {
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			return doUpgrade(ctx, log, fs)
+			return doUpgrade(ctx, log, fs, flags.DryRun)
 		},
 	}
 

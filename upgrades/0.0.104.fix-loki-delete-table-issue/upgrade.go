@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func doUpgrade(ctx context.Context, log logger.Logger, fs *afero.Afero) error {
+func doUpgrade(ctx context.Context, log logger.Logger, fs *afero.Afero, dryRun bool) error {
 	log.Debug("Acquiring cluster manifest information")
 
 	clusterManifest, err := manifest.Cluster(fs)
@@ -37,9 +37,11 @@ func doUpgrade(ctx context.Context, log logger.Logger, fs *afero.Afero) error {
 
 	log.Debug("Uploading patched template")
 
-	err = cfn.UpdateStackTemplate(ctx, stackName, updatedTemplate)
-	if err != nil {
-		return fmt.Errorf("uploading stack template: %w", err)
+	if !dryRun {
+		err = cfn.UpdateStackTemplate(ctx, stackName, updatedTemplate)
+		if err != nil {
+			return fmt.Errorf("uploading stack template: %w", err)
+		}
 	}
 
 	log.Debug("Upgrade complete")
