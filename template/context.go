@@ -2,22 +2,22 @@ package main
 
 import (
 	"github.com/oslokommune/okctl-upgrade/template/pkg/lib/cmdflags"
-	"github.com/oslokommune/okctl-upgrade/template/pkg/lib/logger"
+	"github.com/oslokommune/okctl-upgrade/template/pkg/lib/logging"
 )
 
 type Context struct {
-	logger logger.Logger
+	logger logging.Logger
 }
 
 func newContext(flags cmdflags.Flags) Context {
-	var level logger.Level
+	var level logging.Level
 	if flags.Debug {
-		level = logger.Debug
+		level = logging.Debug
 	} else {
-		level = logger.Info
+		level = logging.Info
 	}
 
 	return Context{
-		logger: logger.New(level),
+		logger: logging.New(level),
 	}
 }
