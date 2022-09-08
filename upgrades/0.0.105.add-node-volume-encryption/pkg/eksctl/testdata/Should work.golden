@@ -1,0 +1,72 @@
+addons:
+- attachPolicyARNs:
+  - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+  name: vpc-cni
+  permissionsBoundary: 'arn:aws:iam::0123456789012:policy/oslokommune/oslokommune-boundary'
+cloudWatch:
+  clusterLogging:
+    enableTypes:
+    - api
+    - audit
+    - authenticator
+    - controllerManager
+    - scheduler
+fargateProfiles:
+- name: fp-default
+  selectors:
+  - namespace: default
+  - namespace: kube-system
+  - namespace: argocd
+iam:
+  fargatePodExecutionRolePermissionsBoundary: arn:aws:iam::0123456789012:policy/oslokommune/oslokommune-boundary
+  serviceRolePermissionsBoundary: arn:aws:iam::0123456789012:policy/oslokommune/oslokommune-boundary
+  withOIDC: true
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: mock-cluster
+  region: eu-north-1
+nodeGroups:
+  - name: eksctl-mock-cluster-nodegroup-ng-generic-1-21-1a
+    availabilityZones: ["1a"]
+    instanceType: "m5.large"
+    desiredCapacity: 0
+    minSize: 0
+    maxSize: 10
+    labels:
+      pool: ng-generic-1a
+    tags:
+      k8s.io/cluster-autoscaler/enabled: "true"
+      k8s.io/cluster-autoscaler/mock-cluster: owned
+    volumeSize: 80
+    volumeEncrypted: true
+    privateNetworking: true
+  - name: eksctl-mock-cluster-nodegroup-ng-generic-1-21-1b
+    availabilityZones: ["1b"]
+    instanceType: "m5.large"
+    desiredCapacity: 0
+    minSize: 0
+    maxSize: 10
+    labels:
+      pool: ng-generic-1b
+    tags:
+      k8s.io/cluster-autoscaler/enabled: "true"
+      k8s.io/cluster-autoscaler/mock-cluster: owned
+    volumeSize: 80
+    volumeEncrypted: true
+    privateNetworking: true
+  - name: eksctl-mock-cluster-nodegroup-ng-generic-1-21-1c
+    availabilityZones: ["1c"]
+    instanceType: "m5.large"
+    desiredCapacity: 0
+    minSize: 0
+    maxSize: 10
+    labels:
+      pool: ng-generic-1c
+    tags:
+      k8s.io/cluster-autoscaler/enabled: "true"
+      k8s.io/cluster-autoscaler/mock-cluster: owned
+    volumeSize: 80
+    volumeEncrypted: true
+    privateNetworking: true
+  

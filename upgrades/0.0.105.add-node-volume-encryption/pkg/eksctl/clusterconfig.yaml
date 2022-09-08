@@ -1,0 +1,45 @@
+addons:
+- attachPolicyARNs:
+  - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+  name: vpc-cni
+  permissionsBoundary: 'arn:aws:iam::{{ .AccountID }}:policy/oslokommune/oslokommune-boundary'
+cloudWatch:
+  clusterLogging:
+    enableTypes:
+    - api
+    - audit
+    - authenticator
+    - controllerManager
+    - scheduler
+fargateProfiles:
+- name: fp-default
+  selectors:
+  - namespace: default
+  - namespace: kube-system
+  - namespace: argocd
+iam:
+  fargatePodExecutionRolePermissionsBoundary: arn:aws:iam::{{ .AccountID }}:policy/oslokommune/oslokommune-boundary
+  serviceRolePermissionsBoundary: arn:aws:iam::{{ .AccountID }}:policy/oslokommune/oslokommune-boundary
+  withOIDC: true
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: {{ .ClusterName }}
+  region: {{ .Region }}
+nodeGroups:
+  {{ range .NodeGroups -}}
+  - name: {{ .Name }}
+    availabilityZones: ["{{ .AvailabilityZone }}"]
+    instanceType: "m5.large"
+    desiredCapacity: 0
+    minSize: 0
+    maxSize: 10
+    labels:
+      pool: ng-generic-{{- .AvailabilityZone }}
+    tags:
+      k8s.io/cluster-autoscaler/enabled: "true"
+      k8s.io/cluster-autoscaler/{{ $.ClusterName }}: owned
+    volumeSize: 80
+    volumeEncrypted: true
+    privateNetworking: true
+  {{ end }}
