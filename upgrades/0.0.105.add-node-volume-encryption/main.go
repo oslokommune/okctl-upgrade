@@ -3,11 +3,15 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.105.add-node-volume-encryption/pkg/lib/cmdflags"
-	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.105.add-node-volume-encryption/pkg/lib/commonerrors"
-	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
+
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.105.add-node-volume-encryption/pkg/lib/cmdflags"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.105.add-node-volume-encryption/pkg/lib/commonerrors"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.105.add-node-volume-encryption/pkg/lib/manifest"
+	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.105.add-node-volume-encryption/pkg/lib/manifest/apis/okctl.io/v1alpha1"
+	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
 )
 
 func main() {
@@ -29,7 +33,12 @@ func main() {
 func buildRootCommand() *cobra.Command {
 	flags := cmdflags.Flags{}
 
-	var context Context
+	var (
+		err             error
+		fs              *afero.Afero = &afero.Afero{Fs: afero.NewOsFs()}
+		context         Context
+		clusterManifest v1alpha1.Cluster
+	)
 
 	filename := filepath.Base(os.Args[0])
 
@@ -42,10 +51,16 @@ func buildRootCommand() *cobra.Command {
 		SilenceUsage:  true, // true because we don't want to show usage if an errors occurs
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			context = newContext(flags)
+
+			clusterManifest, err = manifest.Cluster(fs)
+			if err != nil {
+				return fmt.Errorf("acquiring cluster manifest: %w", err)
+			}
+
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			return upgrade(context, flags)
+			return upgrade(context, flags, clusterManifest)
 		},
 	}
 
