@@ -2,16 +2,17 @@ package somecomponent
 
 import (
 	"fmt"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/oslokommune/okctl-upgrade/template/pkg/lib/cmdflags"
 	"github.com/oslokommune/okctl-upgrade/template/pkg/lib/commonerrors"
-	"github.com/oslokommune/okctl-upgrade/template/pkg/lib/logger"
+	"github.com/oslokommune/okctl-upgrade/template/pkg/lib/logging"
 )
 
 // SomeComponent is a sample okctl component
 type SomeComponent struct {
 	flags cmdflags.Flags
-	log   logger.Logger
+	log   logging.Logger
 }
 
 // Upgrade upgrades the component
@@ -58,7 +59,7 @@ func (c SomeComponent) askUser(question string) (bool, error) {
 	return answer, nil
 }
 
-func New(logger logger.Logger, flags cmdflags.Flags) SomeComponent {
+func New(logger logging.Logger, flags cmdflags.Flags) SomeComponent {
 	return SomeComponent{
 		log:   logger,
 		flags: flags,
