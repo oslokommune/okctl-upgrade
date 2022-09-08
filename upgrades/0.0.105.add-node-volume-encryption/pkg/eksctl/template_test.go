@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetClusterConfig(t *testing.T) {
+func TestGenerateClusterConfig(t *testing.T) {
 	testCases := []struct {
 		name            string
 		withClusterName string
@@ -41,7 +41,7 @@ func TestGetClusterConfig(t *testing.T) {
 			cluster.Metadata.AccountID = tc.withAccountID
 			cluster.Metadata.Region = tc.withRegion
 
-			cfg, err := GetClusterConfig(cluster, tc.withNodeGroups)
+			cfg, err := GenerateClusterConfig(cluster, tc.withNodeGroups)
 			assert.NoError(t, err)
 
 			raw, err := io.ReadAll(cfg)

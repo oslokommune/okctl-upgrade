@@ -2,15 +2,15 @@ package eksctl
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
-	"strings"
 	"text/template"
 
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.105.add-node-volume-encryption/pkg/lib/manifest/apis/okctl.io/v1alpha1"
 )
 
-func GetClusterConfig(cluster v1alpha1.Cluster, nodegroupNames []string) (io.Reader, error) {
+func GenerateClusterConfig(cluster v1alpha1.Cluster, nodegroupNames []string) (io.Reader, error) {
 	t, err := template.New("clusterconfig").Parse(clusterConfigTemplate)
 	if err != nil {
 		return nil, fmt.Errorf("parsing template: %w", err)
@@ -31,17 +31,33 @@ func GetClusterConfig(cluster v1alpha1.Cluster, nodegroupNames []string) (io.Rea
 	return &buf, nil
 }
 
-func parseNodeGroups(nodegroupNames []string) []clusterConfigTemplateOptsNodeGroup {
-	nodeGroups := make([]clusterConfigTemplateOptsNodeGroup, len(nodegroupNames))
+type getNodeGroupResult struct {
+	Name string `json:"Name"`
+}
 
-	for index, item := range nodegroupNames {
-		parts := strings.Split(item, "-")
-
-		nodeGroups[index] = clusterConfigTemplateOptsNodeGroup{
-			Name:             item,
-			AvailabilityZone: parts[len(parts)-1],
-		}
+func GetNodeGroupNames(clusterName string) ([]string, error) {
+	result, err := runCommand("get", "nodegroup", "--cluster", clusterName, "-o", "json")
+	if err != nil {
+		return nil, fmt.Errorf("retrieving nodegroups: %w", err)
 	}
 
-	return nodeGroups
+	var parsedResult []getNodeGroupResult
+
+	rawResult, err := io.ReadAll(result)
+	if err != nil {
+		return nil, fmt.Errorf("buffering result: %w", err)
+	}
+
+	err = json.Unmarshal(rawResult, &parsedResult)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshalling: %w", err)
+	}
+
+	nodegroupNames := make([]string, len(parsedResult))
+
+	for index, item := range parsedResult {
+		nodegroupNames[index] = item.Name
+	}
+
+	return nodegroupNames, nil
 }
