@@ -18,7 +18,7 @@ func TestGenerateClusterConfig(t *testing.T) {
 		withNodeGroups  []string
 	}{
 		{
-			name:            "Should work",
+			name:            "Should generate expected clusterconfig with sane values",
 			withClusterName: "mock-cluster",
 			withAccountID:   "0123456789012",
 			withRegion:      "eu-north-1",
