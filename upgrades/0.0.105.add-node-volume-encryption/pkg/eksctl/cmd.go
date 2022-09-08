@@ -7,7 +7,7 @@ import (
 	"os/exec"
 )
 
-func runCommand(args ...string) (io.Reader, error) {
+func runCommand(stdin io.Reader, args ...string) (io.Reader, error) {
 	cmd := exec.Command("eksctl", args...)
 
 	stdout := bytes.Buffer{}
@@ -15,6 +15,7 @@ func runCommand(args ...string) (io.Reader, error) {
 
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
+	cmd.Stdin = stdin
 
 	err := cmd.Run()
 	if err != nil {

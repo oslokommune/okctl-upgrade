@@ -36,7 +36,7 @@ type getNodeGroupResult struct {
 }
 
 func GetNodeGroupNames(clusterName string) ([]string, error) {
-	result, err := runCommand("get", "nodegroup", "--cluster", clusterName, "-o", "json")
+	result, err := runCommand(nil, "get", "nodegroup", "--cluster", clusterName, "-o", "json")
 	if err != nil {
 		return nil, fmt.Errorf("retrieving nodegroups: %w", err)
 	}
@@ -60,4 +60,39 @@ func GetNodeGroupNames(clusterName string) ([]string, error) {
 	}
 
 	return nodegroupNames, nil
+}
+
+func UpdateNodeGroups(clusterName string, clusterconfig io.Reader, dryRun bool) error {
+	args := []string{
+		"create", "nodegroup", "--cluster", clusterName, "--config-file", "-",
+	}
+
+	if !dryRun {
+		args = append(args, "--dry-run")
+	}
+
+	_, err := runCommand(clusterconfig, args...)
+	if err != nil {
+		return fmt.Errorf("creating nodegroups: %w", err)
+	}
+
+	return nil
+}
+
+func DeleteNodeGroups(clusterName string, nodegroups []string, dryRun bool) error {
+        for _, item := range nodegroups {
+                _, err := runCommand(nil, "drain", "nodegroup", "--cluster", clusterName, "--name", item)
+                if err != nil {
+                        return fmt.Errorf("draining node group %s: %w", item, err)
+                }
+        }
+
+        for _, item := range nodegroups {
+                _, err := runCommand(nil, "delete", "nodegroup", "--cluster", clusterName, "--name", item)
+                if err != nil {
+                        return fmt.Errorf("deleting node group %s: %w", item, err)
+                }
+        }
+
+        return nil
 }
