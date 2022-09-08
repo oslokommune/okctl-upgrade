@@ -36,6 +36,10 @@ test: $(RICHGO)
 	$(GO) test -timeout $(TIMEOUT) $(ARGS) $(TESTPKGS) | tee >(RICHGO_FORCE_COLOR=1 $(RICHGO) testfilter); \
 		test $${PIPESTATUS[0]} -eq 0
 
+test-update: $(RICHGO)
+	$(GO) test -timeout $(TIMEOUT) -update $(ARGS) $(TESTPKGS) | tee >(RICHGO_FORCE_COLOR=1 $(RICHGO) testfilter); \
+		test $${PIPESTATUS[0]} -eq 0
+
 lint: $(GOLANGCILINT)
 	$(GOLANGCILINT) run
 
