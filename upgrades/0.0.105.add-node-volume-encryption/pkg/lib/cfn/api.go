@@ -68,4 +68,3 @@ func UpdateStackTemplate(ctx context.Context, name string, template io.Reader) e
 
 	return nil
 }
-
