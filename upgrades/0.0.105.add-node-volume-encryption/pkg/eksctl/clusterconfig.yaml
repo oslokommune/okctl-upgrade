@@ -29,13 +29,13 @@ metadata:
 nodeGroups:
   {{ range .NodeGroups -}}
   - name: {{ .Name }}
-    availabilityZones: ["{{ .AvailabilityZone }}"]
+    availabilityZones: ["{{ $.Region }}{{ .AvailabilityZone }}"]
     instanceType: "m5.large"
     desiredCapacity: 0
     minSize: 0
     maxSize: 10
     labels:
-      pool: ng-generic-{{- .AvailabilityZone }}
+      pool: ng-generic-{{- $.Region -}}{{- .AvailabilityZone }}
     tags:
       k8s.io/cluster-autoscaler/enabled: "true"
       k8s.io/cluster-autoscaler/{{ $.ClusterName }}: owned

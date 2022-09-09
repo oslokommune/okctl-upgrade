@@ -17,7 +17,7 @@ type clusterConfigTemplateOpts struct {
 
 type clusterConfigTemplateOptsNodeGroup struct {
 	Name             string
-	AvailabilityZone string
+	AvailabilityZone string // 1a // 1b // 1c
 }
 
 func parseNodeGroups(nodegroupNames []string) []clusterConfigTemplateOptsNodeGroup {
@@ -25,10 +25,11 @@ func parseNodeGroups(nodegroupNames []string) []clusterConfigTemplateOptsNodeGro
 
 	for index, item := range nodegroupNames {
 		parts := strings.Split(item, "-")
+		lastPart := parts[len(parts)-1]
 
 		nodeGroups[index] = clusterConfigTemplateOptsNodeGroup{
 			Name:             item,
-			AvailabilityZone: parts[len(parts)-1],
+			AvailabilityZone: string(lastPart[len(lastPart)-1]),
 		}
 	}
 
