@@ -80,19 +80,19 @@ func UpdateNodeGroups(clusterName string, clusterconfig io.Reader, dryRun bool) 
 }
 
 func DeleteNodeGroups(clusterName string, nodegroups []string, dryRun bool) error {
-        for _, item := range nodegroups {
-                _, err := runCommand(nil, "drain", "nodegroup", "--cluster", clusterName, "--name", item)
-                if err != nil {
-                        return fmt.Errorf("draining node group %s: %w", item, err)
-                }
-        }
+	for _, item := range nodegroups {
+		_, err := runCommand(nil, "drain", "nodegroup", "--cluster", clusterName, "--name", item)
+		if err != nil {
+			return fmt.Errorf("draining node group %s: %w", item, err)
+		}
+	}
 
-        for _, item := range nodegroups {
-                _, err := runCommand(nil, "delete", "nodegroup", "--cluster", clusterName, "--name", item)
-                if err != nil {
-                        return fmt.Errorf("deleting node group %s: %w", item, err)
-                }
-        }
+	for _, item := range nodegroups {
+		_, err := runCommand(nil, "delete", "nodegroup", "--cluster", clusterName, "--name", item)
+		if err != nil {
+			return fmt.Errorf("deleting node group %s: %w", item, err)
+		}
+	}
 
-        return nil
+	return nil
 }
