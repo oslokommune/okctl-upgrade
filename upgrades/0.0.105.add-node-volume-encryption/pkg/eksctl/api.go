@@ -31,10 +31,6 @@ func GenerateClusterConfig(cluster v1alpha1.Cluster, nodegroupNames []string) (i
 	return &buf, nil
 }
 
-type getNodeGroupResult struct {
-	Name string `json:"Name"`
-}
-
 func GetNodeGroupNames(clusterName string) ([]string, error) {
 	result, err := runCommand(nil, "get", "nodegroup", "--cluster", clusterName, "-o", "json")
 	if err != nil {
@@ -62,9 +58,9 @@ func GetNodeGroupNames(clusterName string) ([]string, error) {
 	return nodegroupNames, nil
 }
 
-func UpdateNodeGroups(clusterName string, clusterconfig io.Reader, dryRun bool) error {
+func UpdateNodeGroups(clusterconfig io.Reader, dryRun bool) error {
 	args := []string{
-		"create", "nodegroup", "--cluster", clusterName, "--config-file", "-",
+		"create", "nodegroup", "--config-file", "-",
 	}
 
 	if !dryRun {
@@ -95,4 +91,25 @@ func DeleteNodeGroups(clusterName string, nodegroups []string, dryRun bool) erro
 	}
 
 	return nil
+}
+
+func GetClusterVersion(clusterName string) (string, error) {
+	response, err := runCommand(nil, "get", "cluster", "--name", clusterName, "-o", "json")
+	if err != nil {
+		return "", fmt.Errorf("getting cluster")
+	}
+
+	rawResponse, err := io.ReadAll(response)
+	if err != nil {
+		return "", fmt.Errorf("buffering: %w", err)
+	}
+
+	var results []getClusterResult
+
+	err = json.Unmarshal(rawResponse, &results)
+	if err != nil {
+		return "", fmt.Errorf("unmarshalling: %w", err)
+	}
+
+	return results[0].Version, nil
 }
