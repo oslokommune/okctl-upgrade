@@ -89,7 +89,7 @@ func configLogPrinter(log logging.Logger, cfg io.Reader) (io.Reader, error) {
 		return nil, fmt.Errorf("buffering: %w", err)
 	}
 
-	log.Debug(string(raw))
+	log.Debugf("\n%s", string(raw))
 
 	return &buf, nil
 }
