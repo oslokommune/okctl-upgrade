@@ -2,10 +2,12 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
 
+	survey "github.com/AlecAivazis/survey/v2"
 	"github.com/google/uuid"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.105.add-node-volume-encryption/pkg/eksctl"
 	"github.com/oslokommune/okctl-upgrade/upgrades/0.0.105.add-node-volume-encryption/pkg/lib/cmdflags"
@@ -15,6 +17,17 @@ import (
 
 func upgrade(context Context, flags cmdflags.Flags, cluster v1alpha1.Cluster) error {
 	log := context.logger
+
+	if !flags.Confirm {
+		continueUpgrade, err := prompt(continuationMessage)
+		if err != nil {
+			return fmt.Errorf("prompting for continuation: %w", err)
+		}
+
+		if !continueUpgrade {
+			return errors.New("aborted by user")
+		}
+	}
 
 	log.Debug("Retrieving nodegroup names")
 
@@ -118,3 +131,23 @@ func generateNodegroupNames(region string, clusterVersion string, randomizerFn f
 
 	return nodegroupNames
 }
+
+func prompt(msg string) (bool, error) {
+	answer := false
+	prompt := &survey.Confirm{Message: msg}
+
+	err := survey.AskOne(prompt, &answer)
+	if err != nil {
+		return false, fmt.Errorf("prompting user: %w", err)
+	}
+
+	return answer, nil
+}
+
+const continuationMessage = `This upgrade will delete all nodes in the cluster, which can result in applications
+experiencing downtime.
+
+To ensure uptime, follow this guide: https://github.com/oslokommune/okctl-upgrade/tree/main/gists/bump-eks-to-1-20#alternative-1-no-downtime
+
+Are you sure you want to continue with the upgrade?
+`
