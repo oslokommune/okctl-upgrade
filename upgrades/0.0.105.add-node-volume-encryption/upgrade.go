@@ -54,14 +54,27 @@ func upgrade(context Context, flags cmdflags.Flags, cluster v1alpha1.Cluster) er
 		return fmt.Errorf("updating nodegroups: %w", err)
 	}
 
-	log.Debug("Deleting original nodegroups")
-
-	err = eksctl.DeleteNodeGroups(cluster.Metadata.Name, originalNodegroupNames, flags.DryRun)
+	err = deleteNodeGroups(cluster.Metadata.Name, originalNodegroupNames, flags.DryRun)
 	if err != nil {
 		return fmt.Errorf("deleting nodegroups: %w", err)
 	}
 
+	log.Debug("Deleting original nodegroups")
+
 	log.Debug("Update complete")
+
+	return nil
+}
+
+func deleteNodeGroups(clusterName string, nodegroupNames []string, dryRun bool) error {
+	if len(nodegroupNames) == 0 {
+		return nil
+	}
+
+	err := eksctl.DeleteNodeGroups(clusterName, nodegroupNames, dryRun)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
