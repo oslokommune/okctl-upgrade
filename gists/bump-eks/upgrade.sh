@@ -315,12 +315,15 @@ metadata:
 nodeGroups:
 EOF
 
+# Generates 10 random characters [A-Z0-9]{10}. Example: B73670E2DB
+NODEGROUP_POSTFIX=$(uuidgen | sed 's/-//g' | cut -c 1-10 | tr '[:lower:]' '[:upper:]')
+
 for AZ_ID in a b c
 do
   AZ="${AWS_REGION}${AZ_ID}"
 
   cat <<EOF >>$NODEGROUP_FILE
-  - name: "ng-generic-${EKS_VERSION_WITH_DASH}-1${AZ_ID}"
+  - name: "ng-generic-${EKS_VERSION_WITH_DASH}-1${AZ_ID}-${NODEGROUP_POSTFIX}"
     availabilityZones: ["$AZ"]
     instanceType: "m5.large"
     desiredCapacity: 0
@@ -331,8 +334,8 @@ do
     tags:
       k8s.io/cluster-autoscaler/enabled: "true"
       k8s.io/cluster-autoscaler/$CLUSTER_NAME: owned
+    volumeSize: 80
     volumeEncrypted: true
-    privateNetworking: true
     privateNetworking: true
 EOF
 done
