@@ -331,6 +331,8 @@ do
     tags:
       k8s.io/cluster-autoscaler/enabled: "true"
       k8s.io/cluster-autoscaler/$CLUSTER_NAME: owned
+    volumeEncrypted: true
+    privateNetworking: true
     privateNetworking: true
 EOF
 done
