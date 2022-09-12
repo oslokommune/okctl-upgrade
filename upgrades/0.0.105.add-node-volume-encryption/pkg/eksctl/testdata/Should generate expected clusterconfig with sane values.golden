@@ -27,7 +27,7 @@ metadata:
   name: mock-cluster
   region: eu-north-1
 nodeGroups:
-  - name: eksctl-mock-cluster-nodegroup-ng-generic-1-21-1a
+  - name: eksctl-mock-cluster-nodegroup-ng-generic-1-21-1a-AAAAAAAAAA
     availabilityZones: ["eu-north-1a"]
     instanceType: "m5.large"
     desiredCapacity: 0
@@ -41,7 +41,7 @@ nodeGroups:
     volumeSize: 80
     volumeEncrypted: true
     privateNetworking: true
-  - name: eksctl-mock-cluster-nodegroup-ng-generic-1-21-1b
+  - name: eksctl-mock-cluster-nodegroup-ng-generic-1-21-1b-AAAAAAAAAA
     availabilityZones: ["eu-north-1b"]
     instanceType: "m5.large"
     desiredCapacity: 0
@@ -55,7 +55,7 @@ nodeGroups:
     volumeSize: 80
     volumeEncrypted: true
     privateNetworking: true
-  - name: eksctl-mock-cluster-nodegroup-ng-generic-1-21-1c
+  - name: eksctl-mock-cluster-nodegroup-ng-generic-1-21-1c-AAAAAAAAAA
     availabilityZones: ["eu-north-1c"]
     instanceType: "m5.large"
     desiredCapacity: 0

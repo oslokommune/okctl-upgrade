@@ -7,6 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.17.5
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.22.8
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
+	github.com/google/uuid v1.1.2
 	github.com/sebdah/goldie/v2 v2.5.3
 	github.com/spf13/afero v1.6.0
 	github.com/spf13/cobra v1.2.1

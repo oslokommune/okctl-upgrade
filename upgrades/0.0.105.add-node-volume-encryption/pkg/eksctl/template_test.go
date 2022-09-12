@@ -23,9 +23,9 @@ func TestGenerateClusterConfig(t *testing.T) {
 			withAccountID:   "0123456789012",
 			withRegion:      "eu-north-1",
 			withNodeGroups: []string{
-				"eksctl-mock-cluster-nodegroup-ng-generic-1-21-1a",
-				"eksctl-mock-cluster-nodegroup-ng-generic-1-21-1b",
-				"eksctl-mock-cluster-nodegroup-ng-generic-1-21-1c",
+				"eksctl-mock-cluster-nodegroup-ng-generic-1-21-1a-AAAAAAAAAA",
+				"eksctl-mock-cluster-nodegroup-ng-generic-1-21-1b-AAAAAAAAAA",
+				"eksctl-mock-cluster-nodegroup-ng-generic-1-21-1c-AAAAAAAAAA",
 			},
 		},
 	}
@@ -50,6 +50,44 @@ func TestGenerateClusterConfig(t *testing.T) {
 			g := goldie.New(t)
 
 			g.Assert(t, tc.name, raw)
+		})
+	}
+}
+
+func TestParseNodeGroups(t *testing.T) {
+	testCases := []struct {
+		name               string
+		withNodegroupNames []string
+		expectNodeGroups   []clusterConfigTemplateOptsNodeGroup
+	}{
+		{
+			name: "Should work",
+			withNodegroupNames: []string{
+				"ng-generic-1-21-1a-C29C1E3E88",
+				"myname-1-20-3c-AAAAAAAAAA",
+			},
+			expectNodeGroups: []clusterConfigTemplateOptsNodeGroup{
+				{
+					Name:             "ng-generic-1-21-1a-C29C1E3E88",
+					AvailabilityZone: "a",
+				},
+				{
+					Name:             "myname-1-20-3c-AAAAAAAAAA",
+					AvailabilityZone: "c",
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := parseNodeGroups(tc.withNodegroupNames)
+
+			assert.Equal(t, tc.expectNodeGroups, result)
 		})
 	}
 }

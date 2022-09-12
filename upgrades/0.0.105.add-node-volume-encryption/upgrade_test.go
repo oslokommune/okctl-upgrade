@@ -24,9 +24,9 @@ func TestGenerateNodegroupNames(t *testing.T) {
 			},
 			withClusterVersion: "1.21",
 			expectNodegroupNames: []string{
-				"ng-generic-1-21-1a",
-				"ng-generic-1-21-1b",
-				"ng-generic-1-21-1c",
+				"ng-generic-1-21-1a-AAAAAAAAAA",
+				"ng-generic-1-21-1b-AAAAAAAAAA",
+				"ng-generic-1-21-1c-AAAAAAAAAA",
 			},
 		},
 	}
@@ -37,7 +37,9 @@ func TestGenerateNodegroupNames(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			names := generateNodegroupNames(tc.withCluster.Metadata.Region, tc.withClusterVersion)
+			randomizer := func() string { return "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" }
+
+			names := generateNodegroupNames(tc.withCluster.Metadata.Region, tc.withClusterVersion, randomizer)
 
 			assert.Equal(t, tc.expectNodegroupNames, names)
 		})

@@ -16,22 +16,35 @@ type clusterConfigTemplateOpts struct {
 }
 
 type clusterConfigTemplateOptsNodeGroup struct {
-	Name             string
-	AvailabilityZone string // 1a // 1b // 1c
+	Name             string // ng-generic-1-21-1a-C29C1E3E88
+	AvailabilityZone string // a // b // c
 }
 
 func parseNodeGroups(nodegroupNames []string) []clusterConfigTemplateOptsNodeGroup {
 	nodeGroups := make([]clusterConfigTemplateOptsNodeGroup, len(nodegroupNames))
 
 	for index, item := range nodegroupNames {
-		parts := strings.Split(item, "-")
-		lastPart := parts[len(parts)-1]
+		parts := reverse(strings.Split(item, "-"))
+		azContainer := parts[1]
 
 		nodeGroups[index] = clusterConfigTemplateOptsNodeGroup{
 			Name:             item,
-			AvailabilityZone: string(lastPart[len(lastPart)-1]),
+			AvailabilityZone: string(azContainer[len(azContainer)-1]),
 		}
 	}
 
 	return nodeGroups
+}
+
+func reverse(l []string) []string {
+	reversedList := make([]string, len(l))
+	reversedIndex := len(l) - 1
+
+	for _, item := range l {
+		reversedList[reversedIndex] = item
+
+		reversedIndex--
+	}
+
+	return reversedList
 }
