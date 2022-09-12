@@ -63,7 +63,7 @@ func UpdateNodeGroups(clusterconfig io.Reader, dryRun bool) error {
 		"create", "nodegroup", "--config-file", "-",
 	}
 
-	if !dryRun {
+	if dryRun {
 		args = append(args, "--dry-run")
 	}
 
@@ -76,6 +76,10 @@ func UpdateNodeGroups(clusterconfig io.Reader, dryRun bool) error {
 }
 
 func DeleteNodeGroups(clusterName string, nodegroups []string, dryRun bool) error {
+	if dryRun {
+		return nil
+	}
+
 	for _, item := range nodegroups {
 		_, err := runCommand(nil, "drain", "nodegroup", "--cluster", clusterName, "--name", item)
 		if err != nil {
