@@ -359,27 +359,26 @@ function enable_pod_eni() {
 enable_pod_eni
 
 function disable_demux() {
+  PATCH_FILE="/tmp/patch_9nh89tnh9sh.json"
+  cat << EOF >"$PATCH_FILE"
+{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}
+EOF
+
   if [[ $DRY_RUN == "false" ]]; then
-    # If reading this script to get the command, you can copy paste:
-    # kubectl patch daemonset aws-node -n kube-system -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
-
-    # It's hard to pass this command to run_with_output with correct quoting, so we're running the command directly below.
-    echo -e "Running (open this script to get actual command, this command is missing proper quotes): \e[96m"
-    echo     "$KUBECTL" patch daemonset aws-node \
-           -n kube-system \
-           -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
-    echo -e "\e[0m"
-
-    "$KUBECTL" patch daemonset aws-node \
+    run_with_output "$KUBECTL" patch daemonset aws-node \
       -n kube-system \
-      -p '{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
+      --patch-file "$PATCH_FILE"
   else
-    PATCH='{"spec": {"template": {"spec": {"initContainers": [{"env":[{"name":"DISABLE_TCP_EARLY_DEMUX","value":"true"}],"name":"aws-vpc-cni-init"}]}}}}'
     echo "Would run:"
     echo "  $KUBECTL patch daemonset aws-node \\"
     echo "   -n kube-system \\"
-    echo "   -p $PATCH"
+    echo "   --patch-file $PATCH_FILE"
+    echo
   fi
+
+  echo "Contents of patch:"
+  cat "$PATCH_FILE"
+  echo
 }
 
 disable_demux
@@ -509,9 +508,9 @@ echo "--------------------------------------------------------------------------
 function wait_for_pod_aws_node() {
   if [[ $DRY_RUN == "false" ]]; then
     # run_with_output doesn't work because of waiting or something
-    run_no_output "$KUBECTL" -n kube-system wait pod --for=condition=ready -l app.kubernetes.io/name=aws-node --timeout=300s
+    run_no_output "$KUBECTL" -n kube-system wait pod --for=condition=ready -l app.kubernetes.io/name=aws-node --timeout=600s
   else
-    echo "Would run: $KUBECTL -n kube-system wait pod --for=condition=ready -l app.kubernetes.io/name=aws-node --timeout=300s"
+    echo "Would run: $KUBECTL -n kube-system wait pod --for=condition=ready -l app.kubernetes.io/name=aws-node --timeout=600s"
   fi
 }
 
