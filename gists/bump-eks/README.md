@@ -28,16 +28,24 @@ The upgrade script expects the following tools to exist on your machine, so make
 
 ## aws CLI
 
+At least version 2.7.31, but newer versions probably will work as well.
+
 Follow instructions in https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
 ## eksctl
 
+At least version 0.104.0, but newer versions probably will work as well.
+
 ### Linux
 
 ```shell
-curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/download/v0.104.0/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
 sudo mv /tmp/eksctl /usr/local/bin
 ```
+
+https://github.com/weaveworks/eksctl/releases/v0.111.0/download/eksctl_Darwin_amd64.tar.gz
+
+
 
 ### macOS
 
@@ -125,13 +133,13 @@ The source for these suggestions are:
 * https://docs.aws.amazon.com/eks/latest/userguide/platform-versions.html
 * https://kubernetes.io/docs/reference/using-api/deprecation-guide/
 
-## EKS 1.21
+## Requirements for running EKS 1.21
 
-You need Okctl version 0.0.102 to run EKS 1.21.
+After upgrading EKS to 1.21, you need Okctl version 0.0.102.
 
-## EKS 1.22
+## Requirements for running EKS 1.22
 
-If you're upgrading to EKS 1.22, you must follow the below steps. If you do not, your application **probably will stop working**.
+If you do not follow the below steps, your application **probably will stop working**.
 
 AWS describes the necessary changes we need to take into account in detail: https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html#update-1.22. However, we have attempted to extract everything that is necessary, so you shouldn't need to read that guide.
 
@@ -214,8 +222,7 @@ Some useful links regarding this change:
 
 ### Make sure Okctl version is x.x.x or later (ToDo: update this when Okctl supports 1.22)
 
-Okctl doesn't support EKS 1.22 yet. We will update this guide when it is. (Note to ourselves:
-"Replace this text line with: Make sure you have upgraded to Okctl version x.x.x or later.")
+Okctl doesn't support EKS 1.22 yet. We will update this guide when it is.
 
 You can still upgrade to EKS 1.22, but you cannot create a cluster from scratch with version 1.21. You
 will have to create it with version 1.20 and upgade to 1.21.
