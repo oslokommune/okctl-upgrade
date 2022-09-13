@@ -464,6 +464,10 @@ do
   fi
 done
 
+echo
+echo "Final node groups:"
+run_with_output "$EKSCTL" get nodegroup --cluster "$CLUSTER_NAME"
+
 UPDATE_ADDONS_STEPS=3
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"
