@@ -18,7 +18,7 @@ import (
 func upgrade(context Context, flags cmdflags.Flags, cluster v1alpha1.Cluster) error {
 	log := context.logger
 
-	if !c.flags.DryRun && !c.flags.Confirm {
+	if !flags.DryRun && !flags.Confirm {
 		continueUpgrade, err := prompt(continuationMessage)
 		if err != nil {
 			return fmt.Errorf("prompting for continuation: %w", err)
