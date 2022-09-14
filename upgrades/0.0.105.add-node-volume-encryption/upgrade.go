@@ -55,7 +55,7 @@ func upgrade(context Context, flags cmdflags.Flags, cluster v1alpha1.Cluster) er
 		return fmt.Errorf("generating cluster config: %w", err)
 	}
 
-	cfg, err = configLogPrinter(log, cfg)
+	cfg, err = printClusterConfig(log, cfg)
 	if err != nil {
 		return fmt.Errorf("debug printing cluster config: %w", err)
 	}
@@ -92,7 +92,7 @@ func deleteNodeGroups(clusterName string, nodegroupNames []string, dryRun bool) 
 	return nil
 }
 
-func configLogPrinter(log logging.Logger, cfg io.Reader) (io.Reader, error) {
+func printClusterConfig(log logging.Logger, cfg io.Reader) (io.Reader, error) {
 	buf := bytes.Buffer{}
 
 	tee := io.TeeReader(cfg, &buf)
