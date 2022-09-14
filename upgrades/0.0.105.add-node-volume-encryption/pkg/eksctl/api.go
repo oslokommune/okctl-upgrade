@@ -58,7 +58,7 @@ func GetNodeGroupNames(clusterName string) ([]string, error) {
 	return nodegroupNames, nil
 }
 
-func UpdateNodeGroups(clusterconfig io.Reader, dryRun bool) error {
+func CreateNodeGroups(clusterconfig io.Reader, dryRun bool) error {
 	args := []string{
 		"create", "nodegroup", "--config-file", "-",
 	}

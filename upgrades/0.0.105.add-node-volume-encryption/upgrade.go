@@ -62,7 +62,7 @@ func upgrade(context Context, flags cmdflags.Flags, cluster v1alpha1.Cluster) er
 
 	log.Debug("Updating nodegroups")
 
-	err = eksctl.UpdateNodeGroups(cfg, flags.DryRun)
+	err = eksctl.CreateNodeGroups(cfg, flags.DryRun)
 	if err != nil {
 		return fmt.Errorf("updating nodegroups: %w", err)
 	}
