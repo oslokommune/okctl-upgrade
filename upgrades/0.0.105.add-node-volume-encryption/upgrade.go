@@ -111,6 +111,10 @@ func generateRandomString() string {
 	return strings.ReplaceAll(uuid.New().String(), "-", "")
 }
 
+// generateNodegroupNames generates expected nodegroup names for a region
+// The nodegroup names follows the following pattern:
+// Format : ng-generic-<cluster version, i.e. 1-21>-<availability zone prefix, i.e. 1><availability zone, i.e. b>-<randomized postfix>
+// Example: ng-generic-1-21-1b-A1B2C3D4E5
 func generateNodegroupNames(region string, clusterVersion string, randomizerFn func() string) []string {
 	regionParts := strings.Split(region, "-")
 	availabilityZones := []string{"a", "b", "c"}
