@@ -144,7 +144,7 @@ func prompt(msg string) (bool, error) {
 	return answer, nil
 }
 
-const continuationMessage = `This upgrade will delete all nodes in the cluster, which can result in applications
+const continuationMessage = `This upgrade will move applications to new nodes in the cluster, which can result in applications
 experiencing downtime.
 
 To ensure uptime, follow this guide: https://github.com/oslokommune/okctl-upgrade/tree/main/gists/bump-eks-to-1-20#alternative-1-no-downtime
