@@ -20,7 +20,7 @@ function run_cmd() {
 
   echo "" >&2
   echo "~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~" >&2
-  echo -e "Running command [$TIMESTAMP]: \e[96m${CMD}\e[0m" >&2
+  echo -e "Running command [$TIMESTAMP]: \033[96m${CMD}\033[0m" >&2
   echo "~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~" >&2
 
   local RESULT=""
@@ -95,7 +95,7 @@ function get_kubectl_version() {
 if [[ $* == "-h" || -z "$1" || -z "$2" || -z "$3" || "$#" -lt 3 ]]
 then
     ME=$(basename $0)
-    echo -e "\e[1mUSAGE:\e[0m"
+    echo -e "\033[1mUSAGE:\033[0m"
     echo "$ME <cluster-manifest file> <aws-region> <EKS target version> [dry-run={false|true}]"
     echo
     echo "cluster-manifest file      The Okctl cluster manifest"
@@ -103,7 +103,7 @@ then
     echo "EKS target version         Example: 1.21"
     echo "dry-run                     Default true. Set to false to actually run upgrade."
     echo
-    echo -e "\e[1mEXAMPLES:\e[0m"
+    echo -e "\033[1mEXAMPLES:\033[0m"
     echo "# Run with dry-run, i.e. do no changes, i.e. it's safe to run:"
     echo "$ME cluster-dev.yaml eu-west-1 1.21"
     echo
@@ -206,7 +206,7 @@ case "$(uname -s)" in
 esac
 
 # run_with_output doesn't handle big outputs so well, so running command directly instead
-echo -e "Running: \e[96mcurl --location  $EKSCTL_URL | tar xz -C  $TARGET_BINARY_DIR\e[0m"
+echo -e "Running: \033[96mcurl --location  $EKSCTL_URL | tar xz -C  $TARGET_BINARY_DIR\033[0m"
                         curl --location "$EKSCTL_URL"  | tar xz -C "$TARGET_BINARY_DIR"
 ERROR_CODE=$?
 if [[ ! $ERROR_CODE == 0 ]]; then
@@ -215,7 +215,7 @@ if [[ ! $ERROR_CODE == 0 ]]; then
 fi
 
 
-echo -e "Running: \e[96mcurl --location  $KUBECTL_URL  -o  $TARGET_BINARY_DIR/kubectl\e[0m"
+echo -e "Running: \033[96mcurl --location  $KUBECTL_URL  -o  $TARGET_BINARY_DIR/kubectl\033[0m"
                         curl --location "$KUBECTL_URL" -o "$TARGET_BINARY_DIR/kubectl"
 ERROR_CODE=$?
 if [[ ! $ERROR_CODE == 0 ]]; then
@@ -247,12 +247,12 @@ echo "--------------------------------------------------------------------------
 echo "Do these variables look okay?"
 echo "------------------------------------------------------------------------------------------------------------------------"
 
-echo -e "Upgrading EKS to version: \e[93m${EKS_TARGET_VERSION}\e[0m"
-echo -e "Cluster manifest: \e[93m${CLUSTER_MANIFEST}\e[0m"
-echo -e "Cluster name: \e[93m${CLUSTER_NAME}\e[0m"
-echo -e "AWS account: \e[93m${AWS_ACCOUNT}\e[0m"
-echo -e "AWS region: \e[93m${AWS_REGION}\e[0m"
-echo -e "Dry run: \e[93m${DRY_RUN}\e[0m"
+echo -e "Upgrading EKS to version: \033[93m${EKS_TARGET_VERSION}\033[0m"
+echo -e "Cluster manifest: \033[93m${CLUSTER_MANIFEST}\033[0m"
+echo -e "Cluster name: \033[93m${CLUSTER_NAME}\033[0m"
+echo -e "AWS account: \033[93m${AWS_ACCOUNT}\033[0m"
+echo -e "AWS region: \033[93m${AWS_REGION}\033[0m"
+echo -e "Dry run: \033[93m${DRY_RUN}\033[0m"
 
 echo
 # shellcheck disable=SC2162
