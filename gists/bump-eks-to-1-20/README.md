@@ -49,7 +49,7 @@ sudo mv kubectl /usr/local/bin/kubectl2
 
 # Prepare applications
 
-See [prepare-apps.md](../prepare-apps.md).
+See [prepare-apps.md](../bump-eks/prepare-apps.md).
 
 # Bump EKS control plane
 
