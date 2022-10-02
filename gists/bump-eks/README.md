@@ -118,7 +118,7 @@ aws sso login
 
 # Step 3: Configure applications for no downtime
 
-To avoid downtime, **make sure** you have completed the steps described in this guide: https://github.com/oslokommune/okctl-upgrade/tree/main/gists/bump-eks-to-1-20#prepare-applications
+To avoid downtime, **make sure** you have completed the steps described in this guide: [prepare-apps.md](prepare-apps.md).
 
 # Step 4: Adapt to EKS version specific requirements
 
