@@ -207,7 +207,7 @@ esac
 
 # run_with_output doesn't handle big outputs so well, so running command directly instead
 echo -e "Running: \033[96mcurl --location  $EKSCTL_URL | tar xz -C  $TARGET_BINARY_DIR\033[0m"
-                        curl --location "$EKSCTL_URL"  | tar xz -C "$TARGET_BINARY_DIR"
+                          curl --location "$EKSCTL_URL"  | tar xz -C "$TARGET_BINARY_DIR"
 ERROR_CODE=$?
 if [[ ! $ERROR_CODE == 0 ]]; then
   echo eksctl curl failed
@@ -394,9 +394,9 @@ echo "Replacing node groups, step 3 of $REPLACE_NODE_GROUPS_STEPS: Drain old nod
 echo "------------------------------------------------------------------------------------------------------------------------"
 
 # Nodesgroups we want to keep
-NEW_NODE_1A=ng-generic-$EKS_VERSION_WITH_DASH-1a
-NEW_NODE_1B=ng-generic-$EKS_VERSION_WITH_DASH-1b
-NEW_NODE_1C=ng-generic-$EKS_VERSION_WITH_DASH-1c
+NEW_NODE_1A="ng-generic-$EKS_VERSION_WITH_DASH-1a-$NODEGROUP_POSTFIX"
+NEW_NODE_1B="ng-generic-$EKS_VERSION_WITH_DASH-1b-$NODEGROUP_POSTFIX"
+NEW_NODE_1C="ng-generic-$EKS_VERSION_WITH_DASH-1c-$NODEGROUP_POSTFIX"
 
 EXISTING_NODEGROUPS=$($EKSCTL get nodegroup --cluster "$CLUSTER_NAME" -o yaml | yq eval '.[].Name')
 
