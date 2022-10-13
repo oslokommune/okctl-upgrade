@@ -205,6 +205,11 @@ curl --silent --location "https://raw.githubusercontent.com/oslokommune/okctl-up
 chmod +x ./upgrade.sh
 ```
 
+## Run okctl venv
+
+Run `okctl venv` with your usual arguments. We need this because the upgrade script needs to run kubectl
+commands in the correct environment.
+
 ## Run the upgrade
 
 ### Usage
