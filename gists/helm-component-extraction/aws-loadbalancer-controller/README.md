@@ -8,6 +8,11 @@
 
 ## Prerequisites
 
+### Dependencies
+
+❗N.B.: ArgoCD and KubePromStack integrations must be extracted before extracting the AWS LoadBalancer Controller. Is is because
+the AWS LoadBalancer Controller has provisioned network resources making ArgoCD and Grafana available on the internet.
+
 ### Log into AWS
 
 1. Export the `AWS_PROFILE` variable with the relevant profile name.
@@ -35,7 +40,7 @@ See [cloudformation/README.md](cloudformation/README.md) for details.
 
 1. Edit the Makefile and set the variable(s) listed in the user input section
 2. Run `make values` to generate the values.yaml file
-3. Run `make install` to install the autoscaler
+3. Run `make install` to install the component
 
 ## FAQ
 
