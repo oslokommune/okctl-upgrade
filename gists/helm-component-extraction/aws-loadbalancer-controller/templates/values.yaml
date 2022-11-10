@@ -1,0 +1,49 @@
+affinity: {}
+clusterName: ${CLUSTER_NAME}
+defaultTags: {}
+enableCertManager: false
+fullnameOverride: ""
+image:
+  pullPolicy: IfNotPresent
+  repository: 602401143452.dkr.ecr.eu-west-1.amazonaws.com/amazon/aws-load-balancer-controller
+  tag: v2.1.1
+imagePullSecrets: []
+ingressClass: ""
+livenessProbe:
+  failureThreshold: 2
+  httpGet:
+    path: /healthz
+    port: 61779
+    scheme: HTTP
+  initialDelaySeconds: 30
+  timeoutSeconds: 10
+nameOverride: ""
+nodeSelector: {}
+podAnnotations: {}
+podDisruptionBudget: {}
+podLabels: {}
+podSecurityContext:
+  fsGroup: 65534
+priorityClassName: ""
+rbac:
+  create: true
+region: ${AWS_REGION}
+replicaCount: 1
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+serviceAccount:
+  annotations: {}
+  create: false
+  name: aws-load-balancer-controller
+terminationGracePeriodSeconds: 10
+tolerations: []
+vpcId: ${VPC_ID}
