@@ -2,9 +2,9 @@
 
 ## Chart details
 
-Chart source: [link](https://artifacthub.io/packages/helm/grafana/promtail)
-Chart version: 6.6.1
-App version: 2.6.1
+| Chart                                                           | Version  | App version |
+| --------------------------------------------------------------- | -------- | ----------- |
+| [source](https://artifacthub.io/packages/helm/grafana/promtail) | `v6.6.1` | `v2.6.1`    |
 
 ## Prerequisites
 
