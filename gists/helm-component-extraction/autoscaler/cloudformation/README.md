@@ -8,6 +8,6 @@
 
 ## Install the Cloudformation stacks
 
-2. Edit the Makefile and set the `AWS_PROFILE` variable to the relevant profile name.
-3. Run `make configure` to build the Cloudformation stacks.
-4. Run `make install` to deploy the Cloudformation stacks.
+1. Edit the Makefile and set the `AWS_PROFILE` variable to the relevant profile name.
+2. Run `make configure` to build the Cloudformation stacks.
+3. Run `make install` to deploy the Cloudformation stacks.

@@ -3,27 +3,27 @@
 ######################################################################
 # Use `aws eks list-clusters` to get the cluster name
 # Example: CLUSTER_NAME=kjoremiljo
-CLUSTER_NAME=
+CLUSTER_NAME?=
 
 ######################################################################
 # User input END #####################################################
 ######################################################################
 
 configure:
-	cat templates/role.yaml | \
-		OIDC_URI=$$(aws eks describe-cluster --name $(CLUSTER_NAME) --query cluster.identity.oidc.issuer --output text | sed -e "s/^https:\/\///") \
-		AWS_ACCOUNT_ID=$$(aws sts get-caller-identity --query Account --output text) \
+	@test -n "$(CLUSTER_NAME)" || (echo "CLUSTER_NAME is not set. See user input section in Makefile"; exit 1)
+	cat templates/policy.yaml | \
 		CLUSTER_NAME=$(CLUSTER_NAME) \
-		envsubst > role.yaml
+		envsubst > policy.yaml
 
 
 install:
+	@test -n "$(CLUSTER_NAME)" || (echo "CLUSTER_NAME is not set. See user input section in Makefile"; exit 1)
+	@test -f policy.yaml || (echo "policy.yaml does not exist. Run 'make configure' first"; exit 1)
 	aws cloudformation deploy \
 			--template-file policy.yaml \
 			--stack-name okctl-autoscalerpolicy-$(CLUSTER_NAME) \
 			--capabilities CAPABILITY_NAMED_IAM \
 
-	POLICY_ARN=
 	eksctl create iamserviceaccount \
 		--cluster $(CLUSTER_NAME) \
 		--name autoscaler \
