@@ -18,7 +18,7 @@
 
 ### Log into okctl
 
-1. Run `okctl venv -c <path to relevant cluster.yaml` to log into the okctl cluster.
+1. Run `okctl venv -c <path to relevant cluster.yaml>` to log into the okctl cluster.
 
 ## Uninstall okctl provisioned Promtail
 
