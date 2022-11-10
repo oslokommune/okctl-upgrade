@@ -1,5 +1,7 @@
 # Autoscaler
 
+## Chart details
+
 | Chart                                                                                | Version  | App version |
 | ----------------------------------------------------------------------------------   | -------- | ----------- |
 | [source](https://artifacthub.io/packages/helm/cluster-autoscaler/cluster-autoscaler) | `v9.4.0` | `v1.18.1`   |
