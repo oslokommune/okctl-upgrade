@@ -10,6 +10,7 @@ CLUSTER_NAME?=
 ##############################
 
 configure:
+	@test -n "$(AWS_PROFILE)" || (echo "Missing AWS_PROFILE environment variable. export AWS_PROFILE with the relevant profile" && exit 1)
 	@test -n "$(CLUSTER_NAME)" || (echo "Missing CLUSTER_NAME value. Edit the Makefile and configure the user input" && exit 1)
 	cat templates/values.yaml | \
 		CLUSTER_NAME=$(CLUSTER_NAME) \
