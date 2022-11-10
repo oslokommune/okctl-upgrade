@@ -10,8 +10,9 @@
 
 ### Dependencies
 
-❗N.B.: ArgoCD and KubePromStack integrations must be extracted before extracting the AWS LoadBalancer Controller. Is is because
-the AWS LoadBalancer Controller has provisioned network resources making ArgoCD and Grafana available on the internet.
+❗N.B.: ArgoCD and KubePromStack integrations must be extracted and disabled before extracting the AWS LoadBalancer
+Controller. Is is because the AWS LoadBalancer Controller has provisioned network resources making ArgoCD and Grafana
+available on the internet.
 
 ### Log into AWS
 
