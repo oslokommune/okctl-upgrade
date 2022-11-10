@@ -26,7 +26,7 @@ install:
 
 	eksctl create iamserviceaccount \
 		--cluster $(CLUSTER_NAME) \
-		--name autoscaler \
+		--name aws-load-balancer-controller \
 		--namespace kube-system \
 		--attach-policy-arn $$(aws iam list-policies | jq -r '.Policies[] | select(.PolicyName == "okctl-$(CLUSTER_NAME)-AWSLoadBalancerControllerServiceAccountPolicy").Arn') \
 		--override-existing-serviceaccounts \
