@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: promtail
   namespace: argocd
+  labels:
+    provider: okctl
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
