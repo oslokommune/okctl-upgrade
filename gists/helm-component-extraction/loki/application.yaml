@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: autoscaler
+  name: loki
   namespace: argocd
   labels:
     provider: okctl
@@ -9,7 +9,7 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   destination:
-    namespace: kube-system
+    namespace: monitoring
     server: https://kubernetes.default.svc
   project: default
   syncPolicy:
@@ -17,9 +17,9 @@ spec:
       prune: true
       selfHeal: false
   source:
-    chart: cluster-autoscaler
-    repoURL: "https://kubernetes.github.io/autoscaler"
-    targetRevision: 9.4.0
+    chart: loki
+    repoURL: https://grafana.github.io/helm-charts
+    targetRevision: 2.3.0
     helm:
       values: ''
 

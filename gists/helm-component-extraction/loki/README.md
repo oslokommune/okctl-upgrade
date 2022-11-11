@@ -1,10 +1,10 @@
-# Autoscaler
+# Loki
 
 ## Chart details
 
 | Chart                                                                                | Version  | App version |
 | ----------------------------------------------------------------------------------   | -------- | ----------- |
-| [source](https://artifacthub.io/packages/helm/cluster-autoscaler/cluster-autoscaler) | `v9.4.0` | `v1.18.1`   |
+| [source](https://artifacthub.io/packages/helm/grafana/loki/2.3.0)                    | `v2.3.0` | `v2.1.0`   |
 
 ## Prerequisites
 
@@ -20,9 +20,9 @@
  
 1. Run `okctl venv -c <path to relevant cluster.yaml>` to log into the okctl cluster.
 
-## Uninstall okctl provisioned Autoscaler
+## Uninstall okctl provisioned component
 
-1. Edit the relevant `cluster.yaml` file and set `integrations.autoscaler` to `false`.
+1. Edit the relevant `cluster.yaml` file and set `integrations.loki` to `false`.
 2. Run `okctl apply cluster -f cluster.yaml` to apply the changes.
 
 ## Installation
@@ -31,11 +31,11 @@
 
 See [cloudformation/README.md](cloudformation/README.md) for details.
 
-### Install the autoscaler
+### Install the component
 
 1. Edit the Makefile and set the variable(s) listed in the user input section
 2. Run `make values` to generate the values.yaml file
-3. Run `make install` to install the autoscaler
+3. Run `make install` to install the component
 
 ## FAQ
 
