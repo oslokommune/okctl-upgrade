@@ -22,14 +22,15 @@
 
 ## Uninstall okctl provisioned Promtail
 
-1. Edit the relevant `cluster.yaml` file and set `integrations.promtail` to `false`.
+1. Edit the relevant `cluster.yaml` file and set `integrations.promtail` to `false`. If all integrations are commented
+   out showing default values you need to uncomment the entire `integrations` section to avoid nil references.
 2. Run `okctl apply cluster -f cluster.yaml` to apply the changes.
 
 ## Installation
 
 ### Install Promtail
 
-1. Place this directory in `infrastructure/<cluster name>/helm-components/`
+1. Place this directory (promtail) in `infrastructure/<cluster name>/helm-components/`
 2. **Optional**; edit the `values.yaml` to suit your setup.
 3. Run `make install` to install Promtail.
 
