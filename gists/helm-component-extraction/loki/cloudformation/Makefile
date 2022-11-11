@@ -9,11 +9,20 @@ CLUSTER_NAME?=
 # User input END #####################################################
 ######################################################################
 
+
 configure:
+	@test -n "$(AWS_PROFILE)" || (echo "AWS_PROFILE is not set. Export the AWS_PROFILE environment with the relevant profile"; exit 1)
 	@test -n "$(CLUSTER_NAME)" || (echo "CLUSTER_NAME is not set. See user input section in Makefile"; exit 1)
-	cat templates/policy.yaml | \
+	AWS_REGION=$$(aws configure get region)
+	AWS_ACCOUNT_ID=$$(aws sts get-caller-identity --query Account --output text)
+	@test -n "$(AWS_REGION)" || (echo "Unable to acquire region"; exit 1)
+	@test -n "$(AWS_ACCOUNT_ID)" || (echo "Unable to acquire account id"; exit 1)
+
+	cat templates/dynamodb-policy.yaml | \
 		CLUSTER_NAME=$(CLUSTER_NAME) \
-		envsubst > policy.yaml
+		AWS_REGION=$${AWS_REGION} \
+		AWS_ACCOUNT_ID=$${AWS_ACCOUNT_ID} \
+		envsubst > dynamodb-policy.yaml
 
 
 install:
