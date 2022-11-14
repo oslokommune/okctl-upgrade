@@ -1,0 +1,3 @@
+./dynamodb-policy.yaml
+./s3bucket-policy.yaml
+./s3bucket.yaml
