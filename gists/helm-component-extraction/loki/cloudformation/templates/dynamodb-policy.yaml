@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: 2010-09-09
+AWSTemplateFormatVersion: "2010-09-09"
 Outputs:
   LokiDynamoDBServiceAccountPolicy:
     Export:
@@ -22,12 +22,12 @@ Resources:
           - dynamodb:ListTagsOfResource
           - dynamodb:Query
           - dynamodb:UpdateItem
-          - dynamodb:DeleteTable
           - dynamodb:CreateTable
           - dynamodb:TagResource
           - dynamodb:DescribeTable
           - dynamodb:GetItem
           - dynamodb:UpdateTable
+          - dynamodb:DeleteTable
           Effect: Allow
           Resource:
           - arn:aws:dynamodb:${AWS_REGION}:${AWS_ACCOUNT_ID}:table/okctl-${CLUSTER_NAME}-loki-index_*
@@ -36,5 +36,5 @@ Resources:
           Effect: Allow
           Resource:
           - arn:aws:dynamodb:${AWS_REGION}:${AWS_ACCOUNT_ID}:table/*
-        Version: 2012-10-17
+        Version: "2012-10-17"
     Type: AWS::IAM::ManagedPolicy
