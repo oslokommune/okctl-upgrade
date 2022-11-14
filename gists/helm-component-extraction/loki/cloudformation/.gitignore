@@ -1,3 +1,8 @@
 dynamodb-policy.yaml
 s3bucket-policy.yaml
 s3bucket.yaml
+
+.dynamodb-policy.yaml.orig
+.s3bucket-policy.yaml.orig
+.s3bucket.yaml.orig
+
