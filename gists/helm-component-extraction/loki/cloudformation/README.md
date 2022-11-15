@@ -1,3 +1,6 @@
+🔴 **N.B.:** If you are migrating from an existing Loki installation via okctl, ignore this directory. It is only used for
+the initial setup of a new Loki installation. 🔴
+
 ## Prepare
 
 1. Export the `AWS_PROFILE` variable with the relevant profile name.

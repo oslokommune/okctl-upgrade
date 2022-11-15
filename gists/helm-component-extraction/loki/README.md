@@ -22,14 +22,10 @@
 
 ## Uninstall okctl provisioned component
 
-1. Edit the relevant `cluster.yaml` file and set `integrations.loki` to `false`.
-2. Run `okctl apply cluster -f cluster.yaml` to apply the changes.
+1. Run `helm --namespace monitoring uninstall loki` to uninstall the component. Your newer logs will still be picked up by
+    promtail, and existing logs is stored in an S3 bucket.
 
 ## Installation
-
-### Prepare Cloudformation stacks
-
-See [cloudformation/README.md](cloudformation/README.md) for details.
 
 ### Install the component
 
@@ -42,3 +38,6 @@ See [cloudformation/README.md](cloudformation/README.md) for details.
 - **How do I use a different chart version?** To use a different chart version, change the `spec.source.targetRevision` field
     in `application.yaml` to the desired version. Then run `make install` to install the new version. N.B.: The required
 		values are not guaranteed to be the same between versions, so pay attention to the changelog in the chart link above.
+- **There is no instructions regarding the CloudFormation directory, what gives?** The CloudFormation directory is only 
+    relevant when installing the component from scratch. If the component is already installed through okctl, the resources
+		are already created and the CloudFormation directory is redundant.
