@@ -5,7 +5,7 @@
 		export AWS_PROFILE=your-profile-name
 		```
 2. Log in to the AWS account with `aws sso login`.
-3. Make sure you have eksctl installed locally
+3. Make sure you have eksctl installed locally. It should be available in `~/.okctl/binaries/eksctl/<version>/linux/amd64/eksctl`.
 
 ## Install the Cloudformation stacks
 
