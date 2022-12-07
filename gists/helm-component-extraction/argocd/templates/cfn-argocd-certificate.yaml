@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  PublicCertificate:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-PublicCertificate
+    Value:
+      Ref: PublicCertificate
+Resources:
+  PublicCertificate:
+    Properties:
+      DomainName: grafana.${CLUSTER_NAME}.oslo.systems
+      DomainValidationOptions:
+      - DomainName: grafana.${CLUSTER_NAME}.oslo.systems
+        HostedZoneId: ${HOSTED_ZONE_ID}
+      ValidationMethod: DNS
+    Type: AWS::CertificateManager::Certificate
