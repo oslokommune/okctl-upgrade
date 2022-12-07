@@ -4,7 +4,7 @@
 
 # Use `aws eks list-clusters` to get the cluster name
 # Example: CLUSTER_NAME=kjoremiljo
-CLUSTER_NAME?=
+CLUSTER_NAME?=julius
 
 ######################################################################
 # User input END #####################################################
@@ -135,10 +135,3 @@ uninstall-helm-chart:
 
 configure: 
 	echo "✅ Configuration complete"
-
-uninstall:
-	helm delete argocd --namespace argocd || true
-	kubectl delete -f argocd-secret.yaml || true
-	aws ssm delete-parameter --name="/okctl/$(CLUSTER_NAME)/argocd/secret-key" || true
-	aws ssm delete-parameter --name="/okctl/$(CLUSTER_NAME)/argocd/client-secret" || true
-	aws cloudformation delete-stack --stack-name okctl-identitypoolclient-${CLUSTER_NAME}-argocd || true
