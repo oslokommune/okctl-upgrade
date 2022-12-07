@@ -9,9 +9,9 @@ Outputs:
 Resources:
   PublicCertificate:
     Properties:
-      DomainName: grafana.${CLUSTER_NAME}.oslo.systems
+      DomainName: argocd.${CLUSTER_NAME}.oslo.systems
       DomainValidationOptions:
-      - DomainName: grafana.${CLUSTER_NAME}.oslo.systems
+      - DomainName: argocd.${CLUSTER_NAME}.oslo.systems
         HostedZoneId: ${HOSTED_ZONE_ID}
       ValidationMethod: DNS
     Type: AWS::CertificateManager::Certificate
