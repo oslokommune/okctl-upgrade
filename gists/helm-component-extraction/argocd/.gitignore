@@ -1,2 +1,5 @@
 *.orig
-values.yaml
+
+/values.yaml
+/argocd-secret.yaml
+/cfn-argocd-client.yaml
