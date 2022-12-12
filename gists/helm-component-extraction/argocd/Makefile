@@ -133,5 +133,8 @@ uninstall-helm-chart:
 # User facing            #############################################
 ######################################################################
 
-configure: 
-	echo "✅ Configuration complete"
+applications-snapshot:
+	kubectl -n argocd get applications -o yaml > applications.yaml
+
+install-applications-snapshot:
+	kubectl apply -f applications.yaml
