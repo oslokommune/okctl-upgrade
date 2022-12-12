@@ -132,7 +132,41 @@ uninstall-helm-chart:
 	kubectl delete -f namespace.yaml
 
 ######################################################################
-# User facing            #############################################
+# Repository deploy key ##############################################
+######################################################################
+
+deploy-key:
+	ssh-keygen -t ed25519 -C "okctl-$(CLUSTER_NAME)-argocd" -f deploy-key -N ""
+
+deploy-key-secret: base-data base-data-test
+	$(eval REPOSITORY_NAME := $(shell basename -s .git `git config --get remote.origin.url`))
+	cat templates/argocd-repository-secret.yaml | \
+		CLUSTER_NAME=$(CLUSTER_NAME) \
+		REPOSITORY_NAME=$(REPOSITORY_NAME) \
+		envsubst > deploy-key-secret.yaml
+
+configure-deploy-key: deploy-key deploy-key-secret
+	echo "✅ Configuring deploy key complete"
+
+install-deploy-key:
+	$(eval REPOSITORY_NAME := $(shell basename -s .git `git config --get remote.origin.url`))
+	@aws ssm put-parameter --name="/okctl/$(CLUSTER_NAME)/argocd/deploy-key" --value=file://deploy-key --type SecureString --overwrite > /dev/null
+	rm deploy-key
+	kubectl apply -f deploy-key-secret.yaml
+	@curl \
+		-X POST \
+		-H "Accept: application/vnd.github+json" \
+		-H "Authorization: Bearer ${GITHUB_TOKEN}"\
+		-H "X-GitHub-Api-Version: 2022-11-28" \
+		"https://api.github.com/repos/oslokommune/$(REPOSITORY_NAME)/keys" \
+			-d "{\"title\":\"okctl-iac-$(CLUSTER_NAME)\",\"key\":\"`cat deploy-key.pub`\",\"read_only\":false}"
+
+uninstall-deploy-key:
+	kubectl delete -f deploy-key-secret.yaml
+	aws ssm delete-parameter --name="/okctl/$(CLUSTER_NAME)/argocd/deploy-key" > /dev/null
+
+######################################################################
+# Existing ArgoCD Applications #######################################
 ######################################################################
 
 applications-snapshot:
