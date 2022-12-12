@@ -44,6 +44,8 @@ install-cognito-client: cognito-client-data cognito-client-data-test
 	aws cloudformation deploy \
 		--template-file cfn-argocd-client.yaml \
 		--stack-name okctl-identitypoolclient-${CLUSTER_NAME}-argocd
+
+install-cognito-parameters: cognito-client-data cognito-client-data-test
 	$(eval CLIENT_ID := $(shell aws cognito-idp list-user-pool-clients --user-pool-id $(USER_POOL_ID) | yq '.UserPoolClients[] | select(.ClientName == "okctl-$(CLUSTER_NAME)-argocd").ClientId'))
 	$(eval CLIENT_SECRET := $(shell aws cognito-idp describe-user-pool-client --user-pool-id=$(USER_POOL_ID) --client-id=$(CLIENT_ID) | jq '.UserPoolClient.ClientSecret'))
 	@aws ssm put-parameter --name="/okctl/$(CLUSTER_NAME)/argocd/client-secret" --value="$(CLIENT_SECRET)" --type SecureString --overwrite | cat
