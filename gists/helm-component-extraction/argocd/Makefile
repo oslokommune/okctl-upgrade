@@ -115,7 +115,7 @@ argocd-secret.yaml: argocd-data argocd-data-test
 		envsubst > argocd-secret.yaml
 
 configure-helm-chart: argocd-data namespace.yaml values.yaml argocd-secret.yaml
-	echo "✅ Configuring helm chart complete"
+	@echo "✅ Configuring helm chart complete"
 
 install-helm-chart:
 	@test -f "namespace.yaml" || (echo "namespace.yaml does not exist. Run 'make configure'"; exit 1)
@@ -146,7 +146,7 @@ deploy-key-secret: base-data base-data-test
 		envsubst > deploy-key-secret.yaml
 
 configure-deploy-key: deploy-key deploy-key-secret
-	echo "✅ Configuring deploy key complete"
+	@echo "✅ Configuring deploy key complete"
 
 install-deploy-key:
 	$(eval REPOSITORY_NAME := $(shell basename -s .git `git config --get remote.origin.url`))
