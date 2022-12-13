@@ -1,7 +1,1 @@
 *.orig
-
-/values.yaml
-/argocd-secret.yaml
-/cfn-argocd-client.yaml
-/cfn-argocd-certificate.yaml
-/namespace.yaml
