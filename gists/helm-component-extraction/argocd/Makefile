@@ -4,7 +4,7 @@
 
 # Use `aws eks list-clusters` to get the cluster name
 # Example: CLUSTER_NAME=kjoremiljo
-CLUSTER_NAME?=julius
+CLUSTER_NAME?=
 
 ######################################################################
 # User input END #####################################################
