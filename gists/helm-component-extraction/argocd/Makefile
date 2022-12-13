@@ -150,7 +150,7 @@ configure-deploy-key: deploy-key deploy-key-secret
 
 install-deploy-key:
 	$(eval REPOSITORY_NAME := $(shell basename -s .git `git config --get remote.origin.url`))
-	@aws ssm put-parameter --name="/okctl/$(CLUSTER_NAME)/argocd/deploy-key" --value=file://deploy-key --type SecureString --overwrite > /dev/null
+	aws ssm put-parameter --name="/okctl/$(CLUSTER_NAME)/github/deploykeys/oslokommune/$(REPOSITORY_NAME)/privatekey" --value=file://deploy-key --type SecureString --overwrite > /dev/null
 	rm deploy-key
 	kubectl apply -f deploy-key-secret.yaml
 	@curl \
