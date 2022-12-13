@@ -170,7 +170,13 @@ uninstall-deploy-key:
 ######################################################################
 
 applications-snapshot:
-	kubectl -n argocd get applications -o yaml > applications.yaml
+	kubectl -n argocd get applications -o yaml \
+		| yq '.items[] |= del(.status)' \
+		| yq '.items[] |= del(.metadata.annotations)' \
+		| yq '.items[] |= del(.metadata.creationTimestamp)' \
+		| yq '.items[] |= del(.metadata.generation)' \
+		| yq '.items[] |= del(.metadata.resourceVersion)' \
+		| yq '.items[] |= del(.metadata.uid)' > applications-snapshot.yaml
 
 install-applications-snapshot:
-	kubectl apply -f applications.yaml
+	kubectl apply -f applications-snapshot.yaml
