@@ -127,9 +127,9 @@ install-helm-chart:
 	helm install --namespace argocd argocd argo/argo-cd --version 3.26.12 --values values.yaml 
 
 uninstall-helm-chart:
-	helm uninstall --namespace argocd argocd
-	kubectl delete -f argocd-secret.yaml
-	kubectl delete -f namespace.yaml
+	helm uninstall --namespace argocd argocd || true
+	kubectl delete -f argocd-secret.yaml || true
+	kubectl delete -f namespace.yaml || true
 
 ######################################################################
 # Repository deploy key ##############################################
@@ -162,8 +162,8 @@ install-deploy-key:
 			-d "{\"title\":\"okctl-iac-$(CLUSTER_NAME)\",\"key\":\"`cat deploy-key.pub`\",\"read_only\":false}"
 
 uninstall-deploy-key:
-	kubectl delete -f deploy-key-secret.yaml
-	aws ssm delete-parameter --name="/okctl/$(CLUSTER_NAME)/argocd/deploy-key" > /dev/null
+	kubectl delete -f deploy-key-secret.yaml || true
+	aws ssm delete-parameter --name="/okctl/$(CLUSTER_NAME)/argocd/deploy-key" > /dev/null || true
 
 ######################################################################
 # Existing ArgoCD Applications #######################################
