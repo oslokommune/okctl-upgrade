@@ -6,26 +6,36 @@
 | ---------------------------------------------------------------     | --------   | ----------- |
 | [source](https://artifacthub.io/packages/helm/argo/argo-cd/3.26.12) | `v3.26.12` | `v2.1.7`    |
 
-## Prerequisites
+## Preparation
 
 ### Log into AWS
 
 1. Export the `AWS_PROFILE` variable with the relevant profile name.
-    ```bash
-		export AWS_PROFILE=your-profile-name
-		```
+    ```shell
+    export AWS_PROFILE=your-profile-name
+    ```
 2. Log in to the AWS account with `aws sso login`
+3. Verify that you are logged in by running `aws s3 ls`
 
 ### Log into okctl
 
 1. Run `okctl venv -c <path to relevant cluster.yaml>` to log into the okctl cluster.
+2. Verify that you are logged in by running `kubectl get pods -A`
 
-## Backup existing applications
+### Setup a [Github Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token)
+
+1. Generate a fine grained PAT with `administration read/write permissions` for your IAC repository
+2. Export the token as an environment variable
+    ```shell
+    export GITHUB_TOKEN=your-token
+    ```
+
+### Backup existing applications
 
 1. Run `make applications-snapshot` to backup the existing applications.
 2. Verify that there is an `applications.yaml` file in the current directory and that it contains the relevant YAML
 
-## Uninstall okctl provisioned ArgoCD
+### Uninstall okctl provisioned ArgoCD
 
 1. Edit the relevant `cluster.yaml` file and set `integrations.argocd` to `false`. If all integrations are commented
    out showing default values you need to uncomment the entire `integrations` section to avoid nil references.
@@ -33,11 +43,12 @@
 
 ## Installation
 
-The installation consists of three parts:
+The installation consists of the following parts:
 
 1. Setup a Cognito user pool client
-2. Setup a TLS certificate
+2. Setup an SSL certificate
 3. Install the Helm chart
+4. Setup a [deploy key](https://docs.github.com/en/developers/overview/managing-deploy-keys#deploy-keys) for the repository
 
 ### Initial
 
@@ -75,4 +86,3 @@ The installation consists of three parts:
     in `application.yaml` to the desired version. Then run `make install` to install the new version. N.B.: The required
 		values are not guaranteed to be the same between versions, so pay attention to the changelog in the chart link above.
 
-Github fine grained PAT must have administration read/write 
