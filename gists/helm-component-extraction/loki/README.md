@@ -12,8 +12,8 @@
 
 1. Export the `AWS_PROFILE` variable with the relevant profile name.
     ```bash
-		export AWS_PROFILE=your-profile-name
-		```
+    export AWS_PROFILE=your-profile-name
+    ```
 2. Log in to the AWS account with `aws sso login`
 
 ### Log into okctl
