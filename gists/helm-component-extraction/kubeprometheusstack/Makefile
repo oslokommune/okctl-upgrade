@@ -75,6 +75,12 @@ cfn-cloudwatch-datasource.yaml: base-data-test
 		CLUSTER_NAME=$(CLUSTER_NAME) \
 		envsubst > cfn-cloudwatch-datasource.yaml
 
+install-div:
+	@test -f "cfn-cloudwatch-datasource.yaml" || (echo "cfn-cloudwatch-datasource.yaml does not exist. Run 'make configure'"; exit 1)
+	aws cloudformation deploy \
+		--template-file cfn-cloudwatch-datasource.yaml \
+	  --stack-name okctl-oudwatchdatasource-${CLUSTER_NAME}
+
 ######################################################################
 # Helm chart #########################################################
 ######################################################################
