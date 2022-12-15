@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  grafanaClientID:
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-grafanaClientID
+    Value:
+      Ref: UserPoolClientgrafana
+Resources:
+  UserPoolClientgrafana:
+    Properties:
+      AllowedOAuthFlows:
+      - code
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthScopes:
+      - email
+      - profile
+      - openid
+      CallbackURLs:
+      - https://grafana.${CLUSTER_NAME}.oslo.systems/login/generic_oauth
+      ClientName: okctl-${CLUSTER_NAME}-grafana
+      DefaultRedirectURI: https://grafana.${CLUSTER_NAME}.oslo.systems/login/generic_oauth
+      ExplicitAuthFlows:
+      - ALLOW_USER_SRP_AUTH
+      - ALLOW_CUSTOM_AUTH
+      - ALLOW_REFRESH_TOKEN_AUTH
+      - ALLOW_USER_PASSWORD_AUTH
+      GenerateSecret: true
+      PreventUserExistenceErrors: ENABLED
+      RefreshTokenValidity: 30
+      SupportedIdentityProviders:
+      - COGNITO
+      UserPoolId: ${USER_POOL_ID}
+    Type: AWS::Cognito::UserPoolClient
