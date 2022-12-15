@@ -67,6 +67,15 @@ install-certificate: certificate-data certificate-data-test
 	  --stack-name okctl-certificate-${CLUSTER_NAME}-grafana-${CLUSTER_NAME}-oslo-systems
 
 ######################################################################
+# Div ################################################################
+######################################################################
+
+cfn-cloudwatch-datasource.yaml: base-data-test
+	cat templates/cfn-cloudwatch-datasource.yaml | \
+		CLUSTER_NAME=$(CLUSTER_NAME) \
+		envsubst > cfn-cloudwatch-datasource.yaml
+
+######################################################################
 # Helm chart #########################################################
 ######################################################################
 
