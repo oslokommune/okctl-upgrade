@@ -75,11 +75,58 @@ cfn-cloudwatch-datasource.yaml: base-data-test
 		CLUSTER_NAME=$(CLUSTER_NAME) \
 		envsubst > cfn-cloudwatch-datasource.yaml
 
-install-div:
-	@test -f "cfn-cloudwatch-datasource.yaml" || (echo "cfn-cloudwatch-datasource.yaml does not exist. Run 'make configure'"; exit 1)
+install-cloudwatch-datasource:
+	@test -f "cfn-cloudwatch-datasource.yaml" || (echo "cfn-cloudwatch-datasource.yaml does not exist. Run 'make configure-dependencies'"; exit 1)
 	aws cloudformation deploy \
+		--capabilities CAPABILITY_NAMED_IAM \
 		--template-file cfn-cloudwatch-datasource.yaml \
-	  --stack-name okctl-oudwatchdatasource-${CLUSTER_NAME}
+		--stack-name okctl-cloudwatchdatasource-${CLUSTER_NAME}
+
+cm-grafana-notifiers.yaml:
+	cp templates/cm-grafana-notifiers.yaml cm-grafana-notifiers.yaml
+
+install-grafana-notifiers:
+	@test -f "cm-grafana-notifiers.yaml" || (echo "cm-grafana-notifiers.yaml does not exist. Run 'make configure-dependencies'"; exit 1)
+	kubectl apply -f cm-grafana-notifiers.yaml
+
+ext-secret.yaml: base-data-test
+	cat templates/ext-secret.yaml | \
+		CLUSTER_NAME=$(CLUSTER_NAME) \
+		envsubst > ext-secret.yaml
+
+install-ext-secret:
+	@test -f "ext-secret.yaml" || (echo "ext-secret.yaml does not exist. Run 'make configure-dependencies'"; exit 1)
+	kubectl apply -f ext-secret.yaml
+
+configure-dependencies: cfn-cloudwatch-datasource.yaml cm-grafana-notifiers.yaml ext-secret.yaml
+	@echo "✅ Configuring Div complete"
+
+install-service-user:
+	eksctl create iamserviceaccount \
+		--cluster $(CLUSTER_NAME) \
+		--name "cloudwatch-datasource" \
+		--namespace "monitoring" \
+		--attach-policy-arn $$(aws iam list-policies | jq -r '.Policies[] | select(.PolicyName == "okctl-$(CLUSTER_NAME)-CloudwatchDatasourceServiceAccountPolicy").Arn') \
+		--override-existing-serviceaccounts \
+		--approve
+
+install-secret-parameters:
+	$(eval USER_POOL_ID := $(shell aws cognito-idp list-user-pools --max-results 10 | yq '.UserPools[] | select(.Name == "okctl-$(CLUSTER_NAME)-userpool").Id'))
+	$(eval CLIENT_ID := $(shell aws cognito-idp list-user-pool-clients --user-pool-id $(USER_POOL_ID) | yq '.UserPoolClients[] | select(.ClientName == "okctl-$(CLUSTER_NAME)-grafana").ClientId'))
+	$(eval CLIENT_SECRET := $(shell aws cognito-idp describe-user-pool-client --user-pool-id=$(USER_POOL_ID) --client-id=$(CLIENT_ID) | jq '.UserPoolClient.ClientSecret'))
+	@aws ssm put-parameter --name="/okctl/$(CLUSTER_NAME)/client-secret" --value="$(CLIENT_SECRET)" --type SecureString --overwrite > /dev/null
+	@aws ssm put-parameter --name="/okctl/$(CLUSTER_NAME)/secret-key" --value="$$(uuidgen)" --type SecureString --overwrite > /dev/null
+	@aws ssm put-parameter --name="/okctl/$(CLUSTER_NAME)/admin-user" --value="$$(uuidgen)" --type SecureString --overwrite > /dev/null
+	@aws ssm put-parameter --name="/okctl/$(CLUSTER_NAME)/admin-pass" --value="$$(uuidgen)" --type SecureString --overwrite > /dev/null
+
+install-dependencies: install-cloudwatch-datasource install-grafana-notifiers install-service-user install-secret-parameters install-ext-secret
+	kubectl -n monitoring apply -f cm-grafana-notifiers.yaml
+
+data-snapshot:
+	kubectl -n monitoring cp -c prometheus prometheus-kube-prometheus-stack-prometheus-0:/prometheus snapshot-$(shell date +%d%m%Y)
+
+install-data-snapshot:
+	kubectl -n monitoring cp -c prometheus snapshot-$(shell date +%d%m%Y) prometheus-kube-prometheus-stack-prometheus-0:/prometheus
 
 ######################################################################
 # Helm chart #########################################################
