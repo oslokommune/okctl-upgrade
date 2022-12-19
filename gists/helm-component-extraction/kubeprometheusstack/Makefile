@@ -98,6 +98,9 @@ install-ext-secret:
 	@test -f "ext-secret.yaml" || (echo "ext-secret.yaml does not exist. Run 'make configure-dependencies'"; exit 1)
 	kubectl apply -f ext-secret.yaml
 
+install-prometheus-data:
+	sh scripts/restore_snapshot.sh $(shell ls | grep snapshot-)
+
 configure-dependencies: cfn-cloudwatch-datasource.yaml cm-grafana-notifiers.yaml ext-secret.yaml
 	@echo "✅ Configuring Div complete"
 
