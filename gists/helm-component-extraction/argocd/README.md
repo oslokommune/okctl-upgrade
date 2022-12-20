@@ -33,7 +33,7 @@
 ### Backup existing applications
 
 1. Run `make applications-snapshot` to backup the existing applications.
-2. Verify that there is an `applications.yaml` file in the current directory and that it contains the relevant YAML
+2. Verify that there is an `applications-snapshot.yaml` file in the current directory and that it contains the relevant YAML
 
 ### Uninstall okctl provisioned ArgoCD
 
@@ -83,6 +83,6 @@ The installation consists of the following parts:
 ## FAQ
 
 - **How do I use a different chart version?** To use a different chart version, change the `spec.source.targetRevision` field
-    in `application.yaml` to the desired version. Then run `make install` to install the new version. N.B.: The required
+    in `applications-snapshot.yaml` to the desired version. Then run `make install` to install the new version. N.B.: The required
 		values are not guaranteed to be the same between versions, so pay attention to the changelog in the chart link above.
 
