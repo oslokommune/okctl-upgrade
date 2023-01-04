@@ -22,6 +22,10 @@
 1. Run `okctl venv -c <path to relevant cluster.yaml>` to log into the okctl cluster.
 2. Verify that you are logged in by running `kubectl get pods -A`
 
+### Backup existing data
+
+1. Run `make data-snapshot` to backup the existing Prometheus data.
+
 ### Uninstall okctl provisioned kube-prometheus-stack
 
 1. Edit the relevant `cluster.yaml` file and set `integrations.kubePromStack` to `false`. If all integrations are commented
@@ -30,7 +34,47 @@
 
 ## Installation
 
+### Overview
+
 The installation consists of the following parts:
+
+1. Set up a Cognito client for Grafana authentication
+2. Set up a SSL certificate for Grafana
+3. Set up various dependencies
+4. Install the kube-prometheus-stack Helm chart
+5. Restore data snapshot
+
+### Set up a Cognito client for Grafana authentication
+
+1. Run `make configure-cognito-client` to prepare necessary Cognito client configuration
+2. Run `make install-cognito-client` to install the client
+
+### Set up a SSL certificate for Grafana
+
+1. Run `make configure-certificate` to prepare necessary certificate configuration
+2. Run `make install-certificate` to generate the certificate
+
+### Set up various dependencies
+
+1. Run `make configure-dependencies` to prepare necessary dependency configuration
+2. Run `make install-dependencies` to install the dependencies
+
+### Install helm chart
+
+1. Run `make configure-helm-chart` to prepare necessary Helm chart configuration
+2. Run `make install-helm-chart` to install the Helm chart
+
+### Restore data snapshot
+
+To restore the backed up data, run the restore script:
+
+```shell
+# usage
+scripts/restore_snapshot.sh <path to snapshot>
+
+# example
+scripts/restore_snapshot.sh snapshot-24122022
+```
 
 ## FAQ
 
