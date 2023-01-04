@@ -26,16 +26,16 @@ cognito-client-data: base-data
 cognito-client-data-test: base-data-test
 	@test -n "$(USER_POOL_ID)" || (echo "Unable to acquire user pool ID"; exit 1)
 
-cfn-cognito-client.yaml: base-data cognito-client-data cognito-client-data-test
+cfn-cognito-client.yaml: cognito-client-data cognito-client-data-test
 	cat templates/cfn-cognito-client.yaml | \
 		CLUSTER_NAME=$(CLUSTER_NAME) \
 		USER_POOL_ID=$(USER_POOL_ID) \
 		envsubst > cfn-cognito-client.yaml
 
-configure-cognito-client: cfn-cognito-client.yaml
+configure-cognito-client: base-data cfn-cognito-client.yaml
 	@echo "✅ Configuring Cognito Client complete"
 
-install-cognito-client:
+install-cognito-client: base-data
 	@test -f "cfn-cognito-client.yaml" || (echo "cfn-cognito-client.yaml does not exist. Run 'make configure'"; exit 1)
 	aws cloudformation deploy \
 		--template-file cfn-cognito-client.yaml \
@@ -75,7 +75,7 @@ cfn-cloudwatch-datasource.yaml: base-data-test
 		CLUSTER_NAME=$(CLUSTER_NAME) \
 		envsubst > cfn-cloudwatch-datasource.yaml
 
-install-cloudwatch-datasource:
+install-cloudwatch-datasource: base-data-test
 	@test -f "cfn-cloudwatch-datasource.yaml" || (echo "cfn-cloudwatch-datasource.yaml does not exist. Run 'make configure-dependencies'"; exit 1)
 	aws cloudformation deploy \
 		--capabilities CAPABILITY_NAMED_IAM \
@@ -98,10 +98,10 @@ install-ext-secret:
 	@test -f "ext-secret.yaml" || (echo "ext-secret.yaml does not exist. Run 'make configure-dependencies'"; exit 1)
 	kubectl apply -f ext-secret.yaml
 
-configure-dependencies: cfn-cloudwatch-datasource.yaml cm-grafana-notifiers.yaml ext-secret.yaml
+configure-dependencies: base-data cfn-cloudwatch-datasource.yaml cm-grafana-notifiers.yaml ext-secret.yaml
 	@echo "✅ Configuring Div complete"
 
-install-service-user:
+install-service-user: base-data-test
 	eksctl create iamserviceaccount \
 		--cluster $(CLUSTER_NAME) \
 		--name "cloudwatch-datasource" \
@@ -110,7 +110,7 @@ install-service-user:
 		--override-existing-serviceaccounts \
 		--approve
 
-install-secret-parameters:
+install-secret-parameters: base-data base-data-test
 	$(eval USER_POOL_ID := $(shell aws cognito-idp list-user-pools --max-results 10 | yq '.UserPools[] | select(.Name == "okctl-$(CLUSTER_NAME)-userpool").Id'))
 	$(eval CLIENT_ID := $(shell aws cognito-idp list-user-pool-clients --user-pool-id $(USER_POOL_ID) | yq '.UserPoolClients[] | select(.ClientName == "okctl-$(CLUSTER_NAME)-grafana").ClientId'))
 	$(eval CLIENT_SECRET := $(shell aws cognito-idp describe-user-pool-client --user-pool-id=$(USER_POOL_ID) --client-id=$(CLIENT_ID) | jq '.UserPoolClient.ClientSecret'))
@@ -139,7 +139,7 @@ chart-data-test: base-data-test
 	@test -n "$(USER_POOL_ID)" || (echo "Unable to acquire user pool ID"; exit 1)
 	@test -n "$(CLIENT_ID)" || (echo "Unable to acquire Cognito client ID"; exit 1)
 
-values.yaml: chart-data chart-data-test
+values.yaml: chart-data-test
 	cat templates/values.yaml | \
 		CLUSTER_NAME=$(CLUSTER_NAME) \
 		AWS_REGION=$$(aws configure get region) \
@@ -147,7 +147,7 @@ values.yaml: chart-data chart-data-test
 		CERTIFICATE_ARN=$(CERTIFICATE_ARN) \
 		envsubst > values.yaml
 
-configure-helm-chart: values.yaml
+configure-helm-chart: chart-data values.yaml
 	@echo "✅ Configuring Helm chart complete"
 
 install-helm-chart:
