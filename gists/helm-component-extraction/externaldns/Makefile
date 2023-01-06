@@ -93,7 +93,7 @@ uninstall-kubernetes-manifests:
 configure: external-dns-data deployment.yaml cfn-service_account_policy.yaml clusterrole.yaml clusterrolebinding.yaml
 	@echo "✅ Configuring ExternalDNS complete"
 
-install: base-data install-service-account-policy install-service-user install-kubernetes-manifests
+install: external-dns-data install-service-account-policy install-service-user install-kubernetes-manifests
 	@echo "✅ Installing ExternalDNS complete"
 
 uninstall: base-data uninstall-kubernetes-manifests uninstall-service-user
