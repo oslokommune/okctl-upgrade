@@ -10,7 +10,7 @@ CLUSTER_NAME?=
 # User input END #####################################################
 ######################################################################
 
-SERVICE_USER_NAME=external-dns-ext
+SERVICEUSER_NAME=external-dns-ext
 
 base-data:
 	$(eval AWS_ACCOUNT_ID := $(shell aws sts get-caller-identity --query Account --output text))
@@ -46,7 +46,7 @@ uninstall-service-account-policy: base-data base-data-test
 		--stack-name okctl-externaldns-$(CLUSTER_NAME)
 
 uninstall-service-user-role: base-data base-data-test
-	$(eval ROLE_ARN := $(shell eksctl get iamserviceaccount --cluster julius --namespace=kube-system -o json | jq -r '.[] | select(.metadata.name == "$(SERVICE_USER_NAME)").status.roleARN'))
+	$(eval ROLE_ARN := $(shell eksctl get iamserviceaccount --cluster julius --namespace=kube-system -o json | jq -r '.[] | select(.metadata.name == "$(SERVICEUSER_NAME)").status.roleARN'))
 	$(eval ROLE_NAME := $(shell echo $(ROLE_ARN) | cut -d '/' -f2))
 	$(eval POLICY_ARN := $(shell aws iam list-attached-role-policies --role-name $(ROLE_NAME) | jq -r '.AttachedPolicies[].PolicyArn'))
 	aws iam detach-role-policy \
@@ -57,7 +57,7 @@ uninstall-service-user-role: base-data base-data-test
 install-service-user: base-data-test
 	eksctl create iamserviceaccount \
 		--cluster $(CLUSTER_NAME) \
-		--name "$(SERVICE_USER_NAME)" \
+		--name "$(SERVICEUSER_NAME)" \
 		--namespace "kube-system" \
 		--attach-policy-arn $$(aws iam list-policies | jq -r '.Policies[] | select(.PolicyName == "okctl-$(CLUSTER_NAME)-ExternalDNSServiceAccountPolicy").Arn') \
 		--override-existing-serviceaccounts \
@@ -70,12 +70,15 @@ clusterrole.yaml:
 	cat templates/clusterrole.yaml > clusterrole.yaml
 
 clusterrolebinding.yaml:
-	cat templates/clusterrolebinding.yaml > clusterrolebinding.yaml
+	cat templates/clusterrolebinding.yaml | \
+		SERVICEUSER_NAME=$(SERVICEUSER_NAME) \
+		envsubst > clusterrolebinding.yaml
 
 deployment.yaml: external-dns-data-test
 	cat templates/deployment.yaml | \
 		CLUSTER_NAME=$(CLUSTER_NAME) \
 		HOSTED_ZONE_ID=$(HOSTED_ZONE_ID) \
+		SERVICEUSER_NAME=$(SERVICEUSER_NAME) \
 		envsubst > deployment.yaml
 
 install-kubernetes-manifests: clusterrole.yaml clusterrolebinding.yaml deployment.yaml
