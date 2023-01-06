@@ -76,6 +76,8 @@ scripts/restore_snapshot.sh <path to snapshot>
 scripts/restore_snapshot.sh snapshot-24122022
 ```
 
+Remember to change the DRY_RUN variable to `none` if you want to actually restore the data.
+
 ## FAQ
 
 - **How do I use a different chart version?** To use a different chart version, change the `spec.source.targetRevision` field
