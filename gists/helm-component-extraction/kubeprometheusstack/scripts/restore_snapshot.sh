@@ -28,7 +28,7 @@ createDebuggerPod() {
     if [[ ${DRY_RUN} == "none" ]]; then
         kubectl wait --namespace=${NS} --for=condition=Ready pod -l app=debugger --timeout=180s # copiloted, verify
     else
-        echo "🕐 Pretending to be waiting.."
+        sleep 1
     fi
 }
 
@@ -42,7 +42,7 @@ cleanOutPrometheusData() {
     if [[ ${DRY_RUN} == "none" ]]; then
         kubectl exec --namespace=${NS} -it debugger -- rm -rf /prometheus/prometheus-db
     else
-        echo "🧹 Pretending to be cleaning.."
+        sleep 1
     fi
 }
 
@@ -51,7 +51,7 @@ restoreSnapshot() {
     if [[ ${DRY_RUN} == "none" ]]; then
         kubectl cp --namespace=${NS} ${SNAPSHOT_DIRECTORY_NAME} debugger:/prometheus/prometheus-db
     else
-        echo "📦 Pretending to be copying.."
+        sleep 1
     fi
 }
 
