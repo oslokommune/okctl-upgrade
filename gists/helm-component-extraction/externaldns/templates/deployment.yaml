@@ -43,6 +43,6 @@ spec:
       securityContext:
         fsGroup: 65534
         runAsNonRoot: false
-      serviceAccount: external-dns
-      serviceAccountName: external-dns
+      serviceAccount: external-dns-ext
+      serviceAccountName: external-dns-ext
       terminationGracePeriodSeconds: 30

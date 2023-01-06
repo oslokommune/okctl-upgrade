@@ -10,6 +10,8 @@ CLUSTER_NAME?=
 # User input END #####################################################
 ######################################################################
 
+SERVICE_USER_NAME=external-dns-ext
+
 base-data:
 	$(eval AWS_ACCOUNT_ID := $(shell aws sts get-caller-identity --query Account --output text))
 	$(eval AWS_REGION := $(shell aws configure get region))
@@ -44,18 +46,18 @@ uninstall-service-account-policy: base-data base-data-test
 		--stack-name okctl-externaldns-$(CLUSTER_NAME)
 
 uninstall-service-user-role: base-data base-data-test
-	$(eval ROLE_ARN := $(shell eksctl get iamserviceaccount --cluster julius --namespace=kube-system -o json | jq -r '.[] | select(.metadata.name == "external-dns").status.roleARN'))
+	$(eval ROLE_ARN := $(shell eksctl get iamserviceaccount --cluster julius --namespace=kube-system -o json | jq -r '.[] | select(.metadata.name == "$(SERVICE_USER_NAME)").status.roleARN'))
 	$(eval ROLE_NAME := $(shell echo $(ROLE_ARN) | cut -d '/' -f2))
 	$(eval POLICY_ARN := $(shell aws iam list-attached-role-policies --role-name $(ROLE_NAME) | jq -r '.AttachedPolicies[].PolicyArn'))
 	aws iam detach-role-policy \
 		--role-name $(ROLE_NAME) \
-		--policy-arn $(POLICY_ARN)
-	aws iam delete-role --role-name $(ROLE_NAME)
+		--policy-arn $(POLICY_ARN) || true
+	aws iam delete-role --role-name $(ROLE_NAME) || true
 
 install-service-user: base-data-test
 	eksctl create iamserviceaccount \
 		--cluster $(CLUSTER_NAME) \
-		--name "external-dns" \
+		--name "$(SERVICE_USER_NAME)" \
 		--namespace "kube-system" \
 		--attach-policy-arn $$(aws iam list-policies | jq -r '.Policies[] | select(.PolicyName == "okctl-$(CLUSTER_NAME)-ExternalDNSServiceAccountPolicy").Arn') \
 		--override-existing-serviceaccounts \

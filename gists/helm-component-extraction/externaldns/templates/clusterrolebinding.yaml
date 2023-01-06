@@ -9,5 +9,5 @@ roleRef:
   name: external-dns
 subjects:
 - kind: ServiceAccount
-  name: external-dns
+  name: external-dns-ext
   namespace: kube-system
