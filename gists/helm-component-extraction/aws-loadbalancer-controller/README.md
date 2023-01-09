@@ -40,7 +40,7 @@ See [cloudformation/README.md](cloudformation/README.md) for details.
 ### Install the AWS LoadBalancer Controller
 
 1. Edit the Makefile and set the variable(s) listed in the user input section
-2. Run `make values` to generate the values.yaml file
+2. Run `make configure` to generate the values.yaml file
 3. Run `make install` to install the component
 
 ## FAQ
