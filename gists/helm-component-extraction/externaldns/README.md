@@ -58,7 +58,7 @@ make install
 
 ## FAQ
 
-- **How do I use a different chart version?** To use a different chart version, change the `spec.source.targetRevision` field
-    in `applications-snapshot.yaml` to the desired version. Then run `make install` to install the new version. N.B.: The required
-		values are not guaranteed to be the same between versions, so pay attention to the changelog in the chart link above.
+- **How do I use a different version?** To use a different version, change the `spec.template.spec.containers[].image` field
+    in `deployment.yaml` to the desired version. Then run `make install` to install the new version. N.B.: The required
+    values are not guaranteed to be the same between versions, so pay attention to the changelog in the chart link above.
 
