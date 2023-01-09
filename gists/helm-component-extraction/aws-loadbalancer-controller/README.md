@@ -11,7 +11,7 @@
 ### Dependencies
 
 ❗N.B.: ArgoCD and KubePromStack integrations must be extracted and disabled before extracting the AWS LoadBalancer
-Controller. Is is because the AWS LoadBalancer Controller has provisioned network resources making ArgoCD and Grafana
+Controller. This is because the AWS LoadBalancer Controller has provisioned network resources making ArgoCD and Grafana
 available on the internet.
 
 ### Log into AWS
@@ -19,7 +19,7 @@ available on the internet.
 1. Export the `AWS_PROFILE` variable with the relevant profile name.
     ```bash
 		export AWS_PROFILE=your-profile-name
-		```
+    ```
 2. Log in to the AWS account with `aws sso login`
 
 ### Log into okctl
@@ -47,4 +47,4 @@ See [cloudformation/README.md](cloudformation/README.md) for details.
 
 - **How do I use a different chart version?** To use a different chart version, change the `spec.source.targetRevision` field
     in `application.yaml` to the desired version. Then run `make install` to install the new version. N.B.: The required
-		values are not guaranteed to be the same between versions, so pay attention to the changelog in the chart link above.
+    values are not guaranteed to be the same between versions, so pay attention to the changelog in the chart link above.
