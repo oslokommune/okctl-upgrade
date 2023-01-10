@@ -100,6 +100,7 @@ namespace.yaml:
 
 values.yaml: argocd-data argocd-data-test
 	cat templates/values.yaml | \
+		AWS_REGION=$(AWS_REGION) \
 		CLUSTER_NAME=$(CLUSTER_NAME) \
 		ISSUER_URL=$(ISSUER_URL) \
 		CLIENT_ID=$(CLIENT_ID) \
