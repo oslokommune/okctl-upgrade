@@ -119,7 +119,7 @@ install-secret-parameters: base-data base-data-test
 	@aws ssm put-parameter --name="/okctl/$(CLUSTER_NAME)/admin-user" --value="$$(uuidgen)" --type SecureString --overwrite > /dev/null
 	@aws ssm put-parameter --name="/okctl/$(CLUSTER_NAME)/admin-pass" --value="$$(uuidgen)" --type SecureString --overwrite > /dev/null
 
-install-dependencies: install-cloudwatch-datasource install-grafana-notifiers install-service-user install-secret-parameters install-ext-secret
+install-dependencies: base-data base-data-test install-cloudwatch-datasource install-grafana-notifiers install-service-user install-secret-parameters install-ext-secret
 	kubectl -n monitoring apply -f cm-grafana-notifiers.yaml
 
 data-snapshot:
