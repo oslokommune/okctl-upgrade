@@ -2,7 +2,7 @@
 
 ## Motivation
 
-
+[Slack post](https://oslokommune.slack.com/archives/C02U8HJARLH/p1668410829488739)
 
 ## Recommended extraction order
 
