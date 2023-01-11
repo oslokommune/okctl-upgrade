@@ -4,7 +4,7 @@
 
 | Component                                                                     | Version  |
 | ----------------------------------------------------------------------------- | -------- |
-| [source](https://github.com/kubernetes-sigs/external-dns/releases/tag/v0.7.3) | `0.7.3`  |
+| [source](https://github.com/kubernetes-sigs/external-dns)                     | `0.13.1` |
 
 ## Preparation
 
