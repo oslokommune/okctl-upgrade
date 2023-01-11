@@ -79,6 +79,7 @@ deployment.yaml: external-dns-data-test
 		CLUSTER_NAME=$(CLUSTER_NAME) \
 		HOSTED_ZONE_ID=$(HOSTED_ZONE_ID) \
 		SERVICEUSER_NAME=$(SERVICEUSER_NAME) \
+		AWS_REGION=$(AWS_REGION) \
 		envsubst > deployment.yaml
 
 install-kubernetes-manifests: clusterrole.yaml clusterrolebinding.yaml deployment.yaml
