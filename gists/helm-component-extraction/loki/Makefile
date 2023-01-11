@@ -9,7 +9,13 @@ CLUSTER_NAME?=
 ## User input END           ##
 ##############################
 
-configure:
+datasource.yaml:
+	cp templates/datasource.yaml .
+
+install-datasource:
+	kubectl apply -f datasource.yaml
+
+configure: datasource.yaml
 	@test -n "$(AWS_PROFILE)" || (echo "Missing AWS_PROFILE environment variable. export AWS_PROFILE with the relevant profile" && exit 1)
 	@test -n "$(CLUSTER_NAME)" || (echo "Missing CLUSTER_NAME value. Edit the Makefile and configure the user input" && exit 1)
 	cat templates/values.yaml | \
@@ -17,7 +23,7 @@ configure:
 		AWS_REGION=$$(aws configure get region) \
 		envsubst > values.yaml
 
-install:
+install: install-datasource
 	@test -f values.yaml || (echo "Missing values.yaml file. Run 'make configure' first" && exit 1)
 	yq \
 		'.spec.source.helm.values = load_str("values.yaml")' \
