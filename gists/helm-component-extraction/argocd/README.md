@@ -4,7 +4,7 @@
 
 | Chart                                                               | Version    | App version |
 | ---------------------------------------------------------------     | --------   | ----------- |
-| [source](https://artifacthub.io/packages/helm/argo/argo-cd/3.26.12) | `v3.26.12` | `v2.1.7`    |
+| [source](https://artifacthub.io/packages/helm/argo/argo-cd)         | `v5.17.1`  | `v2.5.6`    |
 
 ## Preparation
 
