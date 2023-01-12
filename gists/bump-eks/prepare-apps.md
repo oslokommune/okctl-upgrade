@@ -1,8 +1,8 @@
 # Prepare applications
 
-Your applications need one of the following configurations.
+Do all the steps prefixed with "Step:".
 
-## Remove potential old Okctl configurations
+## Step: Remove potential old Okctl configurations
 
 ### Remove dnsPolicy
 
@@ -40,8 +40,11 @@ If the latter is the case, you need to update your security group policies to in
 aws eks describe-cluster --name my-cluster-dev --query cluster.resourcesVpcConfig.clusterSecurityGroupId
 ```
 
+## Step: Prepare apps for downtime
 
-## Alternative 1: No downtime
+Your applications need one of the following configurations.
+
+### Alternative 1: No downtime
 
 * Deployment: Use `RollingUpdate` strategy
 * Deployment: Use `replicas: 2` or more
@@ -64,7 +67,7 @@ spec:
       maxUnavailable: 0
 ```
 
-## Alternative 2: For stateful applications that must not co-exist
+### Alternative 2: For stateful applications that must not co-exist
 
 * Deployment: Use `Recreate` strategy
 * Deployment: Use `replicas: 1`
@@ -81,7 +84,7 @@ spec:
     type: Recreate
 ```
 
-## Add node selectors to pods using PVCs
+## Step: Add node selectors to pods using PVCs
 
 Before we can bump nodes, we need to make sure that pods that use volumes (via PVCs), spawn on a node in the same AZ as the
 volumes. If not the pod will not start, as it cannot find the PV.
@@ -136,7 +139,7 @@ spec:
         - name: hello
 ```
 
-## Add a PodDisruptionBudget for every application
+## Step: Add a PodDisruptionBudget for every application
 
 **NOTE** Applications using PVC's cannot use PodDisruptionBudgets - see note in the bottom of this title.
 
@@ -188,7 +191,7 @@ The solution is:
 
 See discussion here: https://stackoverflow.com/a/62216783/915441
 
-## Apply changes
+## Step: Apply changes
 
 Run
 
