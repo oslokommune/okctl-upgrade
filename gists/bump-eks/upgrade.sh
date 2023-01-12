@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-EKSCTL_VERSION="v0.104.0"
+#
+EKSCTL_VERSION="v0.124.0"
 
 #
 # Functions
@@ -481,6 +482,18 @@ else
   run_with_output "$EKSCTL" utils update-kube-proxy --cluster="$CLUSTER_NAME"
 fi
 
+# Because eksctl tils update-kube-proxy is buggy, we need to set image manually.
+# See: https://github.com/weaveworks/eksctl/issues/6027
+# https://docs.aws.amazon.com/eks/latest/userguide/managing-kube-proxy.html
+if [[ $EKS_TARGET_VERSION == "1.22" ]]; then
+  KUBE_PROXY_ADDON_VERSION=v1.22.11-eksbuild.2
+
+  if [[ $DRY_RUN == "false" ]]; then
+    run_with_output "$KUBECTL" set image -n kube-system daemonset/kube-proxy "kube-proxy=602401143452.dkr.ecr.$AWS_REGION.amazonaws.com/eks/kube-proxy:$KUBE_PROXY_ADDON_VERSION"
+  else
+    echo "Would run: $KUBECTL" set image -n kube-system daemonset/kube-proxy "kube-proxy=602401143452.dkr.ecr.$AWS_REGION.amazonaws.com/eks/kube-proxy:$KUBE_PROXY_ADDON_VERSION"
+  fi
+fi
 
 echo
 echo "------------------------------------------------------------------------------------------------------------------------"
