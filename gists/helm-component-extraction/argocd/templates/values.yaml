@@ -1666,7 +1666,7 @@ server:
     # -- Additional ingress paths
     extraPaths:
       - path: /*
-        pathType: Prefix
+        pathType: ImplementationSpecific
         backend:
           service:
             name: ssl-redirect
