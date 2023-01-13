@@ -167,7 +167,7 @@ install-deploy-key: deploy-key-data deploy-key-data-test
 
 uninstall-deploy-key: deploy-key-data deploy-key-data-test
 	kubectl delete -f deploy-key-secret.yaml || true
-	aws ssm delete-parameter --name="/okctl/$(CLUSTER_NAME)/argocd/deploy-key" > /dev/null || true
+	aws ssm delete-parameter --name="/okctl/$(CLUSTER_NAME)/github/deploykeys/oslokommune/$(REPOSITORY_NAME)/privatekey" > /dev/null || true
 
 ######################################################################
 # Existing ArgoCD Applications #######################################
