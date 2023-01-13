@@ -169,6 +169,9 @@ uninstall-deploy-key:
 ######################################################################
 # Existing ArgoCD Applications #######################################
 ######################################################################
+remove-finalizers:
+	cat applications-snapshot.yaml | \
+		yq '.items[] |= del(.metadata.finalizers)' > applications-snapshot-no-finalizers.yaml
 
 applications-snapshot:
 	kubectl -n argocd get applications -o yaml \
