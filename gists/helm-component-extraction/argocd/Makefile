@@ -136,11 +136,15 @@ uninstall-helm-chart:
 # Repository deploy key ##############################################
 ######################################################################
 
-deploy-key:
+deploy-key-data: base-data
+	$(eval REPOSITORY_NAME := $(shell basename -s .git `git config --get remote.origin.url`))
+deploy-key-data-test: base-data-test
+	@test -n "$(REPOSITORY_NAME)" || (echo "Unable to acquire repository name"; exit 1)
+
+deploy-key: deploy-key-data-test
 	ssh-keygen -t ed25519 -C "okctl-$(CLUSTER_NAME)-argocd" -f deploy-key -N ""
 
-deploy-key-secret: base-data base-data-test
-	$(eval REPOSITORY_NAME := $(shell basename -s .git `git config --get remote.origin.url`))
+deploy-key-secret: deploy-key-data-test
 	cat templates/argocd-repository-secret.yaml | \
 		CLUSTER_NAME=$(CLUSTER_NAME) \
 		REPOSITORY_NAME=$(REPOSITORY_NAME) \
@@ -149,8 +153,7 @@ deploy-key-secret: base-data base-data-test
 configure-deploy-key: deploy-key deploy-key-secret
 	@echo "✅ Configuring deploy key complete"
 
-install-deploy-key:
-	$(eval REPOSITORY_NAME := $(shell basename -s .git `git config --get remote.origin.url`))
+install-deploy-key: deploy-key-data deploy-key-data-test
 	aws ssm put-parameter --name="/okctl/$(CLUSTER_NAME)/github/deploykeys/oslokommune/$(REPOSITORY_NAME)/privatekey" --value=file://deploy-key --type SecureString --overwrite > /dev/null
 	rm deploy-key
 	kubectl apply -f deploy-key-secret.yaml
@@ -162,7 +165,7 @@ install-deploy-key:
 		"https://api.github.com/repos/oslokommune/$(REPOSITORY_NAME)/keys" \
 			-d "{\"title\":\"okctl-iac-$(CLUSTER_NAME)\",\"key\":\"`cat deploy-key.pub`\",\"read_only\":false}"
 
-uninstall-deploy-key:
+uninstall-deploy-key: deploy-key-data deploy-key-data-test
 	kubectl delete -f deploy-key-secret.yaml || true
 	aws ssm delete-parameter --name="/okctl/$(CLUSTER_NAME)/argocd/deploy-key" > /dev/null || true
 
