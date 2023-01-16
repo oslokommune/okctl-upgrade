@@ -27,6 +27,8 @@
 1. Edit the relevant `cluster.yaml` file and set `integrations.externalDNS` to `false`. If all integrations are commented
    out showing default values you need to uncomment the entire `integrations` section to avoid nil references.
 2. Run `okctl apply cluster -f cluster.yaml` to apply the changes.
+3. Run `kubectl --namespace=kube-system delete deployments.apps external-dns`. This will delete the deployment and the
+   associated pods.
 
 ## Installation
 
