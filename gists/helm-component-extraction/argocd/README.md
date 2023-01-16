@@ -74,7 +74,8 @@ The installation consists of the following parts:
 ### Setup deploy key
 
 1. Run `make configure-deploy-key` to generate a deploy key.
-2. Run `make install-deploy-key` to install the key that ArgoCD uses to read private repositories
+2. Run `make install-deploy-key-parameters` to store deploy key in SSM.
+3. Run `make install-deploy-key` to install the key that ArgoCD uses to read private repositories
 
 ### Reapply applications
 
