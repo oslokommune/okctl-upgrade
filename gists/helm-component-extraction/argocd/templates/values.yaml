@@ -1433,11 +1433,11 @@ server:
   # -- Resource limits and requests for the Argo CD server
   resources:
     limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
       cpu: 100m
       memory: 128Mi
-    requests:
-      cpu: 50m
-      memory: 64Mi
 
   # -- Configures the server port
   containerPort: 8080
