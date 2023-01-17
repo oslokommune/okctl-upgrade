@@ -8,12 +8,6 @@
 
 ## Prerequisites
 
-### Dependencies
-
-❗N.B.: ArgoCD and KubePromStack integrations must be extracted and disabled before extracting the AWS LoadBalancer
-Controller. This is because the AWS LoadBalancer Controller has provisioned network resources making ArgoCD and Grafana
-available on the internet.
-
 ### Log into AWS
 
 1. Export the `AWS_PROFILE` variable with the relevant profile name.
@@ -26,25 +20,19 @@ available on the internet.
  
 1. Run `okctl venv -c <path to relevant cluster.yaml>` to log into the okctl cluster.
 
-## Uninstall okctl provisioned AWS LoadBalancer Controller
+## Installation or upgrade
 
-1. Edit the relevant `cluster.yaml` file and set `integrations.awsLoadBalancerController` to `false`.
-2. Run `okctl apply cluster -f cluster.yaml` to apply the changes.
+Depending on whether you are installing or upgrading, go to the relevant runbook below.
 
-## Installation
+### Installation
 
-### Prepare Cloudformation stacks
+Choose [INSTALL.md](./INSTALL.md) if you can say yes to all of the following:
+- `integrations.awsLoadBalancerController` is missing or set to `false` in your cluster.yaml
+- You have not installed the AWS LoadBalancer Controller with the Makefile or Helm before
 
-See [cloudformation/README.md](cloudformation/README.md) for details.
+### Upgrading
 
-### Install the AWS LoadBalancer Controller
+Choose [UPGRADE.md](./UPGRADE.md) if you can say yes to all of the following:
+- You've uninstalled the Okctl version 
+- You've installed the Helm version of the AWS LoadBalancer Controller
 
-1. Edit the Makefile and set the variable(s) listed in the user input section
-2. Run `make configure` to generate the values.yaml file
-3. Run `make install` to install the component
-
-## FAQ
-
-- **How do I use a different chart version?** To use a different chart version, change the `spec.source.targetRevision` field
-    in `application.yaml` to the desired version. Then run `make install` to install the new version. N.B.: The required
-    values are not guaranteed to be the same between versions, so pay attention to the changelog in the chart link above.
