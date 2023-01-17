@@ -6,6 +6,10 @@
 | ---------------------------------------------------------------     | --------   | ----------- |
 | [source](https://artifacthub.io/packages/helm/argo/argo-cd)         | `v5.17.1`  | `v2.5.6`    |
 
+## Upgrading
+
+Follow the instructions in [UPGRADE.md](/UPGRADE.md) to upgrade the chart.
+
 ## Preparation
 
 ### Log into AWS
