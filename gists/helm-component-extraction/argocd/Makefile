@@ -130,6 +130,7 @@ install-helm-chart:
 	kubectl apply -f $(BUILD_DIR)/namespace.yaml
 	kubectl apply -f $(BUILD_DIR)/argocd-secret.yaml
 	helm repo add argo https://argoproj.github.io/argo-helm
+	helm repo update
 	helm upgrade --install --namespace argocd argocd argo/argo-cd --version 5.17.1 --values $(BUILD_DIR)/values.yaml 
 
 uninstall-helm-chart:
