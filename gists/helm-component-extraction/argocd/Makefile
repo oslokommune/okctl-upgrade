@@ -188,7 +188,6 @@ remove-finalizers:
 applications-snapshot:
 	kubectl -n argocd get applications -o yaml \
 		| yq '.items[] |= del(.status)' \
-		| yq '.items[] |= del(.metadata.annotations)' \
 		| yq '.items[] |= del(.metadata.creationTimestamp)' \
 		| yq '.items[] |= del(.metadata.generation)' \
 		| yq '.items[] |= del(.metadata.resourceVersion)' \
