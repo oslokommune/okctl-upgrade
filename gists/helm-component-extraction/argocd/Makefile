@@ -186,7 +186,7 @@ remove-finalizers:
 		yq '.items[] |= del(.metadata.finalizers)' | \
 		kubectl apply -f -
 
-applications-snapshot:
+applications-snapshot: $(BUILD_DIR)
 	kubectl -n argocd get applications -o yaml \
 		| yq '.items[] |= del(.status)' \
 		| yq '.items[] |= del(.metadata.creationTimestamp)' \
