@@ -16,7 +16,6 @@ keywords:
 - argoproj
 - argocd
 - gitops
-kubeVersion: '>=1.22.0-0'
 maintainers:
 - name: argoproj
   url: https://argoproj.github.io/
