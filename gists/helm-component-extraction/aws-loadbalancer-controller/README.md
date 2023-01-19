@@ -27,7 +27,7 @@ Depending on whether you are installing or upgrading, go to the relevant runbook
 ### Installation
 
 Choose [INSTALL.md](./INSTALL.md) if you can say yes to all of the following:
-- `integrations.awsLoadBalancerController` is missing or set to `false` in your cluster.yaml
+- `integrations.awsLoadBalancerController` is missing or set to `true` in your cluster.yaml
 - You have not installed the AWS LoadBalancer Controller with the Makefile or Helm before
 
 ### Upgrading
