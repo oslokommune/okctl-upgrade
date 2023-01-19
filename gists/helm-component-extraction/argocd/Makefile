@@ -129,13 +129,11 @@ install-helm-chart:
 	@test -f "$(BUILD_DIR)/argocd-secret.yaml" || (echo "argocd-secret.yaml is missing. Run 'make configure'"; exit 1)
 	kubectl apply -f $(BUILD_DIR)/namespace.yaml
 	kubectl apply -f $(BUILD_DIR)/argocd-secret.yaml
-	helm repo add argo https://argoproj.github.io/argo-helm
-	helm repo update
 	helm upgrade --install \
 		--namespace argocd \
 		--version 5.17.1 \
 		--values $(BUILD_DIR)/values.yaml \
-		argocd argo/argo-cd 
+		argocd templates/chart
 
 uninstall-helm-chart:
 	helm uninstall --namespace argocd argocd || true
