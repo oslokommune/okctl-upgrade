@@ -2,12 +2,6 @@
 
 ## From 2.1.7 to 2.5.6
 
-### Back up existing applications
-
-```shell
-make applications-snapshot
-```
-
 ### Upgrade ArgoCD
 
 ```shell
