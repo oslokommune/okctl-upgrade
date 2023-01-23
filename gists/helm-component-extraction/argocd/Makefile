@@ -23,26 +23,31 @@ base-data-test:
 # ArgoCD Cognito Client ##############################################
 ######################################################################
 
+BUILD_DIR=build
+
+$(BUILD_DIR):
+	mkdir $(BUILD_DIR)
+
 cognito-client-data: base-data
 	$(eval USER_POOL_ID := $(shell aws cognito-idp list-user-pools --max-results 10 | yq '.UserPools[] | select(.Name == "okctl-$(CLUSTER_NAME)-userpool").Id'))
 
 cognito-client-data-test: base-data-test
 	@test -n "$(USER_POOL_ID)" || (echo "Unable to acquire user pool ID"; exit 1)
 
-cfn-argocd-client.yaml: cognito-client-data-test
+$(BUILD_DIR)/cfn-argocd-client.yaml: cognito-client-data-test $(BUILD_DIR)
 	@test -n "$(USER_POOL_ID)" || (echo "Unable to acquire user pool ID"; exit 1)
 	cat templates/cfn-argocd-client.yaml | \
 		CLUSTER_NAME=$(CLUSTER_NAME) \
 		USER_POOL_ID=$(USER_POOL_ID) \
-		envsubst > cfn-argocd-client.yaml
+		envsubst > $(BUILD_DIR)/cfn-argocd-client.yaml
 
-configure-cognito-client: cognito-client-data cognito-client-data-test cfn-argocd-client.yaml
+configure-cognito-client: cognito-client-data cognito-client-data-test $(BUILD_DIR)/cfn-argocd-client.yaml
 	@echo "✅ Configuring Cognito client complete"
 
 install-cognito-client: cognito-client-data cognito-client-data-test
-	@test -f "cfn-argocd-client.yaml" || (echo "cfn-argocd-client.yaml does not exist. Run 'make configure'"; exit 1)
+	@test -f "$(BUILD_DIR)/cfn-argocd-client.yaml" || (echo "cfn-argocd-client.yaml does not exist. Run 'make configure'"; exit 1)
 	aws cloudformation deploy \
-		--template-file cfn-argocd-client.yaml \
+		--template-file $(BUILD_DIR)/cfn-argocd-client.yaml \
 		--stack-name okctl-identitypoolclient-${CLUSTER_NAME}-argocd
 
 install-cognito-parameters: cognito-client-data cognito-client-data-test
@@ -63,19 +68,19 @@ certificate-data: base-data
 certificate-data-test: base-data-test
 	@test -n "$(HOSTED_ZONE_ID)" || (echo "Unable to acquire hosted zone ID"; exit 1)
 
-cfn-argocd-certificate.yaml: certificate-data-test
+$(BUILD_DIR)/cfn-argocd-certificate.yaml: certificate-data-test $(BUILD_DIR)
 	cat templates/cfn-argocd-certificate.yaml | \
 		CLUSTER_NAME=$(CLUSTER_NAME) \
 		HOSTED_ZONE_ID=$(HOSTED_ZONE_ID) \
-		envsubst > cfn-argocd-certificate.yaml
+		envsubst > $(BUILD_DIR)/cfn-argocd-certificate.yaml
 
-configure-certificate: certificate-data certificate-data-test cfn-argocd-certificate.yaml
+configure-certificate: certificate-data certificate-data-test $(BUILD_DIR)/cfn-argocd-certificate.yaml
 	@echo "✅ Configuring certificate complete"
 
 install-certificate: certificate-data certificate-data-test
-	@test -f "cfn-argocd-certificate.yaml" || (echo "cfn-argocd-certificate.yaml does not exist. Run 'make configure'"; exit 1)
+	@test -f "$(BUILD_DIR)/cfn-argocd-certificate.yaml" || (echo "cfn-argocd-certificate.yaml does not exist. Run 'make configure'"; exit 1)
 	aws cloudformation deploy \
-		--template-file cfn-argocd-certificate.yaml \
+		--template-file $(BUILD_DIR)/cfn-argocd-certificate.yaml \
 	  --stack-name okctl-certificate-${CLUSTER_NAME}-argocd-${CLUSTER_NAME}-oslo-systems
 
 uninstall-certificate: base-data base-data-test
@@ -95,10 +100,10 @@ argocd-data-test: base-data-test
 	@test -n "$(CERTIFICATE_ARN)" || (echo "Unable to acquire certificate ARN"; exit 1)
 	@test -n "$(CLIENT_ID)" || (echo "Unable to acquire certificate ARN"; exit 1)
 
-namespace.yaml:
-	cp templates/namespace.yaml namespace.yaml
+$(BUILD_DIR)/namespace.yaml: $(BUILD_DIR)
+	cp templates/namespace.yaml $(BUILD_DIR)/namespace.yaml
 
-values.yaml: argocd-data argocd-data-test
+$(BUILD_DIR)/values.yaml: argocd-data argocd-data-test $(BUILD_DIR)
 	cat templates/values.yaml | \
 		AWS_REGION=$(AWS_REGION) \
 		CLUSTER_NAME=$(CLUSTER_NAME) \
@@ -106,78 +111,90 @@ values.yaml: argocd-data argocd-data-test
 		CLIENT_ID=$(CLIENT_ID) \
 		CERTIFICATE_ARN=$(CERTIFICATE_ARN) \
 		USER_POOL_ID=$(USER_POOL_ID) \
-		envsubst '$$AWS_REGION,$$CLUSTER_NAME,$$ISSUER_URL,$$CLIENT_ID,$$CERTIFICATE_ARN,$$USER_POOL_ID' > values.yaml
+		envsubst '$$AWS_REGION,$$CLUSTER_NAME,$$ISSUER_URL,$$CLIENT_ID,$$CERTIFICATE_ARN,$$USER_POOL_ID' > $(BUILD_DIR)/values.yaml
 
-argocd-secret.yaml: argocd-data argocd-data-test
+$(BUILD_DIR)/argocd-secret.yaml: argocd-data argocd-data-test $(BUILD_DIR)
 	$(eval SERVER_SECRET := $(shell uuidgen))
 	@aws ssm put-parameter --name="/okctl/$(CLUSTER_NAME)/argocd/secret-key" --value="$(SERVER_SECRET)" --type SecureString --overwrite | cat
 	cat templates/argocd-secret.yaml | \
 		CLUSTER_NAME=$(CLUSTER_NAME) \
-		envsubst > argocd-secret.yaml
+		envsubst > $(BUILD_DIR)/argocd-secret.yaml
 
-configure-helm-chart: argocd-data namespace.yaml values.yaml argocd-secret.yaml
+configure-helm-chart: argocd-data $(BUILD_DIR)/namespace.yaml $(BUILD_DIR)/values.yaml $(BUILD_DIR)/argocd-secret.yaml
 	@echo "✅ Configuring helm chart complete"
 
 install-helm-chart:
-	@test -f "namespace.yaml" || (echo "namespace.yaml does not exist. Run 'make configure'"; exit 1)
-	@test -f "values.yaml" || (echo "values.yaml is missing. Run 'make configure'"; exit 1)
-	@test -f "argocd-secret.yaml" || (echo "argocd-secret.yaml is missing. Run 'make configure'"; exit 1)
-	kubectl apply -f namespace.yaml
-	kubectl apply -f argocd-secret.yaml
-	helm repo add argo https://argoproj.github.io/argo-helm
-	helm install --namespace argocd argocd argo/argo-cd --version 3.26.12 --values values.yaml 
+	@test -f "$(BUILD_DIR)/namespace.yaml" || (echo "namespace.yaml does not exist. Run 'make configure'"; exit 1)
+	@test -f "$(BUILD_DIR)/values.yaml" || (echo "values.yaml is missing. Run 'make configure'"; exit 1)
+	@test -f "$(BUILD_DIR)/argocd-secret.yaml" || (echo "argocd-secret.yaml is missing. Run 'make configure'"; exit 1)
+	kubectl apply -f $(BUILD_DIR)/namespace.yaml
+	kubectl apply -f $(BUILD_DIR)/argocd-secret.yaml
+	helm upgrade --install \
+		--namespace argocd \
+		--version 5.17.1 \
+		--values $(BUILD_DIR)/values.yaml \
+		argocd templates/chart
 
 uninstall-helm-chart:
 	helm uninstall --namespace argocd argocd || true
-	kubectl delete -f argocd-secret.yaml || true
-	kubectl delete -f namespace.yaml || true
+	kubectl delete -f $(BUILD_DIR)/argocd-secret.yaml || true
+	kubectl delete -f $(BUILD_DIR)/namespace.yaml || true
 
 ######################################################################
 # Repository deploy key ##############################################
 ######################################################################
 
-deploy-key:
-	ssh-keygen -t ed25519 -C "okctl-$(CLUSTER_NAME)-argocd" -f deploy-key -N ""
-
-deploy-key-secret: base-data base-data-test
+deploy-key-data: base-data
 	$(eval REPOSITORY_NAME := $(shell basename -s .git `git config --get remote.origin.url`))
+deploy-key-data-test: base-data-test
+	@test -n "$(REPOSITORY_NAME)" || (echo "Unable to acquire repository name"; exit 1)
+	@test -n "$(GITHUB_TOKEN)" || (echo "GITHUB_TOKEN not set"; exit 1)
+
+$(BUILD_DIR)/deploy-key: deploy-key-data-test $(BUILD_DIR)
+	ssh-keygen -t ed25519 -C "okctl-$(CLUSTER_NAME)-argocd" -f $(BUILD_DIR)/deploy-key -N ""
+
+$(BUILD_DIR)/deploy-key-secret: deploy-key-data-test $(BUILD_DIR)
 	cat templates/argocd-repository-secret.yaml | \
 		CLUSTER_NAME=$(CLUSTER_NAME) \
 		REPOSITORY_NAME=$(REPOSITORY_NAME) \
-		envsubst > deploy-key-secret.yaml
+		envsubst > $(BUILD_DIR)/deploy-key-secret.yaml
 
-configure-deploy-key: deploy-key deploy-key-secret
+configure-deploy-key: deploy-key-data $(BUILD_DIR)/deploy-key $(BUILD_DIR)/deploy-key-secret
 	@echo "✅ Configuring deploy key complete"
 
-install-deploy-key:
-	$(eval REPOSITORY_NAME := $(shell basename -s .git `git config --get remote.origin.url`))
-	aws ssm put-parameter --name="/okctl/$(CLUSTER_NAME)/github/deploykeys/oslokommune/$(REPOSITORY_NAME)/privatekey" --value=file://deploy-key --type SecureString --overwrite > /dev/null
-	rm deploy-key
-	kubectl apply -f deploy-key-secret.yaml
+install-deploy-key-parameters: deploy-key-data deploy-key-data-test
+	aws ssm put-parameter --name="/okctl/$(CLUSTER_NAME)/github/deploykeys/oslokommune/$(REPOSITORY_NAME)/privatekey" --value=file://$(BUILD_DIR)/deploy-key --type SecureString --overwrite > /dev/null
+	rm $(BUILD_DIR)/deploy-key
+
+install-deploy-key: deploy-key-data deploy-key-data-test
+	kubectl apply -f $(BUILD_DIR)/deploy-key-secret.yaml
 	@curl \
 		-X POST \
 		-H "Accept: application/vnd.github+json" \
 		-H "Authorization: Bearer ${GITHUB_TOKEN}"\
 		-H "X-GitHub-Api-Version: 2022-11-28" \
 		"https://api.github.com/repos/oslokommune/$(REPOSITORY_NAME)/keys" \
-			-d "{\"title\":\"okctl-iac-$(CLUSTER_NAME)\",\"key\":\"`cat deploy-key.pub`\",\"read_only\":false}"
+			-d "{\"title\":\"okctl-iac-$(CLUSTER_NAME)\",\"key\":\"`cat $(BUILD_DIR)/deploy-key.pub`\",\"read_only\":false}"
 
-uninstall-deploy-key:
-	kubectl delete -f deploy-key-secret.yaml || true
-	aws ssm delete-parameter --name="/okctl/$(CLUSTER_NAME)/argocd/deploy-key" > /dev/null || true
+uninstall-deploy-key: deploy-key-data deploy-key-data-test
+	kubectl delete -f $(BUILD_DIR)/deploy-key-secret.yaml || true
+	aws ssm delete-parameter --name="/okctl/$(CLUSTER_NAME)/github/deploykeys/oslokommune/$(REPOSITORY_NAME)/privatekey" > /dev/null || true
 
 ######################################################################
 # Existing ArgoCD Applications #######################################
 ######################################################################
+remove-finalizers:
+	kubectl --namespace=argocd get applications.argoproj.io -o yaml | \
+		yq '.items[] |= del(.metadata.finalizers)' | \
+		kubectl apply -f -
 
-applications-snapshot:
+applications-snapshot: $(BUILD_DIR)
 	kubectl -n argocd get applications -o yaml \
 		| yq '.items[] |= del(.status)' \
-		| yq '.items[] |= del(.metadata.annotations)' \
 		| yq '.items[] |= del(.metadata.creationTimestamp)' \
 		| yq '.items[] |= del(.metadata.generation)' \
 		| yq '.items[] |= del(.metadata.resourceVersion)' \
-		| yq '.items[] |= del(.metadata.uid)' > applications-snapshot.yaml
+		| yq '.items[] |= del(.metadata.uid)' > $(BUILD_DIR)/applications-snapshot.yaml
 
 install-applications-snapshot:
-	kubectl apply -f applications-snapshot.yaml
+	kubectl apply -f $(BUILD_DIR)/applications-snapshot.yaml
