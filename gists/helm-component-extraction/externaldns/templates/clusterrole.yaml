@@ -3,36 +3,12 @@ kind: ClusterRole
 metadata:
   name: external-dns
   namespace: kube-system
+  labels:
+    app.kubernetes.io/name: external-dns
 rules:
-- apiGroups:
-  - '*'
-  resources:
-  - '*'
-  verbs:
-  - '*'
-- apiGroups:
-  - ""
-  resources:
-  - get
-  - watch
-  - list
-  verbs:
-  - services
-  - endpoints
-  - pods
-- apiGroups:
-  - extensions
-  - networking.k8s.io
-  resources:
-  - ingresses
-  verbs:
-  - get
-  - watch
-  - list
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - list
-  - watch
+  - apiGroups: [""]
+    resources: ["services","endpoints","pods","nodes"]
+    verbs: ["get","watch","list"]
+  - apiGroups: ["extensions","networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get","watch","list"]

@@ -1,48 +1,35 @@
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    deployment.kubernetes.io/revision: "1"
   name: external-dns
   namespace: kube-system
+  labels:
+    app.kubernetes.io/name: external-dns
 spec:
-  progressDeadlineSeconds: 600
-  replicas: 1
-  revisionHistoryLimit: 10
-  selector:
-    matchLabels:
-      app: external-dns
   strategy:
     type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: external-dns
   template:
     metadata:
       labels:
-        app: external-dns
+        app.kubernetes.io/name: external-dns
     spec:
-      containers:
-      - args:
-        - --source=service
-        - --source=ingress
-        - --domain-filter=${CLUSTER_NAME}.oslo.systems
-        - --provider=aws
-        - --aws-zone-type=public
-        - --log-level=debug
-        - --policy=upsert-only
-        - --events
-        - --registry=txt
-        - --txt-owner-id=${HOSTED_ZONE_ID}
-        image: registry.opensource.zalan.do/teapot/external-dns:v0.7.3
-        imagePullPolicy: IfNotPresent
-        name: external-dns
-        resources: {}
-        terminationMessagePath: /dev/termination-log
-        terminationMessagePolicy: File
-      dnsPolicy: ClusterFirst
-      restartPolicy: Always
-      schedulerName: default-scheduler
-      securityContext:
-        fsGroup: 65534
-        runAsNonRoot: false
-      serviceAccount: ${SERVICEUSER_NAME}
       serviceAccountName: ${SERVICEUSER_NAME}
-      terminationGracePeriodSeconds: 30
+      containers:
+        - name: external-dns
+          image: registry.k8s.io/external-dns/external-dns:v0.13.1
+          args:
+            - --source=service
+            - --source=ingress
+            - --domain-filter=${CLUSTER_NAME}.oslo.systems # will make ExternalDNS see only the hosted zones matching provided domain, omit to process all available hosted zones
+            - --provider=aws
+            - --policy=upsert-only # would prevent ExternalDNS from deleting any records, omit to enable full synchronization
+            - --aws-zone-type=public # only look at public hosted zones (valid values are public, private or no value for both)
+            - --registry=txt
+            - --txt-owner-id=${HOSTED_ZONE_ID}
+          env:
+            - name: AWS_DEFAULT_REGION
+              value: ${AWS_REGION} # change to region where EKS is installed

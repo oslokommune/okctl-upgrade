@@ -12,6 +12,10 @@ CLUSTER_NAME?=
 
 SERVICEUSER_NAME=external-dns-ext
 
+BUILD_DIR=build
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
 base-data:
 	$(eval AWS_ACCOUNT_ID := $(shell aws sts get-caller-identity --query Account --output text))
 	$(eval AWS_REGION := $(shell aws configure get region))
@@ -30,15 +34,15 @@ external-dns-data: base-data
 external-dns-data-test: base-data-test
 	@test -n "$(HOSTED_ZONE_ID)" || (echo "Unable to acquire hosted zone ID"; exit 1)
 
-cfn-service_account_policy.yaml: base-data-test
+$(BUILD_DIR)/cfn-service_account_policy.yaml: base-data-test $(BUILD_DIR)
 	cat templates/cfn-service_account_policy.yaml | \
 		CLUSTER_NAME=$(CLUSTER_NAME) \
-		envsubst > cfn-service_account_policy.yaml
+		envsubst > $(BUILD_DIR)/cfn-service_account_policy.yaml
 
 install-service-account-policy: base-data-test
 	aws cloudformation deploy \
 		--stack-name okctl-externaldns-$(CLUSTER_NAME) \
-		--template-file cfn-service_account_policy.yaml \
+		--template-file $(BUILD_DIR)/cfn-service_account_policy.yaml \
 		--capabilities CAPABILITY_NAMED_IAM
 
 uninstall-service-account-policy: base-data base-data-test
@@ -66,36 +70,40 @@ install-service-user: base-data-test
 uninstall-service-user: base-data-test uninstall-service-user-role uninstall-service-account-policy
 	kubectl delete --namespace=kube-system serviceaccount external-dns
 
-clusterrole.yaml:
-	cat templates/clusterrole.yaml > clusterrole.yaml
+$(BUILD_DIR)/clusterrole.yaml: $(BUILD_DIR)
+	cat templates/clusterrole.yaml > $(BUILD_DIR)/clusterrole.yaml
 
-clusterrolebinding.yaml:
+$(BUILD_DIR)/clusterrolebinding.yaml: $(BUILD_DIR)
 	cat templates/clusterrolebinding.yaml | \
 		SERVICEUSER_NAME=$(SERVICEUSER_NAME) \
-		envsubst > clusterrolebinding.yaml
+		envsubst > $(BUILD_DIR)/clusterrolebinding.yaml
 
-deployment.yaml: external-dns-data-test
+$(BUILD_DIR)/deployment.yaml: external-dns-data-test $(BUILD_DIR)
 	cat templates/deployment.yaml | \
 		CLUSTER_NAME=$(CLUSTER_NAME) \
 		HOSTED_ZONE_ID=$(HOSTED_ZONE_ID) \
 		SERVICEUSER_NAME=$(SERVICEUSER_NAME) \
-		envsubst > deployment.yaml
+		AWS_REGION=$(AWS_REGION) \
+		envsubst > $(BUILD_DIR)/deployment.yaml
 
-install-kubernetes-manifests: clusterrole.yaml clusterrolebinding.yaml deployment.yaml
-	kubectl apply -f clusterrole.yaml
-	kubectl apply -f clusterrolebinding.yaml
-	kubectl apply -f deployment.yaml
+install-kubernetes-manifests:
+	test -f $(BUILD_DIR)/clusterrole.yaml || (echo "Missing $(BUILD_DIR)/clusterrole.yaml. Did you run make configure?"; exit 1)
+	test -f $(BUILD_DIR)/clusterrolebinding.yaml || (echo "Missing $(BUILD_DIR)/clusterrolebinding.yaml. Did you run make configure?"; exit 1)
+	test -f $(BUILD_DIR)/deployment.yaml || (echo "Missing $(BUILD_DIR)/deployment.yaml. Did you run make configure?"; exit 1)
+	kubectl apply -f $(BUILD_DIR)/clusterrole.yaml
+	kubectl apply -f $(BUILD_DIR)/clusterrolebinding.yaml
+	kubectl apply -f $(BUILD_DIR)/deployment.yaml
 
 uninstall-kubernetes-manifests:
-	kubectl delete --ignore-not-found -f clusterrole.yaml
-	kubectl delete --ignore-not-found -f clusterrolebinding.yaml
-	kubectl delete --ignore-not-found -f deployment.yaml
+	kubectl delete --ignore-not-found -f $(BUILD_DIR)/clusterrole.yaml
+	kubectl delete --ignore-not-found -f $(BUILD_DIR)/clusterrolebinding.yaml
+	kubectl delete --ignore-not-found -f $(BUILD_DIR)/deployment.yaml
 
 ######################################################################
 # User facing ########################################################
 ######################################################################
 
-configure: external-dns-data deployment.yaml cfn-service_account_policy.yaml clusterrole.yaml clusterrolebinding.yaml
+configure: external-dns-data $(BUILD_DIR)/deployment.yaml $(BUILD_DIR)/cfn-service_account_policy.yaml $(BUILD_DIR)/clusterrole.yaml $(BUILD_DIR)/clusterrolebinding.yaml
 	@echo "✅ Configuring ExternalDNS complete"
 
 install: external-dns-data install-service-account-policy install-service-user install-kubernetes-manifests
@@ -103,3 +111,6 @@ install: external-dns-data install-service-account-policy install-service-user i
 
 uninstall: base-data uninstall-kubernetes-manifests uninstall-service-user
 	@echo "✅ Uninstalling ExternalDNS complete"
+
+clean:
+	rm -rf $(BUILD_DIR)
